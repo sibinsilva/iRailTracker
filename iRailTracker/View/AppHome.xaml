@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="iRailTracker.View.AppHome"
+             xmlns:vm="clr-namespace:iRailTracker.ViewModel"
+             Title="AppHome">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="0.2*"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- First Row: VerticalStackLayout with RadioButtons and Entry/Search Button -->
+        <Grid Grid.Row="0" Padding="10">
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" Grid.ColumnSpan="2">
+                <!-- Label -->
+                <Label Text="Please select an option to begin." FontSize="Medium" HorizontalOptions="Start"/>
+
+                <!-- RadioButtons -->
+                <StackLayout Orientation="Horizontal" Spacing="70" Margin="0,20,20,0" HorizontalOptions="Start">
+                    <RadioButton x:Name="Find_Station" FontSize="Medium" 
+                 Content="Locate Nearby Station" IsChecked="{Binding IsFindNearbyStationChecked}" HorizontalOptions="StartAndExpand"/>
+                    <RadioButton x:Name="Search_Station" FontSize="Medium" 
+                 Content="Search for Station" IsChecked="{Binding IsLocateStationChecked}" HorizontalOptions="EndAndExpand"/>
+                </StackLayout>
+            </Grid>
+
+            <!-- Entry and Search Button -->
+            <Grid Grid.Row="1" Grid.ColumnSpan="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="5*"/>
+                    <ColumnDefinition Width="3*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <!-- Station Picker -->
+                <Picker x:Name="stationPicker" 
+                        Title="Select a station" 
+                        ItemsSource="{Binding StationOptions}" 
+                        SelectedItem="{Binding SelectedStation, Mode=TwoWay}"
+                        IsVisible="{Binding IsStationListLoaded}" 
+                        IsEnabled="{Binding IsStationListLoaded}" 
+                        VerticalOptions="Center" 
+                        HorizontalOptions="FillAndExpand"
+                        FontSize="Large"
+                        Grid.Column="0"/>
+
+                <!-- Search Button -->
+                <Button Text="Find Services" VerticalOptions="Center"  HorizontalOptions="End"
+                    WidthRequest="150" HeightRequest="50" 
+                    IsVisible="{Binding IsStationListLoaded}" 
+                    Command="{Binding SearchServiceCommand}" Grid.Column="1" />
+            </Grid>
+
+            <!-- Search Button -->
+            <Button Text="Find Stations" HorizontalOptions="Center" VerticalOptions="Center" 
+                    WidthRequest="150" HeightRequest="50" 
+                    IsVisible="{Binding HideSearchButton}" 
+                    Command="{Binding SearchCommand}" Grid.Row="2" Grid.Column="0"/>
+
+            <!-- Loader -->
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" VerticalOptions="Center" HorizontalOptions="End" Grid.Row="2" Grid.Column="2"/>
+        </Grid>
+
+        <!-- Second Row: StackLayout with ListView -->
+        <Grid Grid.Row="1" IsVisible="{Binding EnableListView}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Header Grid -->
+            <Grid Grid.Row="0" Padding="10" VerticalOptions="Start" HorizontalOptions="FillAndExpand">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Frame BorderColor="White" BackgroundColor="Transparent" Padding="0" Grid.Column="0" HasShadow="False">
+                    <Label Text="Origin" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center" />
+                </Frame>
+                <Frame BorderColor="White" BackgroundColor="Transparent" Padding="0" Grid.Column="1" HasShadow="False">
+                    <Label Text="Destination" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center" />
+                </Frame>
+                <Frame BorderColor="White" BackgroundColor="Transparent" Padding="0" Grid.Column="2" HasShadow="False">
+                    <Label Text="Status" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center" />
+                </Frame>
+                <Frame BorderColor="White" BackgroundColor="Transparent" Padding="0" Grid.Column="3" HasShadow="False">
+                    <Label Text="Due In" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center" />
+                </Frame>
+                <Frame BorderColor="White" BackgroundColor="Transparent" Padding="0" Grid.Column="4" HasShadow="False">
+                    <Label Text="Arrival" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center" />
+                </Frame>
+                <Frame BorderColor="White" BackgroundColor="Transparent" Padding="0" Grid.Column="5" HasShadow="False">
+                    <Label Text="Late" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center" />
+                </Frame>
+            </Grid>
+
+            <!-- CollectionView for Data -->
+            <CollectionView BackgroundColor="IndianRed" Grid.Row="1" VerticalOptions="FillAndExpand" HorizontalOptions="FillAndExpand" ItemsSource="{Binding TrainJourneys}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Padding="10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <Frame BorderColor="White" BackgroundColor="Transparent" Padding="0" Grid.Column="0" HasShadow="False">
+                                <Label Text="{Binding Origin}" VerticalOptions="Center" HorizontalOptions="Center" Padding="5" />
+                            </Frame>
+                            <Frame BorderColor="White" BackgroundColor="Transparent" Padding="0" Grid.Column="1" HasShadow="False">
+                                <Label Text="{Binding Destination}" VerticalOptions="Center" HorizontalOptions="Center" Padding="5" />
+                            </Frame>
+                            <Frame BorderColor="White" BackgroundColor="Transparent" Padding="0" Grid.Column="2" HasShadow="False">
+                                <Label Text="{Binding CurrentStatus}" VerticalOptions="Center" HorizontalOptions="Center" Padding="5" />
+                            </Frame>
+                            <Frame BorderColor="White" BackgroundColor="Transparent" Padding="0" Grid.Column="3" HasShadow="False">
+                                <Label Text="{Binding DueIn}" VerticalOptions="Center" HorizontalOptions="Center" Padding="5" />
+                            </Frame>
+                            <Frame BorderColor="White" BackgroundColor="Transparent" Padding="0" Grid.Column="4" HasShadow="False">
+                                <Label Text="{Binding ExpectedArrival}" VerticalOptions="Center" HorizontalOptions="Center" Padding="5" />
+                            </Frame>
+                            <Frame BorderColor="White" BackgroundColor="Transparent" Padding="0" Grid.Column="5" HasShadow="False">
+                                <Label Text="{Binding Late}" VerticalOptions="Center" HorizontalOptions="Center" Padding="5" />
+                            </Frame>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Grid>
+        <Grid Grid.Row="1" IsVisible="{Binding NoJourneyFound}">
+            <Label Text="{Binding NoJourneyMsg}" FontSize="Large" />
+        </Grid>
+    </Grid>
+</ContentPage>

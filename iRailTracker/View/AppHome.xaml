@@ -27,7 +27,7 @@
                     <RadioButton x:Name="Find_Station" FontSize="Medium" 
                  Content="Locate Nearby Station" IsChecked="{Binding IsFindNearbyStationChecked}" HorizontalOptions="StartAndExpand"/>
                     <RadioButton x:Name="Search_Station" FontSize="Medium" 
-                 Content="Search for Station" IsChecked="{Binding IsLocateStationChecked}" HorizontalOptions="EndAndExpand"/>
+                 Content="Pick a Train Station" IsChecked="{Binding IsLocateStationChecked}" HorizontalOptions="EndAndExpand"/>
                 </StackLayout>
             </Grid>
 
@@ -58,7 +58,7 @@
             </Grid>
 
             <!-- Search Button -->
-            <Button Text="Find Stations" HorizontalOptions="Center" VerticalOptions="Center" 
+            <Button Text="Search Stations" HorizontalOptions="Center" VerticalOptions="Center" 
                     WidthRequest="150" HeightRequest="50" 
                     IsVisible="{Binding HideSearchButton}" 
                     Command="{Binding SearchCommand}" Grid.Row="2" Grid.Column="0"/>
@@ -106,7 +106,7 @@
             </Grid>
 
             <!-- CollectionView for Data -->
-            <CollectionView BackgroundColor="IndianRed" Grid.Row="1" VerticalOptions="FillAndExpand" HorizontalOptions="FillAndExpand" ItemsSource="{Binding TrainJourneys}">
+            <CollectionView BackgroundColor="#9880e5" Grid.Row="1" VerticalOptions="FillAndExpand" HorizontalOptions="FillAndExpand" ItemsSource="{Binding TrainJourneys}">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
                         <Grid Padding="10">

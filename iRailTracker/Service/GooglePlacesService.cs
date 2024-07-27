@@ -1,27 +1,22 @@
-﻿using iRailTracker.Model;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using RestSharp;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using static iRailTracker.Model.NearbyStation;
 
 namespace iRailTracker.Service
 {
     public class GooglePlacesService
     {
-        private DataService<Settings> settings;
+        private readonly DataService<Settings> _settings;
 
         public GooglePlacesService(DataService<Settings> settings)
         {
-            this.settings = settings;
+            _settings = settings;
         }
 
-        public async Task<List<string>> GetLocationAsync()
+        public async Task<List<string>> GetLocationAsync(Action<string> errorCallback)
         {
             List<string> stations = new List<string>();
+
             try
             {
                 var location = await Geolocation.GetLastKnownLocationAsync();
@@ -40,51 +35,65 @@ namespace iRailTracker.Service
                     var nearbyStations = await GetNearbyStation(location.Latitude.ToString(), location.Longitude.ToString());
                     NearbyStations stationItems = JsonConvert.DeserializeObject<NearbyStations>(nearbyStations);
 
-                    foreach (var station in stationItems.places)
+                    if (stationItems != null)
                     {
-                        stations.Add(station.name);
+                        foreach (var station in stationItems.places)
+                        {
+                            stations.Add(station.name);
+                        }
+                    }
+                    else
+                    {
+                        errorCallback?.Invoke("No stations found in the response.");
                     }
                 }
                 else
                 {
-                    Console.WriteLine("No GPS data available.");
+                    errorCallback?.Invoke("No GPS data available.");
                 }
             }
             catch (Exception ex)
             {
-                // Unable to get location
+                errorCallback?.Invoke($"An error occurred while getting location: {ex.Message}");
             }
+
             return stations;
         }
 
-        public async Task<string> GetNearbyStation(string devicelatitude, string devicelongitude)
+        private async Task<string> GetNearbyStation(string latitude, string longitude)
         {
-            string stationList = null;
             try
             {
-                string url = settings.Data.GetNearbyStationUrl;
+                string url = _settings.Data.GetNearbyStationUrl;
                 var client = new RestClient(url);
-                var request = new RestRequest();
-                request.Method = Method.Post;
+                var request = new RestRequest
+                {
+                    Method = Method.Post
+                };
                 request.AddHeader("Content-Type", "application/json");
 
                 var body = new
                 {
-                    latitude = devicelatitude,
-                    longitude = devicelongitude
+                    latitude,
+                    longitude
                 };
 
                 request.AddJsonBody(body);
 
-                RestResponse response = client.Execute(request);
-                stationList = response.Content;
+                var response = await client.ExecuteAsync(request);
+                if (response.IsSuccessful)
+                {
+                    return response.Content;
+                }
+                else
+                {
+                    throw new Exception($"Error fetching data from {url}. Status: {response.StatusCode}, Message: {response.ErrorMessage}");
+                }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
-                throw;
+                throw new Exception($"An error occurred while fetching nearby stations: {ex.Message}");
             }
-            return stationList;
         }
     }
 }

@@ -11,18 +11,18 @@ namespace iRailTracker.ViewModel
     {
         private readonly DataService<List<Station>> _stationListService;
         private readonly DataService<Settings> _settings;
+        private ObservableCollection<string> _stationOptions;
+        private ObservableCollection<TrainJourney> _trainJourneys;
         private readonly List<Station> stationList;
+        private readonly List<string> _stationNames = new List<string>();
         private bool _isFindNearbyStationChecked;
         private bool _isLocateStationChecked;
         private bool _isStationListLoaded;
         private bool _hideSearchButton;
-        private ObservableCollection<string> _stationOptions;
-        private ObservableCollection<TrainJourney> _trainJourneys;
-        private string _selectedStation;
-        private readonly List<string> _stationNames = new List<string>();
         private bool _isBusy;
         private bool _enableListView;
         private bool _noJourneys;
+        private string _selectedStation;
         private string _noJourneyMsg;
 
         public AppHomeViewModel(DataService<List<Station>> stationListService, DataService<Settings> settingsService)
@@ -141,7 +141,7 @@ namespace iRailTracker.ViewModel
         public ObservableCollection<string> StationOptions
         {
             get => _stationOptions;
-            private  set
+            private set
             {
                 if (_stationOptions != value)
                 {
@@ -179,6 +179,7 @@ namespace iRailTracker.ViewModel
             }
         }
 
+        public event EventHandler<string> ErrorOccurred;
 
         // Command for the search button
         public ICommand SearchCommand => new Command(async () => await ExecuteLocationSearch());
@@ -186,6 +187,12 @@ namespace iRailTracker.ViewModel
 
         private async Task ExecuteTrainServiceSearch()
         {
+            if (string.IsNullOrEmpty(_selectedStation))
+            {
+                ShowError("You haven't selected a train station to view the available journeys.");
+                return;
+            }
+
             if (IsBusy)
                 return;
 
@@ -203,7 +210,7 @@ namespace iRailTracker.ViewModel
 
                 var stationCode = matchingStation != null ? matchingStation.StationCode : null;
                 StationService trainService = new StationService();
-                var journeyList = await trainService.GetTrainServicesAsync(_settings, stationCode);
+                var journeyList = await trainService.GetTrainServicesAsync(_settings.Data, stationCode, ShowError);
                 if (journeyList.Count > 0)
                 {
                     NoJourneyFound = false;
@@ -224,8 +231,12 @@ namespace iRailTracker.ViewModel
                 {
                     EnableListView = false;
                     NoJourneyFound = true;
-                    NoJourneyMsg = $"No Journeys are Available at the moment for {_selectedStation} station.";
+                    NoJourneyMsg = $"Currently, there are no journeys available for {_selectedStation} station.";
                 }
+            }
+            catch(Exception ex)
+            {
+                ShowError($"An unexpected error occurred while searching for train services: {ex.Message}");
             }
             finally
             {
@@ -244,24 +255,32 @@ namespace iRailTracker.ViewModel
                 if (IsFindNearbyStationChecked)
                 {
                     GooglePlacesService _placesService = new GooglePlacesService(_settings);
-                    var stationList = await _placesService.GetLocationAsync();
+                    var stationList = await _placesService.GetLocationAsync(ShowError);
                     if (stationList.Count > 0)
                     {
                         StationOptions = new ObservableCollection<string>(stationList);
                         IsStationListLoaded = true;
                         HideSearchButton = false;
                     }
-
                 }
+            }
+            catch (Exception ex)
+            {
+                ShowError($"An unexpected error occurred while searching for nearby stations: {ex.Message}");
             }
             finally
             {
                 IsBusy = false;
             }
-            
+        }
+
+        private void ShowError(string message)
+        {
+            ErrorOccurred?.Invoke(this, message);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
+
 
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {

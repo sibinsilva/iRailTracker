@@ -52,7 +52,7 @@
                         Grid.Column="0"/>
 
                 <!-- Search Button -->
-                <Button Text="Find Services" VerticalOptions="Center"  HorizontalOptions="End"
+                <Button Text="{Binding ButtonText}" VerticalOptions="Center"  HorizontalOptions="End"
                     WidthRequest="150" HeightRequest="50" 
                     IsVisible="{Binding IsStationListLoaded}" 
                     Command="{Binding SearchServiceCommand}" Grid.Column="1" />
@@ -67,7 +67,7 @@
             <!-- Loader -->
             <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" VerticalOptions="Center" HorizontalOptions="End" Grid.Row="1" Grid.Column="2"/>
 
-            <Label Text="{Binding RefreshTime}" IsVisible="{Binding IsStationListLoaded}" Grid.Row="2" Grid.ColumnSpan="2"/>
+            <Label Text="{Binding RefreshTime}" IsVisible="{Binding EnableListView}" Grid.Row="2" Grid.ColumnSpan="2"/>
 
         </Grid>
 
@@ -79,7 +79,7 @@
             </Grid.RowDefinitions>
 
             <!-- Header Grid -->
-            <Grid Grid.Row="0" VerticalOptions="Start" HorizontalOptions="FillAndExpand">
+            <Grid Grid.Row="0" VerticalOptions="Start" HorizontalOptions="FillAndExpand" BackgroundColor="DarkSlateGrey">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="*" />

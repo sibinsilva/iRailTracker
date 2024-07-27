@@ -25,6 +25,7 @@ namespace iRailTracker.ViewModel
         private string _selectedStation;
         private string _noJourneyMsg;
         private string _refreshTime;
+        private string _buttonText;
 
         public AppHomeViewModel(DataService<List<Station>> stationListService, DataService<Settings> settingsService)
         {
@@ -68,6 +69,16 @@ namespace iRailTracker.ViewModel
             }
         }
 
+        public string ButtonText
+        {
+            get => _buttonText;
+            set
+            {
+                _buttonText = value;
+                OnPropertyChanged();
+            }
+        }
+
         public bool NoJourneyFound
         {
             get => _noJourneys;
@@ -96,13 +107,14 @@ namespace iRailTracker.ViewModel
             {
                 if (_isFindNearbyStationChecked != value)
                 {
-                    _isFindNearbyStationChecked = value;
+                    _isFindNearbyStationChecked = value;                                                                                                                                                    
+                    EnableListView = false;
                     HideSearchButton = value;
                     OnPropertyChanged();
                 }
             }
         }
-
+        // Property to determine if 'Pick a Train Station' is selected
         public bool IsLocateStationChecked
         {
             get => _isLocateStationChecked;
@@ -112,6 +124,8 @@ namespace iRailTracker.ViewModel
                 {
                     _isLocateStationChecked = value;
                     IsStationListLoaded = value;
+                    EnableListView = false;
+                    ButtonText = "Find Services";
                     if (_isLocateStationChecked)
                     {
                         StationOptions = new ObservableCollection<string>(_stationNames);
@@ -134,7 +148,6 @@ namespace iRailTracker.ViewModel
             }
         }
 
-        // Property to determine if 'Search for Station' is selected
         public bool IsStationListLoaded
         {
             get => _isStationListLoaded;
@@ -183,9 +196,15 @@ namespace iRailTracker.ViewModel
             {
                 if (_selectedStation != value)
                 {
+                    ButtonText = "Find Services";
+                    EnableListView = false;
                     _selectedStation = value;
                     OnPropertyChanged();
                     // Optionally, update other properties or logic based on the selected station
+                }
+                else
+                {
+                    ButtonText = "Refresh Journeys";
                 }
             }
         }
@@ -226,15 +245,17 @@ namespace iRailTracker.ViewModel
                 {
                     NoJourneyFound = false;
                     EnableListView = true;
+                    ButtonText = "Refresh Journeys";
+                    journeyList.Sort((x, y) => x.Duein.CompareTo(y.Duein));
                     TrainJourneys = new ObservableCollection<TrainJourney>(
                     journeyList.Select(journey => new TrainJourney
                     {
                         Origin = journey.Origin,
                         Destination = journey.Destination,
                         CurrentStatus = !string.IsNullOrEmpty(journey.Lastlocation) ? journey.Lastlocation: journey.Status,
-                        DueIn = journey.Duein.ToString() + " min",
+                        DueIn = $"{journey.Duein} min{(journey.Duein > 1 ? "s" : "")}",
                         ExpectedArrival = DateTime.ParseExact(journey.Exparrival, "HH:mm", null).ToString("hh:mm tt").ToLower(),
-                        Late = journey.Late.ToString() + " min"
+                        Late = $"{journey.Late} min{(journey.Late > 1 ? "s" : "")}"      
                     })
                     );
                 }
@@ -242,6 +263,7 @@ namespace iRailTracker.ViewModel
                 {
                     EnableListView = false;
                     NoJourneyFound = true;
+                    ButtonText = "Find Services";
                     NoJourneyMsg = $"Currently, there are no journeys available for {_selectedStation} station.";
                 }
                 RefreshTime = $"Current Status as of {DateTime.Now.ToString("hh:mm tt")}";
@@ -273,6 +295,7 @@ namespace iRailTracker.ViewModel
                         StationOptions = new ObservableCollection<string>(stationList);
                         IsStationListLoaded = true;
                         HideSearchButton = false;
+                        ButtonText = "Find Services";
                     }
                 }
             }

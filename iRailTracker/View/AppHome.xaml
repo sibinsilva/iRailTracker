@@ -7,15 +7,16 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="0.2*"/>
+            <RowDefinition Height="0.28*"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
         <!-- First Row: VerticalStackLayout with RadioButtons and Entry/Search Button -->
         <Grid Grid.Row="0" Padding="10">
             <Grid.RowDefinitions>
-                <RowDefinition/>
-                <RowDefinition/>
+                <RowDefinition Height="8*"/>
+                <RowDefinition Height="3*"/>
+                <RowDefinition Height="2*"/>
             </Grid.RowDefinitions>
 
             <Grid Grid.Row="0" Grid.ColumnSpan="2">
@@ -61,10 +62,13 @@
             <Button Text="Search Stations" HorizontalOptions="Center" VerticalOptions="Center" 
                     WidthRequest="150" HeightRequest="50" 
                     IsVisible="{Binding HideSearchButton}" 
-                    Command="{Binding SearchCommand}" Grid.Row="2" Grid.Column="0"/>
+                    Command="{Binding SearchCommand}" Grid.Row="1" Grid.Column="0"/>
 
             <!-- Loader -->
-            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" VerticalOptions="Center" HorizontalOptions="End" Grid.Row="2" Grid.Column="2"/>
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" VerticalOptions="Center" HorizontalOptions="End" Grid.Row="1" Grid.Column="2"/>
+
+            <Label Text="{Binding RefreshTime}" IsVisible="{Binding IsStationListLoaded}" Grid.Row="2" Grid.ColumnSpan="2"/>
+
         </Grid>
 
         <!-- Second Row: StackLayout with ListView -->
@@ -75,7 +79,7 @@
             </Grid.RowDefinitions>
 
             <!-- Header Grid -->
-            <Grid Grid.Row="0" Padding="10" VerticalOptions="Start" HorizontalOptions="FillAndExpand">
+            <Grid Grid.Row="0" VerticalOptions="Start" HorizontalOptions="FillAndExpand">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="*" />
@@ -85,31 +89,31 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <Frame BorderColor="White" BackgroundColor="Transparent" Padding="0" Grid.Column="0" HasShadow="False">
+                <Border Stroke="White" StrokeThickness="1" BackgroundColor="Transparent" Padding="0" Grid.Column="0">
                     <Label Text="Origin" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center" />
-                </Frame>
-                <Frame BorderColor="White" BackgroundColor="Transparent" Padding="0" Grid.Column="1" HasShadow="False">
+                </Border>
+                <Border Stroke="White" StrokeThickness="1" BackgroundColor="Transparent" Padding="0" Grid.Column="1">
                     <Label Text="Destination" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center" />
-                </Frame>
-                <Frame BorderColor="White" BackgroundColor="Transparent" Padding="0" Grid.Column="2" HasShadow="False">
-                    <Label Text="Status" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center" />
-                </Frame>
-                <Frame BorderColor="White" BackgroundColor="Transparent" Padding="0" Grid.Column="3" HasShadow="False">
-                    <Label Text="Due In" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center" />
-                </Frame>
-                <Frame BorderColor="White" BackgroundColor="Transparent" Padding="0" Grid.Column="4" HasShadow="False">
-                    <Label Text="Arrival" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center" />
-                </Frame>
-                <Frame BorderColor="White" BackgroundColor="Transparent" Padding="0" Grid.Column="5" HasShadow="False">
-                    <Label Text="Late" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center" />
-                </Frame>
+                </Border>
+                <Border Stroke="White" StrokeThickness="1" BackgroundColor="Transparent" Padding="15" Grid.Column="2">
+                    <Label Text="Current Status" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center" />
+                </Border>
+                <Border Stroke="White" StrokeThickness="1" BackgroundColor="Transparent" Padding="0" Grid.Column="3">
+                    <Label Text="Arriving In" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center" />
+                </Border>
+                <Border Stroke="White" StrokeThickness="1" BackgroundColor="Transparent" Padding="10" Grid.Column="4">
+                    <Label Text="Expected Arrival Time" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center" />
+                </Border>
+                <Border Stroke="White" StrokeThickness="1" BackgroundColor="Transparent" Padding="5" Grid.Column="5">
+                    <Label Text="Delayed by" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center" />
+                </Border>
             </Grid>
 
             <!-- CollectionView for Data -->
-            <CollectionView BackgroundColor="#9880e5" Grid.Row="1" VerticalOptions="FillAndExpand" HorizontalOptions="FillAndExpand" ItemsSource="{Binding TrainJourneys}">
+            <CollectionView Grid.Row="1" VerticalOptions="FillAndExpand" HorizontalOptions="FillAndExpand" ItemsSource="{Binding TrainJourneys}">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
-                        <Grid Padding="10">
+                        <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="*" />
@@ -119,24 +123,24 @@
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
 
-                            <Frame BorderColor="White" BackgroundColor="Transparent" Padding="0" Grid.Column="0" HasShadow="False">
-                                <Label Text="{Binding Origin}" VerticalOptions="Center" HorizontalOptions="Center" Padding="5" />
-                            </Frame>
-                            <Frame BorderColor="White" BackgroundColor="Transparent" Padding="0" Grid.Column="1" HasShadow="False">
-                                <Label Text="{Binding Destination}" VerticalOptions="Center" HorizontalOptions="Center" Padding="5" />
-                            </Frame>
-                            <Frame BorderColor="White" BackgroundColor="Transparent" Padding="0" Grid.Column="2" HasShadow="False">
+                            <Border Stroke="White" StrokeThickness="1" BackgroundColor="Transparent" Padding="0" Grid.Column="0">
+                                <Label Text="{Binding Origin}" VerticalOptions="Center" HorizontalOptions="Center" Padding="10" />
+                            </Border>
+                            <Border Stroke="White" StrokeThickness="1" BackgroundColor="Transparent" Padding="0" Grid.Column="1">
+                                <Label Text="{Binding Destination}" VerticalOptions="Center" HorizontalOptions="Center" Padding="10" />
+                            </Border>
+                            <Border Stroke="White" StrokeThickness="1" BackgroundColor="Transparent" Padding="0" Grid.Column="2">
                                 <Label Text="{Binding CurrentStatus}" VerticalOptions="Center" HorizontalOptions="Center" Padding="5" />
-                            </Frame>
-                            <Frame BorderColor="White" BackgroundColor="Transparent" Padding="0" Grid.Column="3" HasShadow="False">
-                                <Label Text="{Binding DueIn}" VerticalOptions="Center" HorizontalOptions="Center" Padding="5" />
-                            </Frame>
-                            <Frame BorderColor="White" BackgroundColor="Transparent" Padding="0" Grid.Column="4" HasShadow="False">
-                                <Label Text="{Binding ExpectedArrival}" VerticalOptions="Center" HorizontalOptions="Center" Padding="5" />
-                            </Frame>
-                            <Frame BorderColor="White" BackgroundColor="Transparent" Padding="0" Grid.Column="5" HasShadow="False">
-                                <Label Text="{Binding Late}" VerticalOptions="Center" HorizontalOptions="Center" Padding="5" />
-                            </Frame>
+                            </Border>
+                            <Border Stroke="White" StrokeThickness="1" BackgroundColor="Transparent" Padding="0" Grid.Column="3">
+                                <Label Text="{Binding DueIn}" VerticalOptions="Center" HorizontalOptions="Center" Padding="0" />
+                            </Border>
+                            <Border Stroke="White" StrokeThickness="1" BackgroundColor="Transparent" Padding="0" Grid.Column="4">
+                                <Label Text="{Binding ExpectedArrival}" VerticalOptions="Center" HorizontalOptions="Center" Padding="0" />
+                            </Border>
+                            <Border Stroke="White" StrokeThickness="1" BackgroundColor="Transparent" Padding="0" Grid.Column="5">
+                                <Label Text="{Binding Late}" VerticalOptions="Center" HorizontalOptions="Center" Padding="0" />
+                            </Border>
                         </Grid>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>

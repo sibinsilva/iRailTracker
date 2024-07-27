@@ -24,6 +24,7 @@ namespace iRailTracker.ViewModel
         private bool _noJourneys;
         private string _selectedStation;
         private string _noJourneyMsg;
+        private string _refreshTime;
 
         public AppHomeViewModel(DataService<List<Station>> stationListService, DataService<Settings> settingsService)
         {
@@ -53,6 +54,16 @@ namespace iRailTracker.ViewModel
             set
             {
                 _noJourneyMsg = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string RefreshTime
+        {
+            get => _refreshTime;
+            set
+            {
+                _refreshTime = value;
                 OnPropertyChanged();
             }
         }
@@ -220,10 +231,10 @@ namespace iRailTracker.ViewModel
                     {
                         Origin = journey.Origin,
                         Destination = journey.Destination,
-                        CurrentStatus = journey.Status,
-                        DueIn = journey.Duein.ToString(),
-                        ExpectedArrival = journey.Exparrival,
-                        Late = journey.Late.ToString()
+                        CurrentStatus = !string.IsNullOrEmpty(journey.Lastlocation) ? journey.Lastlocation: journey.Status,
+                        DueIn = journey.Duein.ToString() + " min",
+                        ExpectedArrival = DateTime.ParseExact(journey.Exparrival, "HH:mm", null).ToString("hh:mm tt").ToLower(),
+                        Late = journey.Late.ToString() + " min"
                     })
                     );
                 }
@@ -233,6 +244,7 @@ namespace iRailTracker.ViewModel
                     NoJourneyFound = true;
                     NoJourneyMsg = $"Currently, there are no journeys available for {_selectedStation} station.";
                 }
+                RefreshTime = $"Current Status as of {DateTime.Now.ToString("hh:mm tt")}";
             }
             catch(Exception ex)
             {

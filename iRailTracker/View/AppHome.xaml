@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="iRailTracker.View.AppHome"
              xmlns:vm="clr-namespace:iRailTracker.ViewModel"
-             Title="AppHome">
+             Title="iRailTracker">
 
     <Grid>
         <Grid.RowDefinitions>
@@ -21,7 +21,7 @@
 
             <Grid Grid.Row="0" Grid.ColumnSpan="2">
                 <!-- Label -->
-                <Label Text="Please select an option to begin." FontSize="Medium" HorizontalOptions="Start"/>
+                <Label Text="Please choose an option to begin." FontSize="Large" HorizontalOptions="Start"/>
 
                 <!-- RadioButtons -->
                 <StackLayout Orientation="Horizontal" Spacing="70" Margin="0,20,20,0" HorizontalOptions="Start">
@@ -53,7 +53,7 @@
 
                 <!-- Search Button -->
                 <Button Text="{Binding ButtonText}" VerticalOptions="Center"  HorizontalOptions="End"
-                    WidthRequest="150" HeightRequest="50" 
+                    WidthRequest="150" HeightRequest="50" FontSize="Medium"
                     IsVisible="{Binding IsStationListLoaded}" 
                     Command="{Binding SearchServiceCommand}" Grid.Column="1" />
             </Grid>

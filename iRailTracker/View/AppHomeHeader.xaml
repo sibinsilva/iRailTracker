@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="iRailTracker.View.AppHomeHeader"
+             xmlns:vm="clr-namespace:iRailTracker.ViewModel">
+
+    <Grid Grid.Row="0" Padding="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="8*"/>
+            <RowDefinition Height="3*"/>
+            <RowDefinition Height="2*"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Grid.ColumnSpan="2">
+            <!-- Label -->
+            <Label Text="Please choose an option to begin." FontSize="Large" HorizontalOptions="Start"/>
+
+            <!-- RadioButtons -->
+            <StackLayout Orientation="Horizontal" Spacing="70" Margin="0,20,20,0" HorizontalOptions="Start">
+                <RadioButton x:Name="Find_Station" FontSize="Medium" 
+          Content="Locate Nearby Station" IsChecked="{Binding IsFindNearbyStationChecked}" HorizontalOptions="StartAndExpand"/>
+                <RadioButton x:Name="Search_Station" FontSize="Medium" 
+          Content="Pick a Train Station" IsChecked="{Binding IsLocateStationChecked}" HorizontalOptions="EndAndExpand"/>
+            </StackLayout>
+        </Grid>
+
+        <!-- Entry and Search Button -->
+        <Grid Grid.Row="1" Grid.ColumnSpan="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="5*"/>
+                <ColumnDefinition Width="3*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <!-- Station Picker -->
+            <Picker x:Name="stationPicker" 
+                 Title="Select a station" 
+                 ItemsSource="{Binding StationOptions}" 
+                 SelectedItem="{Binding SelectedStation, Mode=TwoWay}"
+                 IsVisible="{Binding IsStationListLoaded}" 
+                 IsEnabled="{Binding IsStationListLoaded}" 
+                 VerticalOptions="Center" 
+                 HorizontalOptions="FillAndExpand"
+                 FontSize="Large"
+                 Grid.Column="0"/>
+
+            <!-- Search Button -->
+            <Button Text="{Binding ButtonText}" VerticalOptions="Center"  HorizontalOptions="End"
+             WidthRequest="150" HeightRequest="50" FontSize="Medium"
+             IsVisible="{Binding IsStationListLoaded}" 
+             Command="{Binding SearchServiceCommand}" Grid.Column="1" />
+        </Grid>
+
+        <!-- Search Button -->
+        <Button Text="Search Stations" HorizontalOptions="Center" VerticalOptions="Center" 
+             WidthRequest="150" HeightRequest="50" 
+             IsVisible="{Binding HideSearchButton}" 
+             Command="{Binding SearchCommand}" Grid.Row="1" Grid.Column="0"/>
+
+        <!-- Loader -->
+        <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" VerticalOptions="Center" HorizontalOptions="End" Grid.Row="1" Grid.Column="2"/>
+
+        <Label Text="{Binding RefreshTime}" IsVisible="{Binding EnableListView}" Grid.Row="2" Grid.ColumnSpan="2"/>
+
+    </Grid>
+</ContentView>

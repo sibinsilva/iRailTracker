@@ -288,8 +288,8 @@ namespace iRailTracker.ViewModel
                 IsBusy = true;
                 if (IsFindNearbyStationChecked)
                 {
-                    GooglePlacesService _placesService = new GooglePlacesService(_settings);
-                    var stationList = await _placesService.GetLocationAsync(ShowError);
+                    PlacesService _placesService = new PlacesService(_settings,_stationListService);
+                    var stationList = await _placesService.GetNearbyStationList(ShowError);
                     if (stationList.Count > 0)
                     {
                         StationOptions = new ObservableCollection<string>(stationList);

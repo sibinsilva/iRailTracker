@@ -200,7 +200,6 @@ namespace iRailTracker.ViewModel
                     EnableListView = false;
                     _selectedStation = value;
                     OnPropertyChanged();
-                    // Optionally, update other properties or logic based on the selected station
                 }
                 else
                 {
@@ -238,7 +237,7 @@ namespace iRailTracker.ViewModel
                     stationNames.Any(name => station.StationDesc.Contains(name, StringComparison.OrdinalIgnoreCase))
                 );
 
-                var stationCode = matchingStation != null ? matchingStation.StationCode : null;
+                var stationCode = matchingStation != null ? matchingStation.StationCode : "";
                 StationService trainService = new StationService();
                 var journeyList = await trainService.GetTrainServicesAsync(_settings.Data, stationCode, ShowError);
                 if (journeyList.Count > 0)

@@ -6,19 +6,25 @@
              xmlns:views="clr-namespace:iRailTracker.View"
              Title="iRailTracker">
 
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="0.28*"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+    <Grid RowDefinitions="Auto,*">
 
-        <!-- First Row: Grid with RadioButtons and Search Button -->
+        <!-- HEADER -->
         <views:AppHomeHeader Grid.Row="0" />
-        <!-- Second Row: Grid with ListView -->
+
+        <!-- LIST -->
         <views:AppHomeListView Grid.Row="1" />
 
-        <Grid Grid.Row="1" IsVisible="{Binding NoJourneyFound}">
-            <Label Text="{Binding NoJourneyMsg}" FontSize="Large" />
+        <!-- EMPTY / NO DATA OVERLAY -->
+        <Grid Grid.Row="1"
+              IsVisible="{Binding NoJourneyFound}"
+              BackgroundColor="Transparent">
+
+            <Label Text="{Binding NoJourneyMsg}"
+                   FontSize="Large"
+                   HorizontalOptions="Center"
+                   VerticalOptions="Center"
+                   HorizontalTextAlignment="Center" />
         </Grid>
+
     </Grid>
 </ContentPage>

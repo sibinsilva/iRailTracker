@@ -26,22 +26,25 @@
                        FontAttributes="Bold"
                        HorizontalOptions="Start" />
 
-                <StackLayout Orientation="Horizontal"
-                             Spacing="24"
-                             HorizontalOptions="Fill">
+                <Grid ColumnDefinitions="*,*"
+                      ColumnSpacing="24"
+                      HorizontalOptions="Fill">
 
                     <RadioButton x:Name="Find_Station"
+                                 Grid.Column="0"
                                  Content="Locate Nearby Station"
                                  FontSize="Medium"
                                  IsChecked="{Binding IsFindNearbyStationChecked}"
-                                 HorizontalOptions="StartAndExpand"/>
+                                 HorizontalOptions="Start" />
 
                     <RadioButton x:Name="Search_Station"
+                                 Grid.Column="1"
                                  Content="Pick a Train Station"
                                  FontSize="Medium"
                                  IsChecked="{Binding IsLocateStationChecked}"
-                                 HorizontalOptions="StartAndExpand"/>
-                </StackLayout>
+                                 HorizontalOptions="Start" />
+
+                </Grid>
 
             </StackLayout>
 
@@ -57,7 +60,7 @@
                         IsVisible="{Binding IsStationListLoaded}"
                         IsEnabled="{Binding IsStationListLoaded}"
                         FontSize="Medium"
-                        HorizontalOptions="FillAndExpand"
+                        HorizontalOptions="Fill"
                         VerticalOptions="Center"
                         Grid.Column="0"/>
 

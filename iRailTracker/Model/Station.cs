@@ -7,16 +7,16 @@ namespace iRailTracker.Model
     public class StationCollection
     {
         [XmlElement("objStation")]
-        public List<Station> Stations { get; set; }
+        public List<Station> Stations { get; set; } = new List<Station>();
     }
 
     public class Station
     {
         [XmlElement("StationDesc")]
-        public string StationDesc { get; set; }
+        public string StationDesc { get; set; } = string.Empty;
 
         [XmlElement("StationAlias")]
-        public string StationAlias { get; set; }
+        public string StationAlias { get; set; } = string.Empty;
 
         [XmlElement("StationLatitude")]
         public double StationLatitude { get; set; }
@@ -25,7 +25,7 @@ namespace iRailTracker.Model
         public double StationLongitude { get; set; }
 
         [XmlElement("StationCode")]
-        public string StationCode { get; set; }
+        public string StationCode { get; set; } = string.Empty;
 
         [XmlElement("StationId")]
         public int StationId { get; set; }

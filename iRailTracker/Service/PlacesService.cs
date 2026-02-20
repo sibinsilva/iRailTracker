@@ -79,12 +79,13 @@ namespace iRailTracker.Service
 
             // Find the nearest coordinates
             var nearestCoordinates = stationCoordinates
-                .Select(sc => new { sc.Station, Distance = CalculateDistance(target, sc.Coordinate) })
-                .OrderBy(sc => sc.Distance)
-                .Where(sc => uniqueCoordinates.Add((sc.Station.StationLatitude, sc.Station.StationLongitude)))
-                .Take(5)
-                .Select(sc => sc.Station.StationDesc)
-                .ToList();
+                    .OrderBy(sc => CalculateDistance(target, sc.Coordinate))
+                    .Where(sc => uniqueCoordinates.Add((sc.Station.StationLatitude, sc.Station.StationLongitude)))
+                    .Select(sc => sc.Station.StationDesc)
+                    .Where(desc => !string.IsNullOrWhiteSpace(desc))
+                    .Take(5)
+                    .Select(desc => desc!) 
+                    .ToList();
 
             return nearestCoordinates;
         }

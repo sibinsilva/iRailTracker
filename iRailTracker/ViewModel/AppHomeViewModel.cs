@@ -9,6 +9,8 @@ namespace iRailTracker.ViewModel
 {
     public class AppHomeViewModel : INotifyPropertyChanged
     {
+        #region Fields
+
         private readonly DataService<List<Station>> _stationListService;
         private readonly DataService<Settings> _settings;
         private ObservableCollection<string> _stationOptions;
@@ -27,79 +29,71 @@ namespace iRailTracker.ViewModel
         private string _refreshTime;
         private string _buttonText;
 
+        #endregion
+
+        #region Constructor
+
         public AppHomeViewModel(DataService<List<Station>> stationListService, DataService<Settings> settingsService)
         {
             _stationListService = stationListService;
             _settings = settingsService;
+
             stationList = _stationListService.Data;
+
             var stationNames = stationList.Select(station => station.StationDesc)
                                           .Distinct()
                                           .OrderBy(name => name)
                                           .ToList();
+
             _stationNames = stationNames;
             _stationOptions = new ObservableCollection<string>(stationNames);
+            _trainJourneys = new ObservableCollection<TrainJourney>();
+            _selectedStation = string.Empty;
+            _noJourneyMsg = string.Empty;
+            _refreshTime = string.Empty;
+            _buttonText = "Find Services";
         }
+
+        #endregion
+
+        #region Properties
 
         public bool IsBusy
         {
             get => _isBusy;
-            set
-            {
-                _isBusy = value;
-                OnPropertyChanged();
-            }
+            set { _isBusy = value; OnPropertyChanged(); }
         }
+
         public string NoJourneyMsg
         {
             get => _noJourneyMsg;
-            set
-            {
-                _noJourneyMsg = value;
-                OnPropertyChanged();
-            }
+            set { _noJourneyMsg = value; OnPropertyChanged(); }
         }
 
         public string RefreshTime
         {
             get => _refreshTime;
-            set
-            {
-                _refreshTime = value;
-                OnPropertyChanged();
-            }
+            set { _refreshTime = value; OnPropertyChanged(); }
         }
 
         public string ButtonText
         {
             get => _buttonText;
-            set
-            {
-                _buttonText = value;
-                OnPropertyChanged();
-            }
+            set { _buttonText = value; OnPropertyChanged(); }
         }
 
         public bool NoJourneyFound
         {
             get => _noJourneys;
-            set
-            {
-                _noJourneys = value;
-                OnPropertyChanged();
-            }
+            set { _noJourneys = value; OnPropertyChanged(); }
         }
 
         public bool EnableListView
         {
             get => _enableListView;
-            set
-            {
-                _enableListView = value;
-                OnPropertyChanged();
-            }
+            set { _enableListView = value; OnPropertyChanged(); }
         }
 
-        // Property to determine if 'Locate Nearby Station' is selected
         public bool IsFindNearbyStationChecked
         {
             get => _isFindNearbyStationChecked;
@@ -107,14 +101,14 @@ namespace iRailTracker.ViewModel
             {
                 if (_isFindNearbyStationChecked != value)
                 {
-                    _isFindNearbyStationChecked = value;                                                                                                                                                    
+                    _isFindNearbyStationChecked = value;
                     EnableListView = false;
                     HideSearchButton = value;
                     OnPropertyChanged();
                 }
             }
         }
-        // Property to determine if 'Pick a Train Station' is selected
+
         public bool IsLocateStationChecked
         {
             get => _isLocateStationChecked;
@@ -126,10 +120,12 @@ namespace iRailTracker.ViewModel
                     IsStationListLoaded = value;
                     EnableListView = false;
                     ButtonText = "Find Services";
+
                     if (_isLocateStationChecked)
                     {
                         StationOptions = new ObservableCollection<string>(_stationNames);
                     }
+
                     OnPropertyChanged();
                 }
             }
@@ -161,7 +157,6 @@ namespace iRailTracker.ViewModel
             }
         }
 
-        // Property for the dropdown options
         public ObservableCollection<string> StationOptions
         {
             get => _stationOptions;
@@ -188,7 +183,6 @@ namespace iRailTracker.ViewModel
             }
         }
 
-        // Property for the selected item in the dropdown
         public string SelectedStation
         {
             get => _selectedStation;
@@ -208,11 +202,23 @@ namespace iRailTracker.ViewModel
             }
         }
 
-        public event EventHandler<string> ErrorOccurred;
+        #endregion
 
-        // Command for the search button
+        #region Events
+
+        public event EventHandler<string>? ErrorOccurred;
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        #endregion
+
+        #region Commands
+
         public ICommand SearchCommand => new Command(async () => await ExecuteLocationSearch());
         public ICommand SearchServiceCommand => new Command(async () => await ExecuteTrainServiceSearch());
+
+        #endregion
+
+        #region Private Methods
 
         private async Task ExecuteTrainServiceSearch()
         {
@@ -222,41 +228,46 @@ namespace iRailTracker.ViewModel
                 return;
             }
 
-            if (IsBusy)
-                return;
+            if (IsBusy) return;
 
             try
             {
                 IsBusy = true;
+
                 var stationNames = _selectedStation
-                                    .Split(new[] { '&' }, StringSplitOptions.RemoveEmptyEntries)
-                                    .Select(s => s.Trim())
-                                    .ToList();
+                    .Split(new[] { '&' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(s => s.Trim())
+                    .ToList();
 
                 var matchingStation = stationList.FirstOrDefault(station =>
-                    stationNames.Any(name => station.StationDesc.Contains(name, StringComparison.OrdinalIgnoreCase))
-                );
+                    stationNames.Any(name => station.StationDesc.Contains(name, StringComparison.OrdinalIgnoreCase)));
 
                 var stationCode = matchingStation != null ? matchingStation.StationCode : "";
+
                 StationService trainService = new StationService();
                 var journeyList = await trainService.GetTrainServicesAsync(_settings.Data, stationCode, ShowError);
+
                 if (journeyList.Count > 0)
                 {
                     NoJourneyFound = false;
                     EnableListView = true;
                     ButtonText = "Refresh Journeys";
+
                     journeyList.Sort((x, y) => x.Duein.CompareTo(y.Duein));
+
                     TrainJourneys = new ObservableCollection<TrainJourney>(
-                    journeyList.Select(journey => new TrainJourney
-                    {
-                        Origin = journey.Origin,
-                        Destination = journey.Destination,
-                        CurrentStatus = !string.IsNullOrEmpty(journey.Lastlocation) ? journey.Lastlocation: journey.Status,
-                        DueIn = $"{journey.Duein} min{(journey.Duein > 1 ? "s" : "")}",
-                        ExpectedArrival = DateTime.ParseExact(journey.Exparrival, "HH:mm", null).ToString("hh:mm tt").ToLower(),
-                        Late = $"{journey.Late} min{(journey.Late > 1 ? "s" : "")}"      
-                    })
-                    );
+                        journeyList.Select(journey => new TrainJourney
+                        {
+                            Origin = journey.Origin,
+                            Destination = journey.Destination,
+                            CurrentStatus = !string.IsNullOrEmpty(journey.Lastlocation)
+                                ? journey.Lastlocation
+                                : journey.Status,
+                            DueIn = $"{journey.Duein} min{(journey.Duein > 1 ? "s" : "")}",
+                            ExpectedArrival = DateTime.ParseExact(journey.Exparrival, "HH:mm", null)
+                                .ToString("hh:mm tt").ToLower(),
+                            Late = $"{journey.Late} min{(journey.Late > 1 ? "s" : "")}"
+                        }));
                 }
                 else
                 {
@@ -265,9 +276,10 @@ namespace iRailTracker.ViewModel
                     ButtonText = "Find Services";
                     NoJourneyMsg = $"Currently, there are no journeys available for {_selectedStation} station.";
                 }
-                RefreshTime = $"Current Status as of {DateTime.Now.ToString("hh:mm tt")}";
+
+                RefreshTime = $"Current Status as of {DateTime.Now:hh:mm tt}";
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 ShowError($"An unexpected error occurred while searching for train services: {ex.Message}");
             }
@@ -279,16 +291,17 @@ namespace iRailTracker.ViewModel
 
         private async Task ExecuteLocationSearch()
         {
-            if (IsBusy)
-                return;
+            if (IsBusy) return;
 
             try
             {
                 IsBusy = true;
+
                 if (IsFindNearbyStationChecked)
                 {
-                    PlacesService _placesService = new PlacesService(_settings,_stationListService);
+                    PlacesService _placesService = new PlacesService(_settings, _stationListService);
                     var stationList = await _placesService.GetNearbyStationList(ShowError);
+
                     if (stationList.Count > 0)
                     {
                         StationOptions = new ObservableCollection<string>(stationList);
@@ -313,12 +326,11 @@ namespace iRailTracker.ViewModel
             ErrorOccurred?.Invoke(this, message);
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
-
-
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = "")
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
+        #endregion
     }
 }

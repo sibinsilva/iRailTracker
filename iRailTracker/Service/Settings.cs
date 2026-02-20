@@ -8,9 +8,9 @@ namespace iRailTracker.Service
 {
     public class Settings
     {
-        private string getAllStationsUrl;
-        private string getNearbyStationUrl;
-        private string getServiceByStationCodeURL;
+        private string getAllStationsUrl = string.Empty;
+        private string getNearbyStationUrl = string.Empty;
+        private string getServiceByStationCodeURL = string.Empty;
 
         public string GetAllStationsUrl { get => getAllStationsUrl; set => getAllStationsUrl = value; }
         public string GetNearbyStationUrl { get => getNearbyStationUrl; set => getNearbyStationUrl = value; }

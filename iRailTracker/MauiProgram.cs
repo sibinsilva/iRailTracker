@@ -28,15 +28,18 @@ namespace iRailTracker
             builder.Services.AddTransient<AppHomeViewModel>();
             var a = Assembly.GetExecutingAssembly();
             using var stream = a.GetManifestResourceStream("iRailTracker.appsettings.json");
+            if (stream == null)
+                throw new InvalidOperationException("Config stream is null.");
+
             var config = new ConfigurationBuilder()
-            .AddJsonStream(stream)
-            .Build();
+                .AddJsonStream(stream)
+                .Build();
             builder.Configuration.AddConfiguration(config);
 
             var app = builder.Build();
             Current = app.Services;
             return app;
         }
-        public static IServiceProvider Current { get; private set; }
+        public static IServiceProvider? Current { get; private set; }
     }
 }

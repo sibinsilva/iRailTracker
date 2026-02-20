@@ -8,11 +8,11 @@ namespace iRailTracker.Model
 {
     public class TrainJourney
     {
-        public string Origin { get; set; }
-        public string Destination { get; set; }
-        public string CurrentStatus { get; set; }
-        public string DueIn { get; set; }
-        public string ExpectedArrival { get; set; }
-        public string Late { get; set; }
+        public string Origin { get; set; } = string.Empty;
+        public string Destination { get; set; } = string.Empty;
+        public string CurrentStatus { get; set; } = string.Empty;
+        public string DueIn { get; set; } = string.Empty;
+        public string ExpectedArrival { get; set; } = string.Empty;
+        public string Late { get; set; } = string.Empty;
     }
 }

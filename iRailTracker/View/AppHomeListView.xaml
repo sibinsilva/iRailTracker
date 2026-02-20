@@ -19,8 +19,8 @@
         <!-- CARD LIST -->
         <CollectionView Grid.Row="1"
                         ItemsSource="{Binding TrainJourneys}"
-                        VerticalOptions="FillAndExpand"
-                        HorizontalOptions="FillAndExpand"
+                        VerticalOptions="Fill"
+                        HorizontalOptions="Fill"
                         Margin="6">
 
             <CollectionView.ItemTemplate>

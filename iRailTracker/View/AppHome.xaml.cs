@@ -1,4 +1,3 @@
-using iRailTracker.Service;
 using iRailTracker.ViewModel;
 
 namespace iRailTracker.View;
@@ -9,14 +8,24 @@ public partial class AppHome : ContentPage
     public AppHome()
     {
         InitializeComponent();
-        _viewModel = MauiProgram.Current.GetService<AppHomeViewModel>();
+        var serviceProvider = MauiProgram.Current;
+        if (serviceProvider == null)
+        {
+            throw new InvalidOperationException("Service provider is not initialized.");
+        }
+        var viewModel = serviceProvider.GetService<AppHomeViewModel>();
+        if (viewModel == null)
+        {
+            throw new InvalidOperationException("AppHomeViewModel service is not registered.");
+        }
+        _viewModel = viewModel;
         BindingContext = _viewModel;
         _viewModel.ErrorOccurred += OnErrorOccurred;
     }
 
-    private async void OnErrorOccurred(object sender, string errorMessage)
+    private async void OnErrorOccurred(object? sender, string errorMessage)
     {
-        await DisplayAlert("Error", errorMessage, "OK");
+        await DisplayAlertAsync("Error", errorMessage, "OK");
     }
 
     protected override void OnDisappearing()

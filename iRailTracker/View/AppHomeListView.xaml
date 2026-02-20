@@ -80,10 +80,10 @@
                             </Grid>
 
                             <!-- DELAY -->
-                            <Label Text="{Binding Late, StringFormat='Delay: {0}'}"
+                            <Label Text="{Binding LateDisplay}"
                                    FontSize="Small"
                                    HorizontalOptions="End"
-                                   TextColor="OrangeRed" />
+                                   TextColor="{Binding LateColor}" />
 
                         </VerticalStackLayout>
 

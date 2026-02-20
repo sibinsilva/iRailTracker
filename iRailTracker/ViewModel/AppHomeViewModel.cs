@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
+using Microsoft.Maui.Graphics;
 
 namespace iRailTracker.ViewModel
 {
@@ -266,7 +267,13 @@ namespace iRailTracker.ViewModel
                             DueIn = $"{journey.Duein} min{(journey.Duein > 1 ? "s" : "")}",
                             ExpectedArrival = DateTime.ParseExact(journey.Exparrival, "HH:mm", null)
                                 .ToString("hh:mm tt").ToLower(),
-                            Late = $"{journey.Late} min{(journey.Late > 1 ? "s" : "")}"
+                            Late = Math.Abs(journey.Late).ToString(),
+                            LateDisplay = journey.Late == 0
+                            ? "On time"
+                            : journey.Late < 0
+                                        ? $"Early by {Math.Abs(journey.Late)} min{(Math.Abs(journey.Late) > 1 ? "s" : "")}"
+                                        : $"Delayed by {journey.Late} min{(journey.Late > 1 ? "s" : "")}",
+                            LateColor = journey.Late <= 0 ? Colors.Green : Colors.OrangeRed
                         }));
                 }
                 else

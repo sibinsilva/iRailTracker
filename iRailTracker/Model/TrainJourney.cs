@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace iRailTracker.Model
+﻿namespace iRailTracker.Model
 {
     public class TrainJourney
     {
@@ -14,5 +8,7 @@ namespace iRailTracker.Model
         public string DueIn { get; set; } = string.Empty;
         public string ExpectedArrival { get; set; } = string.Empty;
         public string Late { get; set; } = string.Empty;
+        public string LateDisplay { get; set; } = string.Empty;
+        public Color LateColor { get; set; } = Colors.OrangeRed;
     }
 }

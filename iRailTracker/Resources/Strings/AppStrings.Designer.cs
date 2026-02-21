@@ -106,6 +106,15 @@ namespace iRailTracker.Resources.Strings {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to ↓ Pull to Refresh.
+        /// </summary>
+        internal static string Refresh {
+            get {
+                return ResourceManager.GetString("Refresh", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Refresh Journeys.
         /// </summary>
         internal static string RefreshJourneys {

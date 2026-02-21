@@ -18,82 +18,88 @@
                IsVisible="False" />
 
         <!-- CARD LIST -->
-        <CollectionView Grid.Row="1"
+        <RefreshView Grid.Row="1"
+             IsRefreshing="{Binding IsRefreshing}"
+             Command="{Binding RefreshCommand}"
+             IsEnabled="{Binding EnableListView}">
+            <CollectionView Grid.Row="1"
                         ItemsSource="{Binding TrainJourneys}"
                         VerticalOptions="Fill"
                         HorizontalOptions="Fill"
-                        Margin="6">
+                        Margin="6"
+                        >
 
-            <CollectionView.ItemTemplate>
-                <DataTemplate>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
 
-                    <Border Stroke="#444"
+                        <Border Stroke="#444"
                             StrokeThickness="1"
                             Padding="14"
                             Margin="0,6"
                             BackgroundColor="#1E1E1E">
 
-                        <VerticalStackLayout Spacing="6">
+                            <VerticalStackLayout Spacing="6">
 
-                            <!-- ROUTE -->
-                            <Label FontSize="Medium"
+                                <!-- ROUTE -->
+                                <Label FontSize="Medium"
                                    FontAttributes="Bold"
                                    LineBreakMode="WordWrap">
-                                <Label.FormattedText>
-                                    <FormattedString>
-                                        <Span Text="{Binding Origin}" />
-                                        <Span Text=" → " />
-                                        <Span Text="{Binding Destination}" />
-                                    </FormattedString>
-                                </Label.FormattedText>
-                            </Label>
+                                    <Label.FormattedText>
+                                        <FormattedString>
+                                            <Span Text="{Binding Origin}" />
+                                            <Span Text=" → " />
+                                            <Span Text="{Binding Destination}" />
+                                        </FormattedString>
+                                    </Label.FormattedText>
+                                </Label>
 
-                            <!-- CURRENT STATUS -->
-                            <Label Text="{Binding CurrentStatus}"
+                                <!-- CURRENT STATUS -->
+                                <Label Text="{Binding CurrentStatus}"
                                    FontSize="Small"
                                    LineBreakMode="WordWrap"
                                    TextColor="#CCCCCC" />
 
-                            <!-- TIMING GRID -->
-                            <Grid ColumnDefinitions="*,*"
+                                <!-- TIMING GRID -->
+                                <Grid ColumnDefinitions="*,*"
                                   RowDefinitions="Auto,Auto"
                                   Margin="0,6,0,0">
 
-                                <Label Text="Arriving in"
+                                    <Label Text="Arriving in"
                                        FontSize="Small"
                                        TextColor="#AAAAAA" />
 
-                                <Label Text="{Binding DueIn}"
+                                    <Label Text="{Binding DueIn}"
                                        Grid.Column="1"
                                        HorizontalTextAlignment="End"
                                        FontSize="Small" />
 
-                                <Label Text="Expected"
+                                    <Label Text="Expected"
                                        Grid.Row="1"
                                        FontSize="Small"
                                        TextColor="#AAAAAA" />
 
-                                <Label Text="{Binding ExpectedArrival}"
+                                    <Label Text="{Binding ExpectedArrival}"
                                        Grid.Row="1"
                                        Grid.Column="1"
                                        HorizontalTextAlignment="End"
                                        FontSize="Small" />
-                            </Grid>
+                                </Grid>
 
-                            <!-- DELAY -->
-                            <Label Text="{Binding LateDisplay}"
+                                <!-- DELAY -->
+                                <Label Text="{Binding LateDisplay}"
                                    FontSize="Small"
                                    HorizontalOptions="End"
                                    TextColor="{Binding LateColor}" />
 
-                        </VerticalStackLayout>
+                            </VerticalStackLayout>
 
-                    </Border>
+                        </Border>
 
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
 
-        </CollectionView>
+            </CollectionView>
+        </RefreshView>
 
     </Grid>
 </ContentView>

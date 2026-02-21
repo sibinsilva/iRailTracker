@@ -95,6 +95,12 @@
                        IsVisible="{Binding EnableListView}"
                        FontSize="Small"
                        HorizontalOptions="Center"/>
+                <Label
+                        Text="{x:Static strings:AppStrings.Refresh}"
+                        FontSize="Micro"
+                        Opacity="0.6"
+                        HorizontalOptions="Center"
+                        IsVisible="{Binding EnableListView}" />
             </StackLayout>
 
         </Grid>

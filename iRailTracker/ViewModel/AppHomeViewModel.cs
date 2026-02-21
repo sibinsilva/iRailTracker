@@ -32,6 +32,10 @@ namespace iRailTracker.ViewModel
         private string _buttonText;
         private readonly Dictionary<string, (DateTime fetchedAt, List<StationData> data)> _journeyCache = new();
         private static readonly TimeSpan CacheDuration = TimeSpan.FromSeconds(60);
+        private ICommand? _refreshCommand;
+        private ICommand? _searchServiceCommand;
+        private readonly SemaphoreSlim _searchLock = new(1, 1);
+        private bool _isRefreshing;
         #endregion
 
         #region Constructor
@@ -191,16 +195,22 @@ namespace iRailTracker.ViewModel
             get => _selectedStation;
             set
             {
-                if (_selectedStation != value)
+                ButtonText = AppStrings.FindServices;
+                EnableListView = false;
+                _selectedStation = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool IsRefreshing
+        {
+            get => _isRefreshing;
+            set
+            {
+                if (_isRefreshing != value)
                 {
-                    ButtonText = AppStrings.FindServices;
-                    EnableListView = false;
-                    _selectedStation = value;
+                    _isRefreshing = value;
                     OnPropertyChanged();
-                }
-                else
-                {
-                    ButtonText = AppStrings.RefreshJourneys;
                 }
             }
         }
@@ -217,8 +227,8 @@ namespace iRailTracker.ViewModel
         #region Commands
 
         public ICommand SearchCommand => new Command(async () => await ExecuteLocationSearch());
-        public ICommand SearchServiceCommand => new Command(async () => await ExecuteTrainServiceSearch());
-
+        public ICommand SearchServiceCommand => _searchServiceCommand ??= new Command(async () => await ExecuteTrainServiceSearch());
+        public ICommand RefreshCommand => _refreshCommand ??= new Command(async () => await RefreshJourneys());
         #endregion
 
         #region Private Methods
@@ -231,10 +241,12 @@ namespace iRailTracker.ViewModel
                 return;
             }
 
-            if (IsBusy) return;
+            if (!await _searchLock.WaitAsync(0))
+                return;
 
             try
             {
+                //if (IsBusy) return;
                 IsBusy = true;
 
                 var stationNames = _selectedStation
@@ -272,7 +284,6 @@ namespace iRailTracker.ViewModel
                 {
                     NoJourneyFound = false;
                     EnableListView = true;
-                    ButtonText = AppStrings.RefreshJourneys;
 
                     journeyList.Sort((x, y) => x.Duein.CompareTo(y.Duein));
 
@@ -313,6 +324,7 @@ namespace iRailTracker.ViewModel
             finally
             {
                 IsBusy = false;
+                _searchLock.Release();
             }
         }
 
@@ -345,6 +357,54 @@ namespace iRailTracker.ViewModel
             finally
             {
                 IsBusy = false;
+            }
+        }
+
+        private async Task RefreshJourneys()
+        {
+            if (string.IsNullOrEmpty(SelectedStation))
+            {
+                IsRefreshing = false;
+                return;
+            }
+
+            try
+            {
+                IsRefreshing = true;
+                IsBusy = true;
+                //bypass cache on pull-to-refresh
+                ClearCacheForSelectedStation();
+                await ExecuteTrainServiceSearch();
+            }
+            catch (Exception ex)
+            {
+                ShowError(string.Format(AppMessages.TrainServiceError, ex.Message));
+            }
+            finally
+            {
+                IsBusy = false;
+                IsRefreshing = false;
+            }
+
+        }
+
+        private void ClearCacheForSelectedStation()
+        {
+            var stationNames = _selectedStation?
+                .Split(new[] { '&' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => s.Trim())
+                .ToList();
+
+            var matchingStation = stationList.FirstOrDefault(station =>
+                stationNames != null &&
+                stationNames.Any(name =>
+                    station.StationDesc.Contains(name, StringComparison.OrdinalIgnoreCase)));
+
+            var stationCode = matchingStation?.StationCode;
+
+            if (!string.IsNullOrEmpty(stationCode))
+            {
+                _journeyCache.Remove(stationCode);
             }
         }
 

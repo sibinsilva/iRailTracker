@@ -132,6 +132,9 @@
   <data name="PickTrainStation" xml:space="preserve">
     <value>Pick a Train Station</value>
   </data>
+  <data name="Refresh" xml:space="preserve">
+    <value>↓ Pull to Refresh</value>
+  </data>
   <data name="RefreshJourneys" xml:space="preserve">
     <value>Refresh Journeys</value>
   </data>

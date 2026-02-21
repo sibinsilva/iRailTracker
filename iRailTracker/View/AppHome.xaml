@@ -6,6 +6,14 @@
              xmlns:views="clr-namespace:iRailTracker.View"
              Title="iRailTracker">
 
+    <ContentPage.ToolbarItems>
+        <ToolbarItem
+            IconImageSource="settings.png"
+            Priority="0"
+            Order="Primary"
+            Command="{Binding OpenSettingsCommand}" />
+    </ContentPage.ToolbarItems>
+
     <Grid RowDefinitions="Auto,*">
 
         <!-- HEADER -->

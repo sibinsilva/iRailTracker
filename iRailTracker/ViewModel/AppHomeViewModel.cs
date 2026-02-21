@@ -1,15 +1,17 @@
-﻿using iRailTracker.Model;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using iRailTracker.Model;
+using iRailTracker.Resources.Strings;
 using iRailTracker.Service;
+using iRailTracker.View;
+using Microsoft.Maui.Graphics;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
-using Microsoft.Maui.Graphics;
-using iRailTracker.Resources.Strings;
 
 namespace iRailTracker.ViewModel
 {
-    public class AppHomeViewModel : INotifyPropertyChanged
+    public class AppHomeViewModel : BaseViewModel,IRecipient<AutoRefreshMessage>
     {
         #region Fields
 
@@ -36,12 +38,17 @@ namespace iRailTracker.ViewModel
         private ICommand? _searchServiceCommand;
         private readonly SemaphoreSlim _searchLock = new(1, 1);
         private bool _isRefreshing;
+        private IDispatcherTimer? _countdownTimer;
+        private int _refreshInterval = Preferences.Get(AppPreferences.RefreshIntervalSeconds, 30);
+        private int _refreshCountdown;
+        private bool _isAutoRefreshEnabled;
         #endregion
 
         #region Constructor
 
         public AppHomeViewModel(DataService<List<Station>> stationListService, DataService<Settings> settingsService)
         {
+            WeakReferenceMessenger.Default.Register(this);
             _stationListService = stationListService;
             _settings = settingsService;
 
@@ -164,6 +171,21 @@ namespace iRailTracker.ViewModel
             }
         }
 
+        public bool IsAutoRefreshEnabled
+        {
+            get => _isAutoRefreshEnabled;
+            set
+            {
+                _isAutoRefreshEnabled = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(RefreshStatusText));
+                if (value)
+                    StartCountdown();
+                else
+                    StopCountdown();
+            }
+        }
+
         public ObservableCollection<string> StationOptions
         {
             get => _stationOptions;
@@ -215,12 +237,20 @@ namespace iRailTracker.ViewModel
             }
         }
 
-        #endregion
+        public int RefreshCountdown
+        {
+            get => _refreshCountdown;
+            set
+            {
+                if (SetProperty(ref _refreshCountdown, value))
+                    OnPropertyChanged(nameof(RefreshStatusText));
+            }
+        }
 
-        #region Events
-
-        public event EventHandler<string>? ErrorOccurred;
-        public event PropertyChangedEventHandler? PropertyChanged;
+        public string RefreshStatusText =>
+                                IsAutoRefreshEnabled
+                                    ? $"Refreshing in {RefreshCountdown} sec"
+                                    : AppStrings.Refresh;
 
         #endregion
 
@@ -229,6 +259,8 @@ namespace iRailTracker.ViewModel
         public ICommand SearchCommand => new Command(async () => await ExecuteLocationSearch());
         public ICommand SearchServiceCommand => _searchServiceCommand ??= new Command(async () => await ExecuteTrainServiceSearch());
         public ICommand RefreshCommand => _refreshCommand ??= new Command(async () => await RefreshJourneys());
+        public ICommand OpenSettingsCommand => new Command(async () => await GoToSettings());
+
         #endregion
 
         #region Private Methods
@@ -408,14 +440,53 @@ namespace iRailTracker.ViewModel
             }
         }
 
-        private void ShowError(string message)
+        private async Task GoToSettings()
         {
-            ErrorOccurred?.Invoke(this, message);
+            var nav = Application.Current?.Windows[0].Page?.Navigation;
+
+            if (nav is null)
+                return;
+
+            await nav.PushAsync(new AppSettings(new AppSettingsViewModel()));
         }
 
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = "")
+        public async void Receive(AutoRefreshMessage message)
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            if (IsBusy) return;
+            if (!EnableListView) return;
+            this.IsAutoRefreshEnabled = true;
+            RefreshCountdown = _refreshInterval;
+            await ExecuteTrainServiceSearch();
+        }
+
+        private void StartCountdown()
+        {
+            StopCountdown();
+
+            RefreshCountdown = _refreshInterval;
+
+            _countdownTimer = Application.Current?.Dispatcher.CreateTimer();
+            if (_countdownTimer == null) return;
+
+            _countdownTimer.Interval = TimeSpan.FromSeconds(1);
+            _countdownTimer.Tick += OnCountdownTick;
+            _countdownTimer.Start();
+        }
+
+        private void StopCountdown()
+        {
+            if (_countdownTimer != null)
+            {
+                _countdownTimer.Stop();
+                _countdownTimer.Tick -= OnCountdownTick;
+                _countdownTimer = null;
+            }
+        }
+
+        private void OnCountdownTick(object? sender, EventArgs e)
+        {
+            if (RefreshCountdown > 0)
+                RefreshCountdown--;
         }
 
         #endregion

@@ -1,3 +1,4 @@
+using iRailTracker.Service;
 using iRailTracker.ViewModel;
 
 namespace iRailTracker.View;
@@ -28,9 +29,20 @@ public partial class AppHome : ContentPage
         await DisplayAlertAsync("Error", errorMessage, "OK");
     }
 
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+
+        var enabled = Preferences.Get(AppPreferences.AutoRefreshEnabled, false);
+        var interval = Preferences.Get(AppPreferences.RefreshIntervalSeconds, 60);
+
+        AutoRefreshService.Instance.Start(enabled, interval);
+    }
+
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
+        AutoRefreshService.Instance.Stop();
         // Unsubscribe from error events to prevent memory leaks
         if (_viewModel != null)
         {

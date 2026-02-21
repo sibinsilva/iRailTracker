@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="iRailTracker.View.AppSettings"
+             xmlns:converters="clr-namespace:iRailTracker.Converters"
+             xmlns:vm="clr-namespace:iRailTracker.ViewModel"
+             Title="Settings">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+    
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="24">
+
+            <!-- AUTO REFRESH TOGGLE -->
+            <Label Text="Auto Refresh"
+                   FontAttributes="Bold"
+                   FontSize="Medium" />
+
+            <HorizontalStackLayout Spacing="20">
+
+                <RadioButton Content="On"
+             GroupName="AutoRefreshGroup"
+             IsChecked="{Binding IsAutoRefreshEnabled}" />
+
+                <RadioButton Content="Off"
+             GroupName="AutoRefreshGroup"
+             IsChecked="{Binding IsAutoRefreshEnabled, Converter={StaticResource InverseBoolConverter}}" />
+
+            </HorizontalStackLayout>
+
+            <!-- TIMER SECTION -->
+            <Label Text="Auto Refresh Interval"
+                   FontAttributes="Bold"
+                   FontSize="Medium" />
+
+            <Picker Title="Select interval"
+                    ItemsSource="{Binding RefreshIntervals}"
+                    ItemDisplayBinding="{Binding Display}"
+                    SelectedItem="{Binding SelectedRefreshInterval}" 
+                    IsEnabled="{Binding IsAutoRefreshEnabled}"/>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

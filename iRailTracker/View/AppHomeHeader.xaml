@@ -2,7 +2,8 @@
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="iRailTracker.View.AppHomeHeader"
-             xmlns:vm="clr-namespace:iRailTracker.ViewModel">
+             xmlns:vm="clr-namespace:iRailTracker.ViewModel"
+             xmlns:strings="clr-namespace:iRailTracker.Resources.Strings">
 
     <Border
         StrokeShape="RoundRectangle 16"
@@ -21,7 +22,7 @@
             <!-- HEADER -->
             <StackLayout Grid.Row="0" Spacing="12">
 
-                <Label Text="Please choose an option to begin."
+                <Label Text="{x:Static strings:AppStrings.HeaderChooseOption}"
                        FontSize="Large"
                        FontAttributes="Bold"
                        HorizontalOptions="Start" />
@@ -32,14 +33,14 @@
 
                     <RadioButton x:Name="Find_Station"
                                  Grid.Column="0"
-                                 Content="Locate Nearby Station"
+                                 Content="{x:Static strings:AppStrings.LocateNearbyStation}"
                                  FontSize="Medium"
                                  IsChecked="{Binding IsFindNearbyStationChecked}"
                                  HorizontalOptions="Start" />
 
                     <RadioButton x:Name="Search_Station"
                                  Grid.Column="1"
-                                 Content="Pick a Train Station"
+                                 Content="{x:Static strings:AppStrings.PickTrainStation}"
                                  FontSize="Medium"
                                  IsChecked="{Binding IsLocateStationChecked}"
                                  HorizontalOptions="Start" />
@@ -54,7 +55,7 @@
                   Margin="0,16,0,0">
 
                 <Picker x:Name="stationPicker"
-                        Title="Select a station"
+                        Title="{x:Static strings:AppStrings.SelectStationTitle}"
                         ItemsSource="{Binding StationOptions}"
                         SelectedItem="{Binding SelectedStation, Mode=TwoWay}"
                         IsVisible="{Binding IsStationListLoaded}"
@@ -79,7 +80,7 @@
                          HorizontalOptions="Center"
                          Margin="0,16,0,0">
 
-                <Button Text="Search Stations"
+                <Button Text="{x:Static strings:AppStrings.SearchStations}"
                         WidthRequest="180"
                         HeightRequest="50"
                         CornerRadius="12"

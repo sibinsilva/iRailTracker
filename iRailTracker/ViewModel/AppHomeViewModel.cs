@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using Microsoft.Maui.Graphics;
+using iRailTracker.Resources.Strings;
 
 namespace iRailTracker.ViewModel
 {
@@ -29,7 +30,8 @@ namespace iRailTracker.ViewModel
         private string _noJourneyMsg;
         private string _refreshTime;
         private string _buttonText;
-
+        private readonly Dictionary<string, (DateTime fetchedAt, List<StationData> data)> _journeyCache = new();
+        private static readonly TimeSpan CacheDuration = TimeSpan.FromSeconds(60);
         #endregion
 
         #region Constructor
@@ -52,7 +54,7 @@ namespace iRailTracker.ViewModel
             _selectedStation = string.Empty;
             _noJourneyMsg = string.Empty;
             _refreshTime = string.Empty;
-            _buttonText = "Find Services";
+            _buttonText = AppStrings.FindServices;
         }
 
         #endregion
@@ -120,7 +122,7 @@ namespace iRailTracker.ViewModel
                     _isLocateStationChecked = value;
                     IsStationListLoaded = value;
                     EnableListView = false;
-                    ButtonText = "Find Services";
+                    ButtonText = AppStrings.FindServices;
 
                     if (_isLocateStationChecked)
                     {
@@ -191,14 +193,14 @@ namespace iRailTracker.ViewModel
             {
                 if (_selectedStation != value)
                 {
-                    ButtonText = "Find Services";
+                    ButtonText = AppStrings.FindServices;
                     EnableListView = false;
                     _selectedStation = value;
                     OnPropertyChanged();
                 }
                 else
                 {
-                    ButtonText = "Refresh Journeys";
+                    ButtonText = AppStrings.RefreshJourneys;
                 }
             }
         }
@@ -225,7 +227,7 @@ namespace iRailTracker.ViewModel
         {
             if (string.IsNullOrEmpty(_selectedStation))
             {
-                ShowError("You haven't selected a train station to view the available journeys.");
+                ShowError(AppMessages.SelectStationError);
                 return;
             }
 
@@ -245,14 +247,32 @@ namespace iRailTracker.ViewModel
 
                 var stationCode = matchingStation != null ? matchingStation.StationCode : "";
 
-                StationService trainService = new StationService();
-                var journeyList = await trainService.GetTrainServicesAsync(_settings.Data, stationCode, ShowError);
+                List<StationData> journeyList;
+
+                if (_journeyCache.TryGetValue(stationCode, out var cacheEntry) &&
+                    DateTime.UtcNow - cacheEntry.fetchedAt < CacheDuration)
+                {
+                    // Use cached data
+                    journeyList = cacheEntry.data;
+                }
+                else
+                {
+                    // Fetch fresh data
+                    StationService trainService = new StationService();
+                    journeyList = await trainService.GetTrainServicesAsync(
+                        _settings.Data,
+                        stationCode,
+                        ShowError);
+
+                    // Update cache
+                    _journeyCache[stationCode] = (DateTime.UtcNow, journeyList);
+                }
 
                 if (journeyList.Count > 0)
                 {
                     NoJourneyFound = false;
                     EnableListView = true;
-                    ButtonText = "Refresh Journeys";
+                    ButtonText = AppStrings.RefreshJourneys;
 
                     journeyList.Sort((x, y) => x.Duein.CompareTo(y.Duein));
 
@@ -280,15 +300,15 @@ namespace iRailTracker.ViewModel
                 {
                     EnableListView = false;
                     NoJourneyFound = true;
-                    ButtonText = "Find Services";
-                    NoJourneyMsg = $"Currently, there are no journeys available for {_selectedStation} station.";
+                    ButtonText = AppStrings.FindServices;
+                    NoJourneyMsg = string.Format(AppMessages.NoJourneysForStation, _selectedStation);
                 }
 
-                RefreshTime = $"Current Status as of {DateTime.Now:hh:mm tt}";
+                RefreshTime = string.Format(AppMessages.CurrentStatusAsOf,DateTime.Now.ToString("hh:mm:ss tt"));
             }
             catch (Exception ex)
             {
-                ShowError($"An unexpected error occurred while searching for train services: {ex.Message}");
+                ShowError(string.Format(AppMessages.TrainServiceError, ex.Message));
             }
             finally
             {
@@ -314,13 +334,13 @@ namespace iRailTracker.ViewModel
                         StationOptions = new ObservableCollection<string>(stationList);
                         IsStationListLoaded = true;
                         HideSearchButton = false;
-                        ButtonText = "Find Services";
+                        ButtonText = AppStrings.FindServices;
                     }
                 }
             }
             catch (Exception ex)
             {
-                ShowError($"An unexpected error occurred while searching for nearby stations: {ex.Message}");
+                ShowError(string.Format(AppMessages.NearbyStationError, ex.Message));
             }
             finally
             {

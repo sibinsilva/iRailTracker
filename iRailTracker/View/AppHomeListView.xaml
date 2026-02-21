@@ -2,7 +2,8 @@
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="iRailTracker.View.AppHomeListView"
-             xmlns:vm="clr-namespace:iRailTracker.ViewModel">
+             xmlns:vm="clr-namespace:iRailTracker.ViewModel"
+             xmlns:strings="clr-namespace:iRailTracker.Resources.Strings">
 
     <Grid IsVisible="{Binding EnableListView}"
           RowDefinitions="Auto,*"
@@ -10,7 +11,7 @@
 
         <!-- OPTIONAL HEADER (can remove if not needed) -->
         <Label Grid.Row="0"
-               Text="Live Train Journeys"
+               Text="{x:Static strings:AppStrings.LiveTrainJourneys}"
                FontSize="Medium"
                FontAttributes="Bold"
                Margin="8,4"

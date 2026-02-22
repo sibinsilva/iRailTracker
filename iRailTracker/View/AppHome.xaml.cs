@@ -1,5 +1,6 @@
 using iRailTracker.Service;
 using iRailTracker.ViewModel;
+using Microsoft.Maui.ApplicationModel;
 
 namespace iRailTracker.View;
 
@@ -7,6 +8,7 @@ public partial class AppHome : ContentPage
 {
     private readonly AppHomeViewModel _viewModel;
     private bool _isErrorHandlerSubscribed;
+    private bool _isExitPromptVisible;
     public AppHome()
     {
         InitializeComponent();
@@ -59,5 +61,40 @@ public partial class AppHome : ContentPage
             _viewModel.ErrorOccurred -= OnErrorOccurred;
             _isErrorHandlerSubscribed = false;
         }
+    }
+
+    protected override bool OnBackButtonPressed()
+    {
+        if (_isExitPromptVisible)
+            return true;
+
+        _isExitPromptVisible = true;
+
+        Dispatcher.Dispatch(async () =>
+        {
+            try
+            {
+                var exit = await DisplayAlertAsync("Exit", "Do you want to exit the app?", "Exit", "Cancel");
+                if (exit)
+                {
+                    try
+                    {
+                        Application.Current?.Quit();
+                    }
+                    catch
+                    {
+#if ANDROID
+                        Platform.CurrentActivity?.FinishAffinity();
+#endif
+                    }
+                }
+            }
+            finally
+            {
+                _isExitPromptVisible = false;
+            }
+        });
+
+        return true;
     }
 }

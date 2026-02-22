@@ -2,6 +2,7 @@
 using iRailTracker.Model;
 using iRailTracker.Service;
 using System.Collections.ObjectModel;
+using System.Windows.Input;
 
 namespace iRailTracker.ViewModel
 {
@@ -9,7 +10,7 @@ namespace iRailTracker.ViewModel
     {
         #region Constructor
 
-        public AppSettingsViewModel()
+        public AppSettingsViewModel(DataService<List<Station>> stationListService)
         {
             // Auto refresh
             _isAutoRefreshEnabled = Preferences.Get(AppPreferences.AutoRefreshEnabled, false);
@@ -20,6 +21,19 @@ namespace iRailTracker.ViewModel
             SelectedRefreshInterval =
                 RefreshIntervals.FirstOrDefault(x => x.Value == savedInterval)
                 ?? RefreshIntervals.First();
+
+            // Favourite station
+            var stationNames = stationListService.Data
+                .Select(s => s.StationDesc)
+                .Distinct()
+                .OrderBy(n => n)
+                .ToList();
+            StationNames = new ObservableCollection<string>(stationNames);
+
+            _favouriteStation = Preferences.Get(AppPreferences.FavouriteStation, string.Empty);
+            _selectedFavouriteIndex = string.IsNullOrEmpty(_favouriteStation)
+                ? -1
+                : stationNames.IndexOf(_favouriteStation);
         }
 
         #endregion
@@ -83,6 +97,48 @@ namespace iRailTracker.ViewModel
                     Preferences.Set(AppPreferences.RefreshIntervalSeconds, value);
             }
         }
+
+        #endregion
+
+        #region Favourite Station
+
+        public ObservableCollection<string> StationNames { get; }
+
+        private string _favouriteStation = string.Empty;
+        public string FavouriteStation
+        {
+            get => _favouriteStation;
+            set
+            {
+                if (SetProperty(ref _favouriteStation, value))
+                {
+                    Preferences.Set(AppPreferences.FavouriteStation, value ?? string.Empty);
+                    OnPropertyChanged(nameof(HasFavouriteStation));
+                }
+            }
+        }
+
+        public bool HasFavouriteStation => !string.IsNullOrEmpty(_favouriteStation);
+
+        private int _selectedFavouriteIndex = -1;
+        public int SelectedFavouriteIndex
+        {
+            get => _selectedFavouriteIndex;
+            set
+            {
+                if (SetProperty(ref _selectedFavouriteIndex, value))
+                {
+                    if (value >= 0 && value < StationNames.Count)
+                        FavouriteStation = StationNames[value];
+                }
+            }
+        }
+
+        public ICommand ClearFavouriteCommand => new Command(() =>
+        {
+            FavouriteStation = string.Empty;
+            SelectedFavouriteIndex = -1;
+        });
 
         #endregion
     }

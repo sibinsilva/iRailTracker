@@ -9,6 +9,7 @@ public partial class AppHome : ContentPage
     private readonly AppHomeViewModel _viewModel;
     private bool _isErrorHandlerSubscribed;
     private bool _isExitPromptVisible;
+    private bool _favouriteLoaded;
     public AppHome()
     {
         InitializeComponent();
@@ -47,6 +48,12 @@ public partial class AppHome : ContentPage
         var interval = Preferences.Get(AppPreferences.RefreshIntervalSeconds, 30);
 
         AutoRefreshService.Instance.Start(enabled, interval);
+
+        if (!_favouriteLoaded)
+        {
+            _favouriteLoaded = true;
+            _ = _viewModel.LoadFavouriteStationAsync();
+        }
     }
 
     protected override void OnDisappearing()

@@ -440,7 +440,11 @@ namespace iRailTracker.ViewModel
             if (nav is null)
                 return;
 
-            await nav.PushAsync(new AppSettings(new AppSettingsViewModel()));
+            var settingsPage = MauiProgram.Current?.GetService<AppSettings>();
+            if (settingsPage is null)
+                return;
+
+            await nav.PushAsync(settingsPage);
         }
 
         private async Task OpenJourney(TrainJourney journey)
@@ -514,6 +518,21 @@ namespace iRailTracker.ViewModel
                 WeakReferenceMessenger.Default.UnregisterAll(this);
                 _isRegisteredForAutoRefreshMessages = false;
             }
+        }
+
+        public async Task LoadFavouriteStationAsync()
+        {
+            var favourite = Preferences.Get(AppPreferences.FavouriteStation, string.Empty);
+
+            if (string.IsNullOrEmpty(favourite))
+                return;
+
+            if (!_stationNames.Contains(favourite))
+                return;
+
+            IsLocateStationChecked = true;
+            SelectedStation = favourite;
+            await ExecuteTrainServiceSearch(waitForLock: true);
         }
 
         private static int GetRefreshIntervalSeconds()

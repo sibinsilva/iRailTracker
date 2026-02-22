@@ -49,7 +49,7 @@
                             <VerticalStackLayout Spacing="6">
 
                                 <!-- ROUTE -->
-                                <Label FontSize="Medium"
+                                <Label FontSize="16"
                                    FontAttributes="Bold"
                                    LineBreakMode="WordWrap">
                                     <Label.FormattedText>
@@ -63,7 +63,7 @@
 
                                 <!-- CURRENT STATUS -->
                                 <Label Text="{Binding CurrentStatus}"
-                                   FontSize="Small"
+                                   FontSize="13"
                                    LineBreakMode="WordWrap"
                                    TextColor="{AppThemeBinding Light={StaticResource SubtleTextLight}, Dark={StaticResource SubtleTextDark}}" />
 
@@ -73,29 +73,29 @@
                                   Margin="0,6,0,0">
 
                                     <Label Text="Arriving in"
-                                       FontSize="Small"
+                                       FontSize="13"
                                        TextColor="{AppThemeBinding Light={StaticResource MutedTextLight}, Dark={StaticResource MutedTextDark}}" />
 
                                     <Label Text="{Binding DueIn}"
                                        Grid.Column="1"
                                        HorizontalTextAlignment="End"
-                                       FontSize="Small" />
+                                       FontSize="13" />
 
                                     <Label Text="Expected"
                                        Grid.Row="1"
-                                       FontSize="Small"
+                                       FontSize="13"
                                        TextColor="{AppThemeBinding Light={StaticResource MutedTextLight}, Dark={StaticResource MutedTextDark}}" />
 
                                     <Label Text="{Binding ExpectedArrival}"
                                        Grid.Row="1"
                                        Grid.Column="1"
                                        HorizontalTextAlignment="End"
-                                       FontSize="Small" />
+                                       FontSize="13" />
                                 </Grid>
 
                                 <!-- DELAY -->
                                 <Label Text="{Binding LateDisplay}"
-                                   FontSize="Small"
+                                   FontSize="13"
                                    HorizontalOptions="End"
                                    TextColor="{Binding LateColor}" />
 

@@ -8,9 +8,9 @@
     <Grid RowDefinitions="Auto,*" Padding="12">
 
         <VerticalStackLayout Grid.Row="0" Spacing="4">
-            <Label Text="{Binding Origin}" FontAttributes="Bold" FontSize="Medium" />
-            <Label Text="{Binding Destination}" FontAttributes="Bold" FontSize="Medium" />
-            <Label Text="{Binding CurrentStatus}" FontSize="Small" TextColor="{AppThemeBinding Light={StaticResource SubtleTextLight}, Dark={StaticResource SubtleTextDark}}" />
+            <Label Text="{Binding Origin}" FontAttributes="Bold" FontSize="16" />
+            <Label Text="{Binding Destination}" FontAttributes="Bold" FontSize="16" />
+            <Label Text="{Binding CurrentStatus}" FontSize="13" TextColor="{AppThemeBinding Light={StaticResource SubtleTextLight}, Dark={StaticResource SubtleTextDark}}" />
         </VerticalStackLayout>
 
         <mapsui:MapControl x:Name="TrainMapControl" Grid.Row="1" />

@@ -18,7 +18,7 @@
             <!-- AUTO REFRESH TOGGLE -->
             <Label Text="Auto Refresh"
                    FontAttributes="Bold"
-                   FontSize="Medium" />
+                   FontSize="16" />
 
             <HorizontalStackLayout Spacing="20">
 
@@ -35,7 +35,7 @@
             <!-- TIMER SECTION -->
             <Label Text="Auto Refresh Interval"
                    FontAttributes="Bold"
-                   FontSize="Medium" />
+                   FontSize="16" />
 
             <Picker Title="Select interval"
                     ItemsSource="{Binding RefreshIntervals}"
@@ -46,23 +46,23 @@
                     <!-- FAVOURITE STATION -->
             <Label Text="Favourite Station"
                    FontAttributes="Bold"
-                   FontSize="Medium" />
+                   FontSize="16" />
 
             <Label Text="Set a favourite station to auto-load train journeys on startup."
-                   FontSize="Small"
+                   FontSize="13"
                    Opacity="0.7" />
 
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                 <Picker Title="Select favourite station"
                         ItemsSource="{Binding StationNames}"
                         SelectedIndex="{Binding SelectedFavouriteIndex, Mode=TwoWay}"
-                        FontSize="Medium"
+                        FontSize="15"
                         Grid.Column="0" />
 
                 <Button Text="Remove"
                         Command="{Binding ClearFavouriteCommand}"
                         IsVisible="{Binding HasFavouriteStation}"
-                        FontSize="Small"
+                        FontSize="14"
                         Padding="12,8"
                         Grid.Column="1"
                         VerticalOptions="Center" />

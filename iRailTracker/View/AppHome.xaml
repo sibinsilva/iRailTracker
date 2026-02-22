@@ -44,11 +44,12 @@
         <!-- EMPTY / NO DATA OVERLAY -->
         <Grid Grid.Row="1"
               IsVisible="{Binding NoJourneyFound}"
-              BackgroundColor="Transparent">
+              Padding="32,16">
 
             <Label Text="{Binding NoJourneyMsg}"
-                   FontSize="Large"
-                   HorizontalOptions="Center"
+                   FontSize="16"
+                   LineBreakMode="WordWrap"
+                   HorizontalOptions="Fill"
                    VerticalOptions="Center"
                    HorizontalTextAlignment="Center" />
         </Grid>

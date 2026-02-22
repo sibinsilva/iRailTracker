@@ -14,7 +14,7 @@
                    HeightRequest="200" />
 
             <Label Text="Loading, please wait..."
-                   FontSize="Medium"
+                   FontSize="16"
                    HorizontalOptions="Center" />
 
             <ActivityIndicator IsRunning="True"

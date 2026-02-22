@@ -6,6 +6,20 @@
              xmlns:views="clr-namespace:iRailTracker.View"
              Title="iRailTracker">
 
+    <NavigationPage.TitleView>
+        <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
+            <Image Source="logo.png"
+                   HeightRequest="28"
+                   WidthRequest="28"
+                   VerticalOptions="Center" />
+            <Label Text="iRailTracker"
+                   FontSize="Title"
+                   FontAttributes="Bold"
+                   TextColor="White"
+                   VerticalOptions="Center" />
+        </HorizontalStackLayout>
+    </NavigationPage.TitleView>
+
     <ContentPage.ToolbarItems>
         <ToolbarItem
             IconImageSource="settings.png"

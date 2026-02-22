@@ -12,7 +12,7 @@ namespace iRailTracker
         {
             base.OnCreate(savedInstanceState);
 
-            // Initialize Xamarin.Essentials
+            // Initialize MAUI Essentials
             Platform.Init(this, savedInstanceState);
 
             // Request permissions for location access (if needed)

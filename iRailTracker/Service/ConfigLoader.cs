@@ -17,7 +17,7 @@ namespace iRailTracker.Service
             _stationListService = stationListService;
         }
 
-        public async Task LoadSettingsAsync(IConfiguration configuration, Action<string> errorCallback = null)
+        public async Task LoadSettingsAsync(IConfiguration configuration, Action<string>? errorCallback = null)
         {
             try
             {

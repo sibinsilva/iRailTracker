@@ -13,7 +13,7 @@ namespace iRailTracker.Service
             _stationListService = stationListService;
         }
 
-        private async Task<Coordinate> GetLocationAsync(Action<string> errorCallback)
+        private async Task<Coordinate?> GetLocationAsync(Action<string> errorCallback)
         {
             Coordinate? _location = null;
             try
@@ -98,6 +98,12 @@ namespace iRailTracker.Service
             try
             {
                 var _currentLocationcords = await GetLocationAsync(errorCallback);
+
+                if (_currentLocationcords == null)
+                {
+                    return stations;
+                }
+
                 var _nearbyStations = GetNearestStationNames(_currentLocationcords, _stationListService.Data);
 
                 if (_nearbyStations.Count == 0)

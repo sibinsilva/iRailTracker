@@ -14,7 +14,7 @@ namespace iRailTracker.Service
             _restClient = new RestClient();
         }
 
-        public async Task<List<Station>> GetAllStationsAsync(Settings settings, Action<string> errorCallback)
+        public async Task<List<Station>> GetAllStationsAsync(Settings settings, Action<string>? errorCallback)
         {
             string url = settings.GetAllStationsUrl;
             var request = new RestRequest(url, Method.Get);
@@ -30,14 +30,20 @@ namespace iRailTracker.Service
                     throw new Exception(errorMsg);
                 }
 
-                string responseXml = response.Content;
+                string? responseXml = response.Content;
+
+                if (string.IsNullOrEmpty(responseXml))
+                {
+                    errorCallback?.Invoke($"Empty response from {url}.");
+                    throw new Exception($"Empty response from {url}.");
+                }
 
                 XmlSerializer serializer = new XmlSerializer(typeof(StationCollection));
 
                 using (StringReader reader = new StringReader(responseXml))
                 {
-                    StationCollection stationCollection = (StationCollection)serializer.Deserialize(reader);
-                    return stationCollection.Stations;
+                    StationCollection? stationCollection = serializer.Deserialize(reader) as StationCollection;
+                    return stationCollection?.Stations ?? [];
                 }
             }
             catch (XmlException xmlEx)
@@ -54,7 +60,7 @@ namespace iRailTracker.Service
             }
         }
 
-        public async Task<List<StationData>> GetTrainServicesAsync(Settings settings, string stationCode, Action<string> errorCallback)
+        public async Task<List<StationData>> GetTrainServicesAsync(Settings settings, string stationCode, Action<string>? errorCallback)
         {
             string url = settings.GetServiceByStationCodeURL + stationCode;
             var request = new RestRequest(url, Method.Get);
@@ -70,14 +76,20 @@ namespace iRailTracker.Service
                     throw new Exception(errorMsg);
                 }
 
-                string responseXml = response.Content;
+                string? responseXml = response.Content;
+
+                if (string.IsNullOrEmpty(responseXml))
+                {
+                    errorCallback?.Invoke($"Empty response from {url}.");
+                    throw new Exception($"Empty response from {url}.");
+                }
 
                 XmlSerializer serializer = new XmlSerializer(typeof(TrainService));
 
                 using (StringReader reader = new StringReader(responseXml))
                 {
-                    TrainService trainService = (TrainService)serializer.Deserialize(reader);
-                    return trainService.ObjStationData;
+                    TrainService? trainService = serializer.Deserialize(reader) as TrainService;
+                    return trainService?.ObjStationData ?? [];
                 }
             }
             catch (XmlException xmlEx)
@@ -94,7 +106,7 @@ namespace iRailTracker.Service
             }
         }
 
-        public async Task<List<TrainMovement>> GetTrainMovementsAsync(Settings settings, string trainCode, Action<string> errorCallback)
+        public async Task<List<TrainMovement>> GetTrainMovementsAsync(Settings settings, string trainCode, Action<string>? errorCallback)
         {
             string url = $"{settings.GetTrainMovementsUrl}?TrainId={trainCode}&TrainDate={DateTime.Now:dd MMM yyyy}";
             var request = new RestRequest(url, Method.Get);
@@ -109,12 +121,19 @@ namespace iRailTracker.Service
                     return [];
                 }
 
-                string responseXml = response.Content;
+                string? responseXml = response.Content;
+
+                if (string.IsNullOrEmpty(responseXml))
+                {
+                    errorCallback?.Invoke($"Empty response from {url}.");
+                    return [];
+                }
+
                 XmlSerializer serializer = new XmlSerializer(typeof(TrainMovementsResponse));
 
                 using (StringReader reader = new StringReader(responseXml))
                 {
-                    TrainMovementsResponse result = (TrainMovementsResponse)serializer.Deserialize(reader);
+                    TrainMovementsResponse? result = serializer.Deserialize(reader) as TrainMovementsResponse;
                     return result?.Movements ?? [];
                 }
             }

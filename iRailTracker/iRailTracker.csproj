@@ -145,6 +145,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <MauiXaml Update="View\AboutPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
 	  <MauiXaml Update="View\AppHome.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>

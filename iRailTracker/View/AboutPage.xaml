@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="iRailTracker.View.AboutPage"
+             Title="About">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="20"
+                             VerticalOptions="Center"
+                             HorizontalOptions="Center"
+                             MaximumWidthRequest="400">
+
+            <!-- APP ICON -->
+            <Image Source="logo.png"
+                   WidthRequest="120"
+                   HeightRequest="120"
+                   HorizontalOptions="Center" />
+
+            <!-- APP NAME -->
+            <Label Text="iRailTracker"
+                   FontSize="Title"
+                   FontAttributes="Bold"
+                   HorizontalTextAlignment="Center" />
+
+            <!-- VERSION -->
+            <Label x:Name="VersionLabel"
+                   FontSize="Small"
+                   TextColor="{StaticResource Gray300}"
+                   HorizontalTextAlignment="Center" />
+
+            <!-- DESCRIPTION -->
+            <Label Text="Track live Irish Rail train services, view real-time station data, and follow your journey on an interactive map."
+                   FontSize="Body"
+                   HorizontalTextAlignment="Center"
+                   LineBreakMode="WordWrap" />
+
+            <!-- SEPARATOR -->
+            <BoxView HeightRequest="1"
+                     Color="{StaticResource Gray600}"
+                     Margin="0,4" />
+
+            <!-- DEVELOPER -->
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Developer"
+                       FontSize="Small"
+                       TextColor="{StaticResource Gray300}"
+                       HorizontalTextAlignment="Center" />
+                <Label Text="Sibin Silvester"
+                       FontSize="Body"
+                       FontAttributes="Bold"
+                       HorizontalTextAlignment="Center" />
+            </VerticalStackLayout>
+
+            <!-- SOURCE CODE LINK -->
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Source Code"
+                       FontSize="Small"
+                       TextColor="{StaticResource Gray300}"
+                       HorizontalTextAlignment="Center" />
+                <Label Text="github.com/sibinsilva/iRailTracker"
+                       FontSize="Body"
+                       TextColor="{StaticResource PrimaryDark}"
+                       TextDecorations="Underline"
+                       HorizontalTextAlignment="Center">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnGitHubLinkTapped" />
+                    </Label.GestureRecognizers>
+                </Label>
+            </VerticalStackLayout>
+
+            <!-- POWERED BY -->
+            <Label Text="Powered by the Irish Rail Realtime API"
+                   FontSize="Caption"
+                   TextColor="{StaticResource Gray400}"
+                   HorizontalTextAlignment="Center"
+                   Margin="0,12,0,0" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

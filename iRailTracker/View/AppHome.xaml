@@ -12,6 +12,11 @@
             Priority="0"
             Order="Primary"
             Command="{Binding OpenSettingsCommand}" />
+        <ToolbarItem
+            Text="About"
+            Priority="1"
+            Order="Secondary"
+            Clicked="OnAboutClicked" />
     </ContentPage.ToolbarItems>
 
     <Grid RowDefinitions="Auto,*">

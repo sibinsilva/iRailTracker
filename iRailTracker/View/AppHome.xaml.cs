@@ -97,4 +97,9 @@ public partial class AppHome : ContentPage
 
         return true;
     }
+
+    private async void OnAboutClicked(object? sender, EventArgs e)
+    {
+        await Navigation.PushAsync(new AboutPage());
+    }
 }

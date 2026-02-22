@@ -10,6 +10,7 @@ public partial class AppHome : ContentPage
     private bool _isErrorHandlerSubscribed;
     private bool _isExitPromptVisible;
     private bool _favouriteLoaded;
+    private bool _changelogChecked;
     public AppHome()
     {
         InitializeComponent();
@@ -53,6 +54,12 @@ public partial class AppHome : ContentPage
         {
             _favouriteLoaded = true;
             _ = _viewModel.LoadFavouriteStationAsync();
+        }
+
+        if (!_changelogChecked)
+        {
+            _changelogChecked = true;
+            ShowChangelogIfNeeded();
         }
     }
 
@@ -108,5 +115,14 @@ public partial class AppHome : ContentPage
     private async void OnAboutClicked(object? sender, EventArgs e)
     {
         await Navigation.PushAsync(new AboutPage());
+    }
+
+    private async void ShowChangelogIfNeeded()
+    {
+        var lastSeen = Preferences.Get(AppPreferences.LastSeenChangelogVersion, string.Empty);
+        if (lastSeen == AppInfo.VersionString)
+            return;
+
+        await Navigation.PushModalAsync(new NavigationPage(new ChangelogPage()));
     }
 }

@@ -9,5 +9,6 @@ namespace iRailTracker
         public const string AutoRefreshEnabled = "auto_refresh_enabled";
         public const string RefreshIntervalSeconds = "refresh_interval_seconds";
         public const string FavouriteStation = "favourite_station";
+        public const string LastSeenChangelogVersion = "last_seen_changelog_version";
     }
 }

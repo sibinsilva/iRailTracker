@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="iRailTracker.View.ChangelogPage"
+             Title="What's New">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="20"
+                             VerticalOptions="Start"
+                             HorizontalOptions="Center"
+                             MaximumWidthRequest="400">
+
+            <!-- APP ICON -->
+            <Image Source="logo.png"
+                   WidthRequest="80"
+                   HeightRequest="80"
+                   HorizontalOptions="Center" />
+
+            <!-- HEADING -->
+            <Label Text="What's New"
+                   FontSize="Title"
+                   FontAttributes="Bold"
+                   HorizontalTextAlignment="Center" />
+
+            <!-- VERSION -->
+            <Label x:Name="VersionLabel"
+                   FontSize="Small"
+                   TextColor="{StaticResource Gray300}"
+                   HorizontalTextAlignment="Center" />
+
+            <!-- SEPARATOR -->
+            <BoxView HeightRequest="1"
+                     Color="{StaticResource Gray600}"
+                     Margin="0,4" />
+
+            <!-- CHANGELOG ENTRIES -->
+            <VerticalStackLayout x:Name="ChangelogEntries" Spacing="12" />
+
+            <!-- DISMISS BUTTON -->
+            <Button Text="Got it!"
+                    BackgroundColor="{StaticResource Primary}"
+                    TextColor="White"
+                    FontAttributes="Bold"
+                    CornerRadius="8"
+                    Margin="0,12,0,0"
+                    Clicked="OnDismissClicked"
+                    HorizontalOptions="Fill" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

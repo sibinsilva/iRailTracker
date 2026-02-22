@@ -20,6 +20,9 @@ namespace iRailTracker.Service
             if (!enabled)
                 return;
 
+            if (intervalSeconds < 1)
+                intervalSeconds = 1;
+
             _timer = Application.Current?.Dispatcher.CreateTimer();
             if (_timer == null) return;
 
@@ -45,8 +48,15 @@ namespace iRailTracker.Service
 
         private void OnTimerTick(object? sender, EventArgs e)
         {
-            WeakReferenceMessenger.Default.Send(new AutoRefreshMessage());
-            System.Diagnostics.Debug.WriteLine("Auto refresh triggered");
+            try
+            {
+                WeakReferenceMessenger.Default.Send(new AutoRefreshMessage());
+                System.Diagnostics.Debug.WriteLine("Auto refresh triggered");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Auto refresh failed: {ex}");
+            }
         }
     }
 }

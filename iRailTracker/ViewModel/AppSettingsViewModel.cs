@@ -1,4 +1,5 @@
-﻿using iRailTracker.Model;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using iRailTracker.Model;
 using iRailTracker.Service;
 using System.Collections.ObjectModel;
 
@@ -11,14 +12,10 @@ namespace iRailTracker.ViewModel
         public AppSettingsViewModel()
         {
             // Auto refresh
-            _isAutoRefreshEnabled =
-                Preferences.ContainsKey(AppPreferences.AutoRefreshEnabled)
-                    ? Preferences.Get(AppPreferences.AutoRefreshEnabled, false)
-                    : false;
+            _isAutoRefreshEnabled = Preferences.Get(AppPreferences.AutoRefreshEnabled, false);
 
             // Interval
-            var savedInterval =
-                Preferences.Get(AppPreferences.RefreshIntervalSeconds, 30);
+            var savedInterval = Preferences.Get(AppPreferences.RefreshIntervalSeconds, 30);
 
             SelectedRefreshInterval =
                 RefreshIntervals.FirstOrDefault(x => x.Value == savedInterval)
@@ -39,6 +36,7 @@ namespace iRailTracker.ViewModel
                 {
                     Preferences.Set(AppPreferences.AutoRefreshEnabled, value);
                     AutoRefreshService.Instance.UpdateSettings(IsAutoRefreshEnabled, RefreshIntervalSeconds);
+                    WeakReferenceMessenger.Default.Send(new AutoRefreshSettingsChangedMessage(IsAutoRefreshEnabled, RefreshIntervalSeconds));
                 }
             }
         }
@@ -62,9 +60,16 @@ namespace iRailTracker.ViewModel
             get => _selectedRefreshInterval;
             set
             {
-                if (SetProperty(ref _selectedRefreshInterval, value) && value != null)
+                if(SetProperty(ref _selectedRefreshInterval, value) && value != null)
+                {
                     RefreshIntervalSeconds = value.Value;
-                AutoRefreshService.Instance.UpdateSettings(IsAutoRefreshEnabled, RefreshIntervalSeconds);
+
+                    AutoRefreshService.Instance.UpdateSettings(
+                        IsAutoRefreshEnabled,
+                        RefreshIntervalSeconds);
+
+                    WeakReferenceMessenger.Default.Send(new AutoRefreshSettingsChangedMessage(IsAutoRefreshEnabled, RefreshIntervalSeconds));
+                }
             }
         }
 

@@ -6,6 +6,7 @@ namespace iRailTracker.View;
 public partial class AppHome : ContentPage
 {
     private readonly AppHomeViewModel _viewModel;
+    private bool _isErrorHandlerSubscribed;
     public AppHome()
     {
         InitializeComponent();
@@ -21,7 +22,6 @@ public partial class AppHome : ContentPage
         }
         _viewModel = viewModel;
         BindingContext = _viewModel;
-        _viewModel.ErrorOccurred += OnErrorOccurred;
     }
 
     private async void OnErrorOccurred(object? sender, string errorMessage)
@@ -33,8 +33,16 @@ public partial class AppHome : ContentPage
     {
         base.OnAppearing();
 
+        _viewModel.OnAppearing();
+
+        if (!_isErrorHandlerSubscribed)
+        {
+            _viewModel.ErrorOccurred += OnErrorOccurred;
+            _isErrorHandlerSubscribed = true;
+        }
+
         var enabled = Preferences.Get(AppPreferences.AutoRefreshEnabled, false);
-        var interval = Preferences.Get(AppPreferences.RefreshIntervalSeconds, 60);
+        var interval = Preferences.Get(AppPreferences.RefreshIntervalSeconds, 30);
 
         AutoRefreshService.Instance.Start(enabled, interval);
     }
@@ -43,10 +51,13 @@ public partial class AppHome : ContentPage
     {
         base.OnDisappearing();
         AutoRefreshService.Instance.Stop();
-        // Unsubscribe from error events to prevent memory leaks
-        if (_viewModel != null)
+
+        _viewModel.OnDisappearing();
+
+        if (_isErrorHandlerSubscribed)
         {
             _viewModel.ErrorOccurred -= OnErrorOccurred;
+            _isErrorHandlerSubscribed = false;
         }
     }
 }

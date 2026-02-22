@@ -11,7 +11,7 @@ using System.Windows.Input;
 
 namespace iRailTracker.ViewModel
 {
-    public class AppHomeViewModel : BaseViewModel,IRecipient<AutoRefreshMessage>
+    public class AppHomeViewModel : BaseViewModel,IRecipient<AutoRefreshMessage>, IRecipient<AutoRefreshSettingsChangedMessage>
     {
         #region Fields
 
@@ -39,16 +39,15 @@ namespace iRailTracker.ViewModel
         private readonly SemaphoreSlim _searchLock = new(1, 1);
         private bool _isRefreshing;
         private IDispatcherTimer? _countdownTimer;
-        private int _refreshInterval = Preferences.Get(AppPreferences.RefreshIntervalSeconds, 30);
         private int _refreshCountdown;
         private bool _isAutoRefreshEnabled;
+        private bool _isRegisteredForAutoRefreshMessages;
         #endregion
 
         #region Constructor
 
         public AppHomeViewModel(DataService<List<Station>> stationListService, DataService<Settings> settingsService)
         {
-            WeakReferenceMessenger.Default.Register(this);
             _stationListService = stationListService;
             _settings = settingsService;
 
@@ -176,9 +175,11 @@ namespace iRailTracker.ViewModel
             get => _isAutoRefreshEnabled;
             set
             {
-                _isAutoRefreshEnabled = value;
-                OnPropertyChanged();
+                if (!SetProperty(ref _isAutoRefreshEnabled, value))
+                    return;
+
                 OnPropertyChanged(nameof(RefreshStatusText));
+
                 if (value)
                     StartCountdown();
                 else
@@ -265,7 +266,7 @@ namespace iRailTracker.ViewModel
 
         #region Private Methods
 
-        private async Task ExecuteTrainServiceSearch()
+        private async Task ExecuteTrainServiceSearch(bool waitForLock = false, bool bypassCache = false)
         {
             if (string.IsNullOrEmpty(_selectedStation))
             {
@@ -273,8 +274,15 @@ namespace iRailTracker.ViewModel
                 return;
             }
 
-            if (!await _searchLock.WaitAsync(0))
-                return;
+            if (waitForLock)
+            {
+                await _searchLock.WaitAsync();
+            }
+            else
+            {
+                if (!await _searchLock.WaitAsync(0))
+                    return;
+            }
 
             try
             {
@@ -291,9 +299,14 @@ namespace iRailTracker.ViewModel
 
                 var stationCode = matchingStation != null ? matchingStation.StationCode : "";
 
+                if (bypassCache && !string.IsNullOrEmpty(stationCode))
+                {
+                    _journeyCache.Remove(stationCode);
+                }
+
                 List<StationData> journeyList;
 
-                if (_journeyCache.TryGetValue(stationCode, out var cacheEntry) &&
+                if (!bypassCache && _journeyCache.TryGetValue(stationCode, out var cacheEntry) &&
                     DateTime.UtcNow - cacheEntry.fetchedAt < CacheDuration)
                 {
                     // Use cached data
@@ -403,10 +416,7 @@ namespace iRailTracker.ViewModel
             try
             {
                 IsRefreshing = true;
-                IsBusy = true;
-                //bypass cache on pull-to-refresh
-                ClearCacheForSelectedStation();
-                await ExecuteTrainServiceSearch();
+                await ExecuteTrainServiceSearch(waitForLock: true, bypassCache: true);
             }
             catch (Exception ex)
             {
@@ -414,30 +424,9 @@ namespace iRailTracker.ViewModel
             }
             finally
             {
-                IsBusy = false;
                 IsRefreshing = false;
             }
 
-        }
-
-        private void ClearCacheForSelectedStation()
-        {
-            var stationNames = _selectedStation?
-                .Split(new[] { '&' }, StringSplitOptions.RemoveEmptyEntries)
-                .Select(s => s.Trim())
-                .ToList();
-
-            var matchingStation = stationList.FirstOrDefault(station =>
-                stationNames != null &&
-                stationNames.Any(name =>
-                    station.StationDesc.Contains(name, StringComparison.OrdinalIgnoreCase)));
-
-            var stationCode = matchingStation?.StationCode;
-
-            if (!string.IsNullOrEmpty(stationCode))
-            {
-                _journeyCache.Remove(stationCode);
-            }
         }
 
         private async Task GoToSettings()
@@ -452,18 +441,75 @@ namespace iRailTracker.ViewModel
 
         public async void Receive(AutoRefreshMessage message)
         {
-            if (IsBusy) return;
+            if (IsBusy || IsRefreshing) return;
             if (!EnableListView) return;
-            this.IsAutoRefreshEnabled = true;
-            RefreshCountdown = _refreshInterval;
-            await ExecuteTrainServiceSearch();
+
+            if (!IsAutoRefreshEnabled)
+                IsAutoRefreshEnabled = true;
+
+            RefreshCountdown = GetRefreshIntervalSeconds();
+
+            try
+            {
+                await ExecuteTrainServiceSearch();
+            }
+            catch (Exception ex)
+            {
+                ShowError(string.Format(AppMessages.TrainServiceError, ex.Message));
+            }
+        }
+
+        public void Receive(AutoRefreshSettingsChangedMessage message)
+        {
+            var intervalSeconds = message.IntervalSeconds < 1 ? 1 : message.IntervalSeconds;
+
+            if (!message.Enabled)
+            {
+                IsAutoRefreshEnabled = false;
+                RefreshCountdown = 0;
+                return;
+            }
+
+            if (!EnableListView)
+                return;
+
+            if (!IsAutoRefreshEnabled)
+                IsAutoRefreshEnabled = true;
+
+            RefreshCountdown = intervalSeconds;
+        }
+
+        public void OnAppearing()
+        {
+            if (_isRegisteredForAutoRefreshMessages)
+                return;
+
+            WeakReferenceMessenger.Default.RegisterAll(this);
+            _isRegisteredForAutoRefreshMessages = true;
+        }
+
+        public void OnDisappearing()
+        {
+            IsAutoRefreshEnabled = false;
+
+            if (_isRegisteredForAutoRefreshMessages)
+            {
+                WeakReferenceMessenger.Default.UnregisterAll(this);
+                _isRegisteredForAutoRefreshMessages = false;
+            }
+        }
+
+        private static int GetRefreshIntervalSeconds()
+        {
+            var interval = Preferences.Get(AppPreferences.RefreshIntervalSeconds, 30);
+            return interval < 1 ? 1 : interval;
         }
 
         private void StartCountdown()
         {
             StopCountdown();
 
-            RefreshCountdown = _refreshInterval;
+            RefreshCountdown = GetRefreshIntervalSeconds();
 
             _countdownTimer = Application.Current?.Dispatcher.CreateTimer();
             if (_countdownTimer == null) return;

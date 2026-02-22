@@ -28,6 +28,7 @@ namespace iRailTracker
             builder.Services.AddTransient<AppHomeViewModel>();
             builder.Services.AddSingleton<AppSettingsViewModel>();
             builder.Services.AddTransient<AppSettings>();
+            builder.Services.AddSingleton<AutoRefreshService>();
             var a = Assembly.GetExecutingAssembly();
             using var stream = a.GetManifestResourceStream("iRailTracker.appsettings.json");
             if (stream == null)

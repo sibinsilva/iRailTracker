@@ -22,7 +22,7 @@
              IsRefreshing="{Binding IsRefreshing}"
              Command="{Binding RefreshCommand}"
              IsEnabled="{Binding EnableListView}">
-            <CollectionView Grid.Row="1"
+            <CollectionView
                         ItemsSource="{Binding TrainJourneys}"
                         VerticalOptions="Fill"
                         HorizontalOptions="Fill"

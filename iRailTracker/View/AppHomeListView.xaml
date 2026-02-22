@@ -3,7 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="iRailTracker.View.AppHomeListView"
              xmlns:vm="clr-namespace:iRailTracker.ViewModel"
-             xmlns:strings="clr-namespace:iRailTracker.Resources.Strings">
+             xmlns:strings="clr-namespace:iRailTracker.Resources.Strings"
+             xmlns:views="clr-namespace:iRailTracker.View">
 
     <Grid IsVisible="{Binding EnableListView}"
           RowDefinitions="Auto,*"
@@ -37,6 +38,12 @@
                             Padding="14"
                             Margin="0,6"
                             BackgroundColor="#1E1E1E">
+
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding BindingContext.OpenJourneyCommand, Source={RelativeSource AncestorType={x:Type views:AppHomeListView}}}"
+                                    CommandParameter="{Binding .}" />
+                            </Border.GestureRecognizers>
 
                             <VerticalStackLayout Spacing="6">
 

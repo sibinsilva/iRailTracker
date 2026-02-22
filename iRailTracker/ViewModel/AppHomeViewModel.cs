@@ -36,6 +36,7 @@ namespace iRailTracker.ViewModel
         private static readonly TimeSpan CacheDuration = TimeSpan.FromSeconds(60);
         private ICommand? _refreshCommand;
         private ICommand? _searchServiceCommand;
+        private ICommand? _openJourneyCommand;
         private readonly SemaphoreSlim _searchLock = new(1, 1);
         private bool _isRefreshing;
         private IDispatcherTimer? _countdownTimer;
@@ -261,6 +262,7 @@ namespace iRailTracker.ViewModel
         public ICommand SearchServiceCommand => _searchServiceCommand ??= new Command(async () => await ExecuteTrainServiceSearch());
         public ICommand RefreshCommand => _refreshCommand ??= new Command(async () => await RefreshJourneys());
         public ICommand OpenSettingsCommand => new Command(async () => await GoToSettings());
+        public ICommand OpenJourneyCommand => _openJourneyCommand ??= new Command<TrainJourney>(async (journey) => await OpenJourney(journey));
 
         #endregion
 
@@ -335,11 +337,13 @@ namespace iRailTracker.ViewModel
                     TrainJourneys = new ObservableCollection<TrainJourney>(
                         journeyList.Select(journey => new TrainJourney
                         {
+                            TrainCode = journey.Traincode,
                             Origin = journey.Origin,
                             Destination = journey.Destination,
                             CurrentStatus = !string.IsNullOrEmpty(journey.Lastlocation)
                                 ? journey.Lastlocation
                                 : journey.Status,
+                            LastLocation = journey.Lastlocation,
                             DueIn = $"{journey.Duein} min{(journey.Duein > 1 ? "s" : "")}",
                             ExpectedArrival = DateTime.ParseExact(journey.Exparrival, "HH:mm", null)
                                 .ToString("hh:mm tt").ToLower(),
@@ -437,6 +441,19 @@ namespace iRailTracker.ViewModel
                 return;
 
             await nav.PushAsync(new AppSettings(new AppSettingsViewModel()));
+        }
+
+        private async Task OpenJourney(TrainJourney journey)
+        {
+            if (journey is null)
+                return;
+
+            var nav = Application.Current?.Windows[0].Page?.Navigation;
+
+            if (nav is null)
+                return;
+
+            await nav.PushAsync(new TrainLiveStatusPage(journey, stationList));
         }
 
         public async void Receive(AutoRefreshMessage message)

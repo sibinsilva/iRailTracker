@@ -110,11 +110,12 @@
 
 	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.2" />
-		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.2" />
-		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.30" />
-		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="10.0.30" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.2" />
+		<PackageReference Include="Mapsui.Maui" Version="5.0.2" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.3" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.3" />
+		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.41" />
+		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="10.0.41" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.3" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
 		<PackageReference Include="RestSharp" Version="113.1.0" />
 	</ItemGroup>
@@ -157,6 +158,9 @@
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="View\StartPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="View\TrainLiveStatusPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	</ItemGroup>

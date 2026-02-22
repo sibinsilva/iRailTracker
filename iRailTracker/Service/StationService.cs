@@ -93,5 +93,41 @@ namespace iRailTracker.Service
                 throw new Exception(errorMsg);
             }
         }
+
+        public async Task<List<TrainMovement>> GetTrainMovementsAsync(Settings settings, string trainCode, Action<string> errorCallback)
+        {
+            string url = $"{settings.GetTrainMovementsUrl}?TrainId={trainCode}&TrainDate={DateTime.Now:dd MMM yyyy}";
+            var request = new RestRequest(url, Method.Get);
+
+            try
+            {
+                var response = await _restClient.ExecuteAsync(request);
+
+                if (!response.IsSuccessful)
+                {
+                    errorCallback?.Invoke($"Error fetching movements from {url}. Status: {response.StatusCode}");
+                    return [];
+                }
+
+                string responseXml = response.Content;
+                XmlSerializer serializer = new XmlSerializer(typeof(TrainMovementsResponse));
+
+                using (StringReader reader = new StringReader(responseXml))
+                {
+                    TrainMovementsResponse result = (TrainMovementsResponse)serializer.Deserialize(reader);
+                    return result?.Movements ?? [];
+                }
+            }
+            catch (XmlException xmlEx)
+            {
+                errorCallback?.Invoke($"XML deserialization error: {xmlEx.Message}");
+                return [];
+            }
+            catch (Exception ex)
+            {
+                errorCallback?.Invoke($"Unexpected error: {ex.Message}");
+                return [];
+            }
+        }
     }
 }

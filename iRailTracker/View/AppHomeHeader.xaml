@@ -7,7 +7,7 @@
 
     <Border
         StrokeShape="RoundRectangle 16"
-        BackgroundColor="{AppThemeBinding Light=White, Dark=#1E1E1E}"
+        BackgroundColor="{AppThemeBinding Light={StaticResource CardBackgroundLight}, Dark={StaticResource CardBackgroundDark}}"
         Padding="16"
         Margin="12"
         Shadow="{

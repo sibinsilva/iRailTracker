@@ -353,7 +353,7 @@ namespace iRailTracker.ViewModel
                             : journey.Late < 0
                                         ? $"Early by {Math.Abs(journey.Late)} min{(Math.Abs(journey.Late) > 1 ? "s" : "")}"
                                         : $"Delayed by {journey.Late} min{(journey.Late > 1 ? "s" : "")}",
-                            LateColor = journey.Late <= 0 ? Colors.Green : Colors.OrangeRed
+                            LateColor = journey.Late <= 0 ? Color.FromArgb("#16A34A") : Color.FromArgb("#DC2626")
                         }));
                 }
                 else

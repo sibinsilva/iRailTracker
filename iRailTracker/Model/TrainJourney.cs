@@ -11,6 +11,6 @@
         public string ExpectedArrival { get; set; } = string.Empty;
         public string Late { get; set; } = string.Empty;
         public string LateDisplay { get; set; } = string.Empty;
-        public Color LateColor { get; set; } = Colors.OrangeRed;
+        public Color LateColor { get; set; } = Color.FromArgb("#DC2626");
     }
 }

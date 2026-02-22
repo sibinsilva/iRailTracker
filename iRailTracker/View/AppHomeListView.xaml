@@ -33,11 +33,12 @@
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
 
-                        <Border Stroke="#444"
+                        <Border Stroke="{AppThemeBinding Light={StaticResource CardStrokeLight}, Dark={StaticResource CardStrokeDark}}"
+                            StrokeShape="RoundRectangle 12"
                             StrokeThickness="1"
                             Padding="14"
                             Margin="0,6"
-                            BackgroundColor="#1E1E1E">
+                            BackgroundColor="{AppThemeBinding Light={StaticResource CardBackgroundLight}, Dark={StaticResource CardBackgroundDark}}">
 
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer
@@ -64,7 +65,7 @@
                                 <Label Text="{Binding CurrentStatus}"
                                    FontSize="Small"
                                    LineBreakMode="WordWrap"
-                                   TextColor="#CCCCCC" />
+                                   TextColor="{AppThemeBinding Light={StaticResource SubtleTextLight}, Dark={StaticResource SubtleTextDark}}" />
 
                                 <!-- TIMING GRID -->
                                 <Grid ColumnDefinitions="*,*"
@@ -73,7 +74,7 @@
 
                                     <Label Text="Arriving in"
                                        FontSize="Small"
-                                       TextColor="#AAAAAA" />
+                                       TextColor="{AppThemeBinding Light={StaticResource MutedTextLight}, Dark={StaticResource MutedTextDark}}" />
 
                                     <Label Text="{Binding DueIn}"
                                        Grid.Column="1"
@@ -83,7 +84,7 @@
                                     <Label Text="Expected"
                                        Grid.Row="1"
                                        FontSize="Small"
-                                       TextColor="#AAAAAA" />
+                                       TextColor="{AppThemeBinding Light={StaticResource MutedTextLight}, Dark={StaticResource MutedTextDark}}" />
 
                                     <Label Text="{Binding ExpectedArrival}"
                                        Grid.Row="1"

@@ -18,6 +18,19 @@ namespace iRailTracker.Service
             Coordinate? _location = null;
             try
             {
+                var status = await Permissions.CheckStatusAsync<Permissions.LocationWhenInUse>();
+
+                if (status != PermissionStatus.Granted)
+                {
+                    status = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
+                }
+
+                if (status != PermissionStatus.Granted)
+                {
+                    errorCallback?.Invoke("Location permission denied. Please enable location access in your device settings.");
+                    return null;
+                }
+
                 var location = await Geolocation.GetLastKnownLocationAsync();
 
                 if (location == null)
@@ -37,6 +50,18 @@ namespace iRailTracker.Service
                 {
                     errorCallback?.Invoke("No GPS data available.");
                 }
+            }
+            catch (FeatureNotSupportedException)
+            {
+                errorCallback?.Invoke("Location is not supported on this device.");
+            }
+            catch (FeatureNotEnabledException)
+            {
+                errorCallback?.Invoke("Location is disabled. Please enable location services in your device settings.");
+            }
+            catch (PermissionException)
+            {
+                errorCallback?.Invoke("Location permission denied. Please enable location access in your device settings.");
             }
             catch (Exception ex)
             {

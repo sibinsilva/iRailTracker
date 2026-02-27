@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 
 namespace iRailTracker.Service
@@ -17,6 +18,7 @@ namespace iRailTracker.Service
             _stationListService = stationListService;
         }
 
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Settings))]
         public async Task LoadSettingsAsync(IConfiguration configuration, Action<string>? errorCallback = null)
         {
             try

@@ -1,5 +1,6 @@
 ﻿using iRailTracker.Model;
 using RestSharp;
+using System.Diagnostics.CodeAnalysis;
 using System.Xml;
 using System.Xml.Serialization;
 
@@ -14,6 +15,8 @@ namespace iRailTracker.Service
             _restClient = new RestClient();
         }
 
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(StationCollection))]
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Station))]
         public async Task<List<Station>> GetAllStationsAsync(Settings settings, Action<string>? errorCallback)
         {
             string url = settings.GetAllStationsUrl;
@@ -60,6 +63,8 @@ namespace iRailTracker.Service
             }
         }
 
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(TrainService))]
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(StationData))]
         public async Task<List<StationData>> GetTrainServicesAsync(Settings settings, string stationCode, Action<string>? errorCallback)
         {
             string url = settings.GetServiceByStationCodeURL + stationCode;
@@ -106,6 +111,8 @@ namespace iRailTracker.Service
             }
         }
 
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(TrainMovementsResponse))]
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(TrainMovement))]
         public async Task<List<TrainMovement>> GetTrainMovementsAsync(Settings settings, string trainCode, Action<string>? errorCallback)
         {
             string url = $"{settings.GetTrainMovementsUrl}?TrainId={trainCode}&TrainDate={DateTime.Now:dd MMM yyyy}";

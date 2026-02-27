@@ -28,4 +28,16 @@ public class TrainMovement
 
     [XmlElement("StopType")]
     public string StopType { get; set; } = string.Empty;
+
+    [XmlElement("ExpectedArrival")]
+    public string ExpectedArrival { get; set; } = string.Empty;
+
+    [XmlElement("ExpectedDeparture")]
+    public string ExpectedDeparture { get; set; } = string.Empty;
+
+    [XmlElement("ScheduledArrival")]
+    public string ScheduledArrival { get; set; } = string.Empty;
+
+    [XmlElement("ScheduledDeparture")]
+    public string ScheduledDeparture { get; set; } = string.Empty;
 }

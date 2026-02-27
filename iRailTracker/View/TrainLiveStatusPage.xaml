@@ -13,7 +13,26 @@
             <Label Text="{Binding CurrentStatus}" FontSize="13" TextColor="{AppThemeBinding Light={StaticResource SubtleTextLight}, Dark={StaticResource SubtleTextDark}}" />
         </VerticalStackLayout>
 
-        <mapsui:MapControl x:Name="TrainMapControl" Grid.Row="1" />
+        <Grid Grid.Row="1">
+            <mapsui:MapControl x:Name="TrainMapControl" />
+
+            <Border x:Name="PinInfoOverlay"
+                    IsVisible="False"
+                    VerticalOptions="Start"
+                    HorizontalOptions="Center"
+                    Margin="0,12,0,0"
+                    Padding="14,10"
+                    BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#2D2D2D}"
+                    StrokeShape="RoundRectangle 8"
+                    Stroke="{AppThemeBinding Light=#E0E0E0, Dark=#444444}"
+                    Shadow="{OnPlatform Default={Shadow Brush=Black, Offset='2,2', Radius=4, Opacity=0.2}}">
+                <VerticalStackLayout Spacing="2">
+                    <Label x:Name="PinStationLabel" FontAttributes="Bold" FontSize="14" />
+                    <Label x:Name="PinArrivalLabel" FontSize="12"
+                           TextColor="{AppThemeBinding Light={StaticResource SubtleTextLight}, Dark={StaticResource SubtleTextDark}}" />
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
 
     </Grid>
 </ContentPage>

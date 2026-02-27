@@ -34,6 +34,8 @@ public partial class TrainLiveStatusPage : ContentPage
         var map = TrainMapControl.Map;
         map.Layers.Add(OpenStreetMap.CreateTileLayer());
 
+        TrainMapControl.Info += OnMapInfo;
+
         var allPoints = new List<MPoint>();
         var movements = await FetchMovementsAsync(journey.TrainCode);
 
@@ -41,7 +43,7 @@ public partial class TrainLiveStatusPage : ContentPage
         {
             foreach (var movement in movements.OrderBy(m => m.LocationOrder))
             {
-                var station = FindStation(movement.LocationFullName);
+                var station = FindStation(movement.LocationCode);
                 if (station is null)
                     continue;
 
@@ -62,7 +64,7 @@ public partial class TrainLiveStatusPage : ContentPage
                           : isDestination ? new MapsuiColor(220, 20, 60)
                           : new MapsuiColor(65, 105, 225);
                 var scale = (isOrigin || isDestination) ? 0.45 : 0.25;
-                AddStationPin(point, movement.LocationFullName, color, scale, map);
+                AddStationPin(point, movement.LocationFullName, color, scale, map, movement);
             }
         }
         else
@@ -99,6 +101,56 @@ public partial class TrainLiveStatusPage : ContentPage
     {
         base.OnDisappearing();
         StopBlinking();
+        TrainMapControl.Info -= OnMapInfo;
+    }
+
+    private void OnMapInfo(object? sender, MapInfoEventArgs e)
+    {
+        var mapInfo = e.GetMapInfo?.Invoke(TrainMapControl.Map.Layers);
+        var feature = mapInfo?.Feature;
+
+        if (feature is null)
+        {
+            PinInfoOverlay.IsVisible = false;
+            return;
+        }
+
+        var label = feature["Label"]?.ToString();
+        if (string.IsNullOrWhiteSpace(label) || label == "Current")
+        {
+            PinInfoOverlay.IsVisible = false;
+            return;
+        }
+
+        PinStationLabel.Text = label;
+
+        var locationType = feature["LocationType"]?.ToString();
+        var arrival = feature["ExpectedArrival"]?.ToString();
+        var departure = feature["ExpectedDeparture"]?.ToString();
+
+        var details = locationType switch
+        {
+            "O" => !string.IsNullOrWhiteSpace(departure) ? $"Dep: {departure}" : "Origin",
+            "D" => !string.IsNullOrWhiteSpace(arrival) ? $"Arr: {arrival}" : "Destination",
+            _ => FormatArrivalDeparture(arrival, departure)
+        };
+
+        PinArrivalLabel.Text = details;
+        PinInfoOverlay.IsVisible = true;
+    }
+
+    private static string FormatArrivalDeparture(string? arrival, string? departure)
+    {
+        bool hasArr = !string.IsNullOrWhiteSpace(arrival);
+        bool hasDep = !string.IsNullOrWhiteSpace(departure);
+
+        return (hasArr, hasDep) switch
+        {
+            (true, true) => $"Arr: {arrival}  Dep: {departure}",
+            (true, false) => $"Arr: {arrival}",
+            (false, true) => $"Dep: {departure}",
+            _ => string.Empty
+        };
     }
 
     private async Task<List<TrainMovement>> FetchMovementsAsync(string trainCode)
@@ -119,10 +171,17 @@ public partial class TrainLiveStatusPage : ContentPage
         }
     }
 
-    private static void AddStationPin(MPoint point, string label, MapsuiColor color, double scale, MapsuiMap map)
+    private static void AddStationPin(MPoint point, string label, MapsuiColor color, double scale, MapsuiMap map, TrainMovement? movement = null)
     {
         var feature = new PointFeature(point);
         feature["Label"] = label;
+
+        if (movement is not null)
+        {
+            feature["ExpectedArrival"] = movement.ExpectedArrival;
+            feature["ExpectedDeparture"] = movement.ExpectedDeparture;
+            feature["LocationType"] = movement.LocationType;
+        }
 
         var layer = new MemoryLayer
         {
@@ -199,8 +258,8 @@ public partial class TrainLiveStatusPage : ContentPage
         var normalized = name.Trim();
 
         return _stations.FirstOrDefault(s =>
-            s.StationDesc.Equals(normalized, StringComparison.OrdinalIgnoreCase) ||
+            s.StationCode.Equals(normalized, StringComparison.OrdinalIgnoreCase) ||
             (!string.IsNullOrWhiteSpace(s.StationAlias) && s.StationAlias.Equals(normalized, StringComparison.OrdinalIgnoreCase)) ||
-            normalized.Contains(s.StationDesc, StringComparison.OrdinalIgnoreCase));
+            normalized.Contains(s.StationCode, StringComparison.OrdinalIgnoreCase));
     }
 }

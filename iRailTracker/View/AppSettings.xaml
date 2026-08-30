@@ -43,30 +43,76 @@
                     SelectedItem="{Binding SelectedRefreshInterval}" 
                     IsEnabled="{Binding IsAutoRefreshEnabled}"/>
 
-                    <!-- FAVOURITE STATION -->
-            <Label Text="Favourite Station"
+                    <!-- FAVOURITE STATIONS -->
+            <Label Text="Favourite Stations"
                    FontAttributes="Bold"
                    FontSize="16" />
 
-            <Label Text="Set a favourite station to auto-load train journeys on startup."
+            <Label Text="Add favourite stations for quick access and delay alerts. The first one auto-loads on startup."
                    FontSize="13"
                    Opacity="0.7" />
 
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
-                <Picker Title="Select favourite station"
+                <Picker Title="Select a station to add"
                         ItemsSource="{Binding StationNames}"
-                        SelectedIndex="{Binding SelectedFavouriteIndex, Mode=TwoWay}"
+                        SelectedIndex="{Binding SelectedStationToAddIndex, Mode=TwoWay}"
                         FontSize="15"
                         Grid.Column="0" />
 
-                <Button Text="Remove"
-                        Command="{Binding ClearFavouriteCommand}"
-                        IsVisible="{Binding HasFavouriteStation}"
+                <Button Text="Add"
+                        Command="{Binding AddFavouriteCommand}"
                         FontSize="14"
                         Padding="12,8"
                         Grid.Column="1"
                         VerticalOptions="Center" />
             </Grid>
+
+            <VerticalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding FavouriteStations}">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate>
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                            <Label Text="{Binding .}"
+                                   FontSize="15"
+                                   VerticalOptions="Center"
+                                   Grid.Column="0" />
+
+                            <Button Text="Remove"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:AppSettingsViewModel}}, Path=RemoveFavouriteCommand}"
+                                    CommandParameter="{Binding .}"
+                                    FontSize="13"
+                                    Padding="10,6"
+                                    Grid.Column="1" />
+                        </Grid>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+
+            <!-- DELAY NOTIFICATIONS -->
+            <Label Text="Delay Notifications"
+                   FontAttributes="Bold"
+                   FontSize="16" />
+
+            <Label Text="Get notified when a journey you're tracking (tap the bell on a journey card) is delayed past the threshold below."
+                   FontSize="13"
+                   Opacity="0.7" />
+
+            <HorizontalStackLayout Spacing="20">
+
+                <RadioButton Content="On"
+             GroupName="DelayNotificationsGroup"
+             IsChecked="{Binding IsDelayNotificationsEnabled}" />
+
+                <RadioButton Content="Off"
+             GroupName="DelayNotificationsGroup"
+             IsChecked="{Binding IsDelayNotificationsEnabled, Converter={StaticResource InverseBoolConverter}}" />
+
+            </HorizontalStackLayout>
+
+            <Picker Title="Select delay threshold"
+                    ItemsSource="{Binding DelayThresholds}"
+                    ItemDisplayBinding="{Binding Display}"
+                    SelectedItem="{Binding SelectedDelayThreshold}"
+                    IsEnabled="{Binding IsDelayNotificationsEnabled}" />
 
         </VerticalStackLayout>
     </ScrollView>

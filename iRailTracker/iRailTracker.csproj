@@ -4,7 +4,7 @@
   <!-- 🔷 VERSIONING -->
   <!-- =============================== -->
   <PropertyGroup>
-    <VersionMajor>1</VersionMajor>
+    <VersionMajor>2</VersionMajor>
     <VersionMinor>0</VersionMinor>
     <VersionPatch>0</VersionPatch>
 
@@ -95,10 +95,12 @@
   <!-- =============================== -->
   <!-- 🔷 RELEASE GUARD -->
   <!-- =============================== -->
+  <!-- Blocks CLI release builds unless -p:ConfirmMajorBump=true is passed.
+       Visual Studio (Archive, etc.) is always allowed through. -->
   <Target Name="GuardRelease"
       BeforeTargets="Build"
       DependsOnTargets="ComputeDisplayVersion"
-      Condition="'$(Configuration)'=='Release'">
+      Condition="'$(Configuration)'=='Release' AND '$(BuildingInsideVisualStudio)'!='true'">
 
     <Message Importance="high"
          Text="🚀 Release build detected. Version=$(ApplicationDisplayVersion)" />
@@ -161,6 +163,7 @@
     <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="10.0.41" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.3" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="Plugin.LocalNotification" Version="14.1.1" />
     <PackageReference Include="RestSharp" Version="113.1.0" />
   </ItemGroup>
 

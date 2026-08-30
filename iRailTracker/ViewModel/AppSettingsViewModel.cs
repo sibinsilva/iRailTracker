@@ -1,6 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
 using iRailTracker.Model;
 using iRailTracker.Service;
+using Plugin.LocalNotification;
+using Plugin.LocalNotification.Core.Models;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 
@@ -22,7 +24,7 @@ namespace iRailTracker.ViewModel
                 RefreshIntervals.FirstOrDefault(x => x.Value == savedInterval)
                 ?? RefreshIntervals.First();
 
-            // Favourite station
+            // Favourite stations
             var stationNames = stationListService.Data
                 .Select(s => s.StationDesc)
                 .Distinct()
@@ -30,10 +32,15 @@ namespace iRailTracker.ViewModel
                 .ToList();
             StationNames = new ObservableCollection<string>(stationNames);
 
-            _favouriteStation = Preferences.Get(AppPreferences.FavouriteStation, string.Empty);
-            _selectedFavouriteIndex = string.IsNullOrEmpty(_favouriteStation)
-                ? -1
-                : stationNames.IndexOf(_favouriteStation);
+            FavouriteStations = new ObservableCollection<string>(FavouriteStationsStore.Load());
+
+            // Delay notifications
+            _isDelayNotificationsEnabled = Preferences.Get(AppPreferences.DelayNotificationsEnabled, false);
+
+            var savedThreshold = Preferences.Get(AppPreferences.DelayNotificationThresholdMinutes, 5);
+            SelectedDelayThreshold =
+                DelayThresholds.FirstOrDefault(x => x.Value == savedThreshold)
+                ?? DelayThresholds.First();
         }
 
         #endregion
@@ -100,45 +107,105 @@ namespace iRailTracker.ViewModel
 
         #endregion
 
-        #region Favourite Station
+        #region Favourite Stations
 
         public ObservableCollection<string> StationNames { get; }
 
-        private string _favouriteStation = string.Empty;
-        public string FavouriteStation
+        public ObservableCollection<string> FavouriteStations { get; }
+
+        private int _selectedStationToAddIndex = -1;
+        public int SelectedStationToAddIndex
         {
-            get => _favouriteStation;
-            set
-            {
-                if (SetProperty(ref _favouriteStation, value))
-                {
-                    Preferences.Set(AppPreferences.FavouriteStation, value ?? string.Empty);
-                    OnPropertyChanged(nameof(HasFavouriteStation));
-                }
-            }
+            get => _selectedStationToAddIndex;
+            set => SetProperty(ref _selectedStationToAddIndex, value);
         }
 
-        public bool HasFavouriteStation => !string.IsNullOrEmpty(_favouriteStation);
-
-        private int _selectedFavouriteIndex = -1;
-        public int SelectedFavouriteIndex
+        public ICommand AddFavouriteCommand => new Command(() =>
         {
-            get => _selectedFavouriteIndex;
-            set
+            if (SelectedStationToAddIndex < 0 || SelectedStationToAddIndex >= StationNames.Count)
+                return;
+
+            var station = StationNames[SelectedStationToAddIndex];
+
+            if (!FavouriteStations.Contains(station))
             {
-                if (SetProperty(ref _selectedFavouriteIndex, value))
-                {
-                    if (value >= 0 && value < StationNames.Count)
-                        FavouriteStation = StationNames[value];
-                }
+                FavouriteStations.Add(station);
+                SaveFavouriteStations();
             }
-        }
 
-        public ICommand ClearFavouriteCommand => new Command(() =>
-        {
-            FavouriteStation = string.Empty;
-            SelectedFavouriteIndex = -1;
+            SelectedStationToAddIndex = -1;
         });
+
+        public ICommand RemoveFavouriteCommand => new Command<string>((station) =>
+        {
+            if (string.IsNullOrEmpty(station))
+                return;
+
+            if (FavouriteStations.Remove(station))
+                SaveFavouriteStations();
+        });
+
+        private void SaveFavouriteStations()
+        {
+            FavouriteStationsStore.Save(FavouriteStations.ToList());
+            WeakReferenceMessenger.Default.Send(new FavouriteStationsChangedMessage(FavouriteStations.ToList()));
+        }
+
+        #endregion
+
+        #region Delay Notifications
+
+        public ObservableCollection<RefreshIntervalOption> DelayThresholds { get; } =
+            new()
+            {
+                new() { Display = "2 minutes", Value = 2 },
+                new() { Display = "5 minutes", Value = 5 },
+                new() { Display = "10 minutes", Value = 10 },
+                new() { Display = "15 minutes", Value = 15 }
+            };
+
+        private RefreshIntervalOption? _selectedDelayThreshold;
+        public RefreshIntervalOption? SelectedDelayThreshold
+        {
+            get => _selectedDelayThreshold;
+            set
+            {
+                if (SetProperty(ref _selectedDelayThreshold, value) && value != null)
+                    Preferences.Set(AppPreferences.DelayNotificationThresholdMinutes, value.Value);
+            }
+        }
+
+        private bool _isDelayNotificationsEnabled;
+        public bool IsDelayNotificationsEnabled
+        {
+            get => _isDelayNotificationsEnabled;
+            set
+            {
+                if (!SetProperty(ref _isDelayNotificationsEnabled, value))
+                    return;
+
+                Preferences.Set(AppPreferences.DelayNotificationsEnabled, value);
+
+                if (value)
+                    _ = RequestNotificationPermissionAsync();
+            }
+        }
+
+        private async Task RequestNotificationPermissionAsync()
+        {
+            var permission = new NotificationPermission();
+
+            if (await LocalNotificationCenter.Current.AreNotificationsEnabled(permission))
+                return;
+
+            var granted = await LocalNotificationCenter.Current.RequestNotificationPermission(permission);
+
+            if (!granted)
+            {
+                ShowError("Notification permission denied. Enable notifications in your device settings to receive delay alerts.");
+                IsDelayNotificationsEnabled = false;
+            }
+        }
 
         #endregion
     }

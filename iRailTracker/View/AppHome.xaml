@@ -4,7 +4,14 @@
              x:Class="iRailTracker.View.AppHome"
              xmlns:vm="clr-namespace:iRailTracker.ViewModel"
              xmlns:views="clr-namespace:iRailTracker.View"
+             xmlns:converters="clr-namespace:iRailTracker.Converters"
              Title="iRailTracker">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:CountToBoolConverter x:Key="CountToBoolConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
 
     <NavigationPage.TitleView>
         <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
@@ -33,16 +40,40 @@
             Clicked="OnAboutClicked" />
     </ContentPage.ToolbarItems>
 
-    <Grid RowDefinitions="Auto,*">
+    <Grid RowDefinitions="Auto,Auto,*">
 
         <!-- HEADER -->
         <views:AppHomeHeader Grid.Row="0" />
 
+        <!-- FAVOURITE STATION CHIPS -->
+        <ScrollView Grid.Row="1"
+                    Orientation="Horizontal"
+                    IsVisible="{Binding FavouriteStations.Count, Converter={StaticResource CountToBoolConverter}}">
+            <HorizontalStackLayout Spacing="8"
+                                   Padding="12,0,12,8"
+                                   BindableLayout.ItemsSource="{Binding FavouriteStations}">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate>
+                        <Border StrokeShape="RoundRectangle 16"
+                                BackgroundColor="{AppThemeBinding Light={StaticResource CardBackgroundLight}, Dark={StaticResource CardBackgroundDark}}"
+                                Padding="14,6">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:AppHomeViewModel}}, Path=SelectFavouriteCommand}"
+                                    CommandParameter="{Binding .}" />
+                            </Border.GestureRecognizers>
+                            <Label Text="{Binding .}" FontSize="13" />
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </HorizontalStackLayout>
+        </ScrollView>
+
         <!-- LIST -->
-        <views:AppHomeListView Grid.Row="1" />
+        <views:AppHomeListView Grid.Row="2" />
 
         <!-- EMPTY / NO DATA OVERLAY -->
-        <Grid Grid.Row="1"
+        <Grid Grid.Row="2"
               IsVisible="{Binding NoJourneyFound}"
               Padding="32,16">
 

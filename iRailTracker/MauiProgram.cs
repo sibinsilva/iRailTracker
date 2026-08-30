@@ -4,6 +4,8 @@ using iRailTracker.ViewModel;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
+using Plugin.LocalNotification;
+using Plugin.LocalNotification.Core.Models.AndroidOption;
 using SkiaSharp.Views.Maui.Controls.Hosting;
 
 namespace iRailTracker
@@ -16,6 +18,21 @@ namespace iRailTracker
             builder
                 .UseMauiApp<App>()
                 .UseSkiaSharp()
+                .UseLocalNotification(config =>
+                {
+                    config.AddAndroid(android =>
+                    {
+                        android.AddChannel(new AndroidNotificationChannelRequest
+                        {
+                            Id = "journey_tracking",
+                            Name = "Journey Tracking",
+                            Description = "Ongoing status while a journey is being tracked",
+                            Importance = AndroidImportance.Low,
+                            EnableVibration = false,
+                            EnableSound = false
+                        });
+                    });
+                })
                 .ConfigureFonts(fonts =>
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");

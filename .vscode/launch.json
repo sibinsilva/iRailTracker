@@ -1,0 +1,26 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "iRailTracker (Windows)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-windows",
+      "program": "${workspaceFolder}/iRailTracker/bin/Debug/net10.0-windows10.0.19041.0/win-x64/iRailTracker.exe",
+      "args": [],
+      "cwd": "${workspaceFolder}/iRailTracker/bin/Debug/net10.0-windows10.0.19041.0/win-x64",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Debug Unit Tests",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "dotnet",
+      "args": ["test", "${workspaceFolder}/iRailTracker.UnitTests/iRailTracker.UnitTests.csproj"],
+      "cwd": "${workspaceFolder}",
+      "console": "internalConsole",
+      "stopAtEntry": false
+    }
+  ]
+}

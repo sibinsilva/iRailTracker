@@ -453,6 +453,43 @@ public class AppHomeViewModelTests
 
     #endregion
 
+    #region Favourite Stations Tests
+
+    [Fact]
+    public void Constructor_FavouriteStations_StartsEmpty()
+    {
+        var vm = CreateViewModel();
+
+        Assert.Empty(vm.FavouriteStations);
+    }
+
+    [Fact]
+    public void Receive_FavouriteStationsChanged_UpdatesFavouriteStations()
+    {
+        var vm = CreateViewModel();
+
+        vm.Receive(new FavouriteStationsChangedMessage(new List<string> { "Cork", "Dublin Heuston" }));
+
+        Assert.Equal(new[] { "Cork", "Dublin Heuston" }, vm.FavouriteStations);
+    }
+
+    [Fact]
+    public void Receive_FavouriteStationsChanged_RaisesPropertyChanged()
+    {
+        var vm = CreateViewModel();
+        var raised = false;
+        vm.PropertyChanged += (s, e) =>
+        {
+            if (e.PropertyName == nameof(vm.FavouriteStations)) raised = true;
+        };
+
+        vm.Receive(new FavouriteStationsChangedMessage(new List<string> { "Cork" }));
+
+        Assert.True(raised);
+    }
+
+    #endregion
+
     #region ErrorOccurred Tests
 
     [Fact]

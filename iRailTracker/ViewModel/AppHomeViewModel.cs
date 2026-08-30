@@ -11,7 +11,10 @@ using System.Windows.Input;
 
 namespace iRailTracker.ViewModel
 {
-    public class AppHomeViewModel : BaseViewModel,IRecipient<AutoRefreshMessage>, IRecipient<AutoRefreshSettingsChangedMessage>
+    public class AppHomeViewModel : BaseViewModel,
+        IRecipient<AutoRefreshMessage>,
+        IRecipient<AutoRefreshSettingsChangedMessage>,
+        IRecipient<FavouriteStationsChangedMessage>
     {
         #region Fields
 
@@ -19,6 +22,7 @@ namespace iRailTracker.ViewModel
         private readonly DataService<Settings> _settings;
         private ObservableCollection<string> _stationOptions;
         private ObservableCollection<TrainJourney> _trainJourneys;
+        private ObservableCollection<string> _favouriteStations;
         private readonly List<Station> stationList;
         private readonly List<string> _stationNames = new List<string>();
         private bool _isFindNearbyStationChecked;
@@ -62,6 +66,7 @@ namespace iRailTracker.ViewModel
             _stationNames = stationNames;
             _stationOptions = new ObservableCollection<string>(stationNames);
             _trainJourneys = new ObservableCollection<TrainJourney>();
+            _favouriteStations = new ObservableCollection<string>();
             _selectedStation = string.Empty;
             _noJourneyMsg = string.Empty;
             _refreshTime = string.Empty;
@@ -201,6 +206,19 @@ namespace iRailTracker.ViewModel
             }
         }
 
+        public ObservableCollection<string> FavouriteStations
+        {
+            get => _favouriteStations;
+            private set
+            {
+                if (_favouriteStations != value)
+                {
+                    _favouriteStations = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         public ObservableCollection<TrainJourney> TrainJourneys
         {
             get => _trainJourneys;
@@ -263,6 +281,8 @@ namespace iRailTracker.ViewModel
         public ICommand RefreshCommand => _refreshCommand ??= new Command(async () => await RefreshJourneys());
         public ICommand OpenSettingsCommand => new Command(async () => await GoToSettings());
         public ICommand OpenJourneyCommand => _openJourneyCommand ??= new Command<TrainJourney>(async (journey) => await OpenJourney(journey));
+        public ICommand SelectFavouriteCommand => new Command<string>(async (station) => await LoadStationAsync(station));
+        public ICommand ToggleTrackingCommand => new Command<TrainJourney>(async (journey) => await ToggleTracking(journey));
 
         #endregion
 
@@ -353,7 +373,8 @@ namespace iRailTracker.ViewModel
                             : journey.Late < 0
                                         ? $"Early by {Math.Abs(journey.Late)} min{(Math.Abs(journey.Late) > 1 ? "s" : "")}"
                                         : $"Delayed by {journey.Late} min{(journey.Late > 1 ? "s" : "")}",
-                            LateColor = journey.Late <= 0 ? Color.FromArgb("#16A34A") : Color.FromArgb("#DC2626")
+                            LateColor = journey.Late <= 0 ? Color.FromArgb("#16A34A") : Color.FromArgb("#DC2626"),
+                            IsTracking = JourneyTrackingService.Instance.IsTracking(journey.Traincode)
                         }));
                 }
                 else
@@ -447,6 +468,23 @@ namespace iRailTracker.ViewModel
             await nav.PushAsync(settingsPage);
         }
 
+        private async Task ToggleTracking(TrainJourney journey)
+        {
+            if (journey is null)
+                return;
+
+            if (JourneyTrackingService.Instance.IsTracking(journey.TrainCode))
+            {
+                await JourneyTrackingService.Instance.StopTracking(journey.TrainCode);
+                journey.IsTracking = false;
+            }
+            else
+            {
+                await JourneyTrackingService.Instance.StartTracking(journey, _settings.Data);
+                journey.IsTracking = true;
+            }
+        }
+
         private async Task OpenJourney(TrainJourney journey)
         {
             if (journey is null)
@@ -522,17 +560,29 @@ namespace iRailTracker.ViewModel
 
         public async Task LoadFavouriteStationAsync()
         {
-            var favourite = Preferences.Get(AppPreferences.FavouriteStation, string.Empty);
+            FavouriteStations = new ObservableCollection<string>(FavouriteStationsStore.Load());
+
+            var favourite = FavouriteStations.FirstOrDefault();
 
             if (string.IsNullOrEmpty(favourite))
                 return;
 
-            if (!_stationNames.Contains(favourite))
+            await LoadStationAsync(favourite);
+        }
+
+        private async Task LoadStationAsync(string? station)
+        {
+            if (string.IsNullOrEmpty(station) || !_stationNames.Contains(station))
                 return;
 
             IsLocateStationChecked = true;
-            SelectedStation = favourite;
+            SelectedStation = station;
             await ExecuteTrainServiceSearch(waitForLock: true);
+        }
+
+        public void Receive(FavouriteStationsChangedMessage message)
+        {
+            FavouriteStations = new ObservableCollection<string>(message.Stations);
         }
 
         private static int GetRefreshIntervalSeconds()

@@ -4,7 +4,15 @@
              x:Class="iRailTracker.View.AppHomeListView"
              xmlns:vm="clr-namespace:iRailTracker.ViewModel"
              xmlns:strings="clr-namespace:iRailTracker.Resources.Strings"
-             xmlns:views="clr-namespace:iRailTracker.View">
+             xmlns:views="clr-namespace:iRailTracker.View"
+             xmlns:converters="clr-namespace:iRailTracker.Converters">
+
+    <ContentView.Resources>
+        <ResourceDictionary>
+            <converters:BellGlyphConverter x:Key="BellGlyphConverter" />
+            <converters:BellOpacityConverter x:Key="BellOpacityConverter" />
+        </ResourceDictionary>
+    </ContentView.Resources>
 
     <Grid IsVisible="{Binding EnableListView}"
           RowDefinitions="Auto,*"
@@ -48,18 +56,33 @@
 
                             <VerticalStackLayout Spacing="6">
 
-                                <!-- ROUTE -->
-                                <Label FontSize="16"
-                                   FontAttributes="Bold"
-                                   LineBreakMode="WordWrap">
-                                    <Label.FormattedText>
-                                        <FormattedString>
-                                            <Span Text="{Binding Origin}" />
-                                            <Span Text=" → " />
-                                            <Span Text="{Binding Destination}" />
-                                        </FormattedString>
-                                    </Label.FormattedText>
-                                </Label>
+                                <!-- ROUTE + TRACKING BELL -->
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <Label Grid.Column="0"
+                                       FontSize="16"
+                                       FontAttributes="Bold"
+                                       LineBreakMode="WordWrap">
+                                        <Label.FormattedText>
+                                            <FormattedString>
+                                                <Span Text="{Binding Origin}" />
+                                                <Span Text=" → " />
+                                                <Span Text="{Binding Destination}" />
+                                            </FormattedString>
+                                        </Label.FormattedText>
+                                    </Label>
+
+                                    <Label Grid.Column="1"
+                                       Text="{Binding IsTracking, Converter={StaticResource BellGlyphConverter}}"
+                                       FontSize="20"
+                                       VerticalOptions="Start"
+                                       Opacity="{Binding IsTracking, Converter={StaticResource BellOpacityConverter}}">
+                                        <Label.GestureRecognizers>
+                                            <TapGestureRecognizer
+                                                Command="{Binding BindingContext.ToggleTrackingCommand, Source={RelativeSource AncestorType={x:Type views:AppHomeListView}}}"
+                                                CommandParameter="{Binding .}" />
+                                        </Label.GestureRecognizers>
+                                    </Label>
+                                </Grid>
 
                                 <!-- CURRENT STATUS -->
                                 <Label Text="{Binding CurrentStatus}"

@@ -92,10 +92,6 @@ namespace iRailTracker.Service
                 return;
 
             var destinationStop = movements.FirstOrDefault(m => m.LocationType == "D");
-            var lateMinutes = destinationStop is not null &&
-                TrainMovementAnalysis.TryComputeDelayMinutes(destinationStop, out var late)
-                    ? late
-                    : 0;
 
             if (destinationStop is not null && HasJourneyEnded(destinationStop))
             {
@@ -103,7 +99,9 @@ namespace iRailTracker.Service
                 return;
             }
 
-            var currentLocation = TrainMovementAnalysis.DetermineCurrentLocation(movements, DateTime.Now) ?? tracked.Origin;
+            var currentStop = TrainMovementAnalysis.DetermineCurrentStop(movements, DateTime.Now);
+            var currentLocation = currentStop?.LocationFullName ?? tracked.Origin;
+            var lateMinutes = await GetOfficialDelayMinutes(stationService, settings, tracked, movements);
 
             await ShowStatusNotification(tracked, currentLocation, lateMinutes);
 
@@ -113,6 +111,24 @@ namespace iRailTracker.Service
                 var delay = new TrainDelayInfo(tracked.TrainCode, tracked.Origin, tracked.Destination, lateMinutes);
                 await DelayNotificationService.Instance.CheckAndNotify(delay, threshold);
             }
+        }
+
+        /// <summary>
+        /// Looks up the train's official, live "Late" value from the departure board of the next
+        /// station it hasn't reached yet - the same field and endpoint the Home page cards use, so the
+        /// tracking notification always agrees with what's shown there.
+        /// </summary>
+        private static async Task<int> GetOfficialDelayMinutes(
+            StationService stationService, Settings settings, TrackedJourney tracked, List<TrainMovement> movements)
+        {
+            var nextStop = TrainMovementAnalysis.DetermineNextStop(movements, DateTime.Now);
+            if (nextStop is null)
+                return 0;
+
+            var board = await stationService.GetTrainServicesAsync(settings, nextStop.LocationCode, _ => { });
+            var match = board.FirstOrDefault(s => s.Traincode.Trim() == tracked.TrainCode.Trim());
+
+            return match?.Late ?? 0;
         }
 
         private static bool HasJourneyEnded(TrainMovement destinationStop)
@@ -132,15 +148,19 @@ namespace iRailTracker.Service
 
         private static async Task ShowStatusNotification(TrackedJourney tracked, string currentLocation, int lateMinutes)
         {
-            var statusText = lateMinutes > 0
-                ? $"Near {currentLocation} · Delayed {lateMinutes} min"
-                : $"Near {currentLocation} · On time";
+            var statusText = lateMinutes switch
+            {
+                > 0 => $"Near {currentLocation} · Delayed {lateMinutes} min",
+                < 0 => $"Near {currentLocation} · Early by {Math.Abs(lateMinutes)} min",
+                _ => $"Near {currentLocation} · On time"
+            };
 
             var notification = new NotificationRequest
             {
                 NotificationId = tracked.NotificationId,
                 Title = $"{tracked.Origin} → {tracked.Destination}",
                 Description = statusText,
+                ReturningData = tracked.TrainCode,
                 Android =
                 {
                     ChannelId = "journey_tracking",
@@ -166,6 +186,7 @@ namespace iRailTracker.Service
                     NotificationId = tracked.NotificationId,
                     Title = $"{tracked.Origin} → {tracked.Destination}",
                     Description = "Tracking journey…",
+                    ReturningData = tracked.TrainCode,
                     Android =
                     {
                         ChannelId = "journey_tracking",

@@ -70,7 +70,7 @@
         </ScrollView>
 
         <!-- LIST -->
-        <views:AppHomeListView Grid.Row="2" />
+        <views:AppHomeListView x:Name="JourneysListView" Grid.Row="2" />
 
         <!-- EMPTY / NO DATA OVERLAY -->
         <Grid Grid.Row="2"

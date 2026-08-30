@@ -8,46 +8,49 @@ namespace iRailTracker.Service
         private const string TimeFormat = "HH:mm:ss";
         private static readonly TimeSpan ZeroSentinel = TimeSpan.Zero;
 
-        public static bool TryComputeDelayMinutes(TrainMovement destinationStop, out int minutes)
-        {
-            minutes = 0;
-
-            if (!TryParseTime(destinationStop.ScheduledArrival, out var scheduled) ||
-                !TryParseTime(destinationStop.ExpectedArrival, out var expected))
-            {
-                return false;
-            }
-
-            var diff = (expected - scheduled).TotalMinutes;
-
-            if (diff > 720)
-                diff -= 1440;
-            else if (diff < -720)
-                diff += 1440;
-
-            minutes = (int)Math.Round(diff);
-            return true;
-        }
-
-        public static string? DetermineCurrentLocation(IEnumerable<TrainMovement> movements, DateTime now)
+        /// <summary>
+        /// Returns the last stop in the route whose effective time has already passed (i.e. where the
+        /// train currently is, or most recently was), falling back to the first named stop if none have
+        /// passed yet. Blank-name timing points are skipped.
+        /// </summary>
+        public static TrainMovement? DetermineCurrentStop(IEnumerable<TrainMovement> movements, DateTime now)
         {
             var nowTime = now.TimeOfDay;
-            string? current = null;
-            string? firstNamed = null;
+            TrainMovement? current = null;
+            TrainMovement? firstNamed = null;
 
             foreach (var movement in movements.OrderBy(m => m.LocationOrder))
             {
                 if (string.IsNullOrWhiteSpace(movement.LocationFullName))
                     continue;
 
-                firstNamed ??= movement.LocationFullName;
+                firstNamed ??= movement;
 
                 var effectiveTime = GetEffectiveTime(movement);
                 if (effectiveTime is { } effective && effective <= nowTime)
-                    current = movement.LocationFullName;
+                    current = movement;
             }
 
             return current ?? firstNamed;
+        }
+
+        public static string? DetermineCurrentLocation(IEnumerable<TrainMovement> movements, DateTime now) =>
+            DetermineCurrentStop(movements, now)?.LocationFullName;
+
+        /// <summary>
+        /// Returns the next stop (by route order) the train hasn't reached yet - i.e. one whose
+        /// departure board would still list this train as due. Used to look up the train's official,
+        /// live "Late" value from that station's board rather than approximating it from movement
+        /// timestamps (which can disagree with Irish Rail's own figure).
+        /// </summary>
+        public static TrainMovement? DetermineNextStop(IEnumerable<TrainMovement> movements, DateTime now)
+        {
+            var nowTime = now.TimeOfDay;
+
+            return movements
+                .Where(m => !string.IsNullOrWhiteSpace(m.LocationFullName) && !string.IsNullOrWhiteSpace(m.LocationCode))
+                .OrderBy(m => m.LocationOrder)
+                .FirstOrDefault(m => GetEffectiveTime(m) is { } effective && effective > nowTime);
         }
 
         private static TimeSpan? GetEffectiveTime(TrainMovement movement)

@@ -14,7 +14,8 @@ namespace iRailTracker.ViewModel
     public class AppHomeViewModel : BaseViewModel,
         IRecipient<AutoRefreshMessage>,
         IRecipient<AutoRefreshSettingsChangedMessage>,
-        IRecipient<FavouriteStationsChangedMessage>
+        IRecipient<FavouriteStationsChangedMessage>,
+        IRecipient<NavigateToTrackedJourneyMessage>
     {
         #region Fields
 
@@ -583,6 +584,16 @@ namespace iRailTracker.ViewModel
         public void Receive(FavouriteStationsChangedMessage message)
         {
             FavouriteStations = new ObservableCollection<string>(message.Stations);
+        }
+
+        public event EventHandler<TrainJourney>? ScrollToJourneyRequested;
+
+        public void Receive(NavigateToTrackedJourneyMessage message)
+        {
+            var journey = TrainJourneys.FirstOrDefault(j => j.TrainCode == message.TrainCode);
+
+            if (journey is not null)
+                ScrollToJourneyRequested?.Invoke(this, journey);
         }
 
         private static int GetRefreshIntervalSeconds()

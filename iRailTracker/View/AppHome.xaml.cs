@@ -8,6 +8,7 @@ public partial class AppHome : ContentPage
 {
     private readonly AppHomeViewModel _viewModel;
     private bool _isErrorHandlerSubscribed;
+    private bool _isScrollHandlerSubscribed;
     private bool _isExitPromptVisible;
     private bool _favouriteLoaded;
     private bool _changelogChecked;
@@ -45,6 +46,12 @@ public partial class AppHome : ContentPage
             _isErrorHandlerSubscribed = true;
         }
 
+        if (!_isScrollHandlerSubscribed)
+        {
+            _viewModel.ScrollToJourneyRequested += OnScrollToJourneyRequested;
+            _isScrollHandlerSubscribed = true;
+        }
+
         var enabled = Preferences.Get(AppPreferences.AutoRefreshEnabled, false);
         var interval = Preferences.Get(AppPreferences.RefreshIntervalSeconds, 30);
 
@@ -75,6 +82,17 @@ public partial class AppHome : ContentPage
             _viewModel.ErrorOccurred -= OnErrorOccurred;
             _isErrorHandlerSubscribed = false;
         }
+
+        if (_isScrollHandlerSubscribed)
+        {
+            _viewModel.ScrollToJourneyRequested -= OnScrollToJourneyRequested;
+            _isScrollHandlerSubscribed = false;
+        }
+    }
+
+    private void OnScrollToJourneyRequested(object? sender, Model.TrainJourney journey)
+    {
+        JourneysListView.ScrollTo(journey);
     }
 
     protected override bool OnBackButtonPressed()

@@ -53,7 +53,8 @@ namespace iRailTracker.Service
             {
                 NotificationId = _nextNotificationId++,
                 Title = $"{delay.TrainCode} delayed by {delay.LateMinutes} min",
-                Description = $"{delay.Origin} to {delay.Destination}"
+                Description = $"{delay.Origin} to {delay.Destination}",
+                ReturningData = delay.TrainCode
             };
 
             await LocalNotificationCenter.Current.Show(notification);

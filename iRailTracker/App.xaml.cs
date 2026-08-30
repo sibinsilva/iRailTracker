@@ -1,6 +1,9 @@
-﻿using iRailTracker.Service;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using iRailTracker.Service;
 using iRailTracker.View;
 using Microsoft.Extensions.Configuration;
+using Plugin.LocalNotification;
+using Plugin.LocalNotification.EventArgs;
 
 namespace iRailTracker
 {
@@ -14,6 +17,8 @@ namespace iRailTracker
             InitializeComponent();
             _config = config;
             _configLoader = configLoader;
+
+            LocalNotificationCenter.Current.NotificationActionTapped += OnNotificationActionTapped;
         }
 
         protected override Window CreateWindow(IActivationState? activationState)
@@ -31,6 +36,37 @@ namespace iRailTracker
             {
                 Windows[0].Page = new NavigationPage(new AppHome());
             }
+
+            var launchDetails = LocalNotificationCenter.LaunchNotificationDetails;
+            if (launchDetails is { DidNotificationLaunchApp: true })
+                HandleNotificationTap(launchDetails.Request?.ReturningData);
+        }
+
+        private void OnNotificationActionTapped(NotificationActionEventArgs e)
+        {
+            if (e.IsTapped)
+                HandleNotificationTap(e.Request?.ReturningData);
+        }
+
+        private void HandleNotificationTap(string? trainCode)
+        {
+            if (string.IsNullOrEmpty(trainCode))
+                return;
+
+            MainThread.BeginInvokeOnMainThread(async () =>
+            {
+                var nav = Windows.Count > 0 ? Windows[0].Page?.Navigation : null;
+                if (nav is null)
+                    return;
+
+                while (nav.ModalStack.Count > 0)
+                    await nav.PopModalAsync(false);
+
+                while (nav.NavigationStack.Count > 1)
+                    await nav.PopAsync(false);
+
+                WeakReferenceMessenger.Default.Send(new NavigateToTrackedJourneyMessage(trainCode));
+            });
         }
     }
 }

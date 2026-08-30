@@ -32,6 +32,7 @@
              Command="{Binding RefreshCommand}"
              IsEnabled="{Binding EnableListView}">
             <CollectionView
+                        x:Name="JourneysCollectionView"
                         ItemsSource="{Binding TrainJourneys}"
                         VerticalOptions="Fill"
                         HorizontalOptions="Fill"

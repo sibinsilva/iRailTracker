@@ -8,4 +8,6 @@
     android:updatePeriodMillis="1800000"
     android:initialLayout="@layout/departures_widget"
     android:description="@string/departures_widget_description"
+    android:configure="com.app.irailtracker.WidgetConfigActivity"
+    android:widgetFeatures="reconfigurable|configuration_optional"
     android:widgetCategory="home_screen" />

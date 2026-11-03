@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="departures_widget_description">Next departures from your first favourite station</string>
+    <string name="departures_widget_description">Next departures from a station of your choice</string>
+    <string name="departures_widget_compact_description">The next departure from a station, in one row</string>
 </resources>

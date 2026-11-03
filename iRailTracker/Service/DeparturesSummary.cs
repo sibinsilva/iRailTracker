@@ -37,11 +37,13 @@ namespace iRailTracker.Service
         /// Loads the next departures for the user's first favourite station. Network problems are
         /// described in the returned summary rather than thrown.
         /// </summary>
-        public static async Task<Summary> LoadAsync()
+        /// <param name="station">The widget's chosen station; empty means the first favourite.</param>
+        public static async Task<Summary> LoadAsync(string? station = null, int maxRows = 3)
         {
-            var station = FavouriteStationsStore.Load().FirstOrDefault();
+            if (string.IsNullOrWhiteSpace(station))
+                station = FavouriteStationsStore.Load().FirstOrDefault();
             if (string.IsNullOrEmpty(station))
-                return new Summary("iRailTracker", ["Add a favourite station in the app"], string.Empty);
+                return new Summary("iRailTracker", ["Long-press to choose a station"], string.Empty);
 
             var settings = LoadEmbeddedSettings();
             if (settings is null)
@@ -58,7 +60,7 @@ namespace iRailTracker.Service
             if (error is not null)
                 return new Summary(station, ["Couldn't load departures (offline?)"], UpdatedText());
 
-            var rows = FormatRows(board);
+            var rows = FormatRows(board, maxRows);
             return new Summary(station, rows.Count > 0 ? rows : ["No departures in the next 90 min"], UpdatedText());
         }
 

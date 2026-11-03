@@ -348,12 +348,8 @@ namespace iRailTracker.ViewModel
 
                 var stationCode = matchingStation != null ? matchingStation.StationCode : "";
 
-                if (bypassCache && !string.IsNullOrEmpty(stationCode))
-                {
-                    _journeyCache.Remove(stationCode);
-                }
-
                 List<StationData> journeyList;
+                DateTime? offlineDataFrom = null;
 
                 if (!bypassCache && _journeyCache.TryGetValue(stationCode, out var cacheEntry) &&
                     DateTime.UtcNow - cacheEntry.fetchedAt < CacheDuration)
@@ -364,15 +360,30 @@ namespace iRailTracker.ViewModel
                 else
                 {
                     // Fetch fresh data
+                    string? fetchError = null;
                     StationService trainService = new StationService();
                     journeyList = await trainService.GetTrainServicesAsync(
                         _settings.Data,
                         stationCode,
-                        ShowError);
+                        error => fetchError = error);
 
-                    // Only cache real results, so a failed request is retried on the next refresh
-                    if (journeyList.Count > 0)
+                    if (fetchError is null)
+                    {
                         _journeyCache[stationCode] = (DateTime.UtcNow, journeyList);
+                    }
+                    else if (_journeyCache.TryGetValue(stationCode, out var lastGood))
+                    {
+                        // Offline or the API is down: keep showing the last board we got, marked
+                        // with its age, instead of an alert on every auto-refresh.
+                        journeyList = lastGood.data;
+                        offlineDataFrom = lastGood.fetchedAt.ToLocalTime();
+                    }
+                    else
+                    {
+                        ShowError(IsOffline()
+                            ? "You're offline. Connect to the internet to see live train times."
+                            : fetchError);
+                    }
                 }
 
                 var destinationCode = GetDestinationStationCode();
@@ -424,7 +435,9 @@ namespace iRailTracker.ViewModel
                         : $"No trains from {_selectedStation} to {_selectedDestination} right now.";
                 }
 
-                RefreshTime = string.Format(AppMessages.CurrentStatusAsOf,DateTime.Now.ToString("hh:mm:ss tt"));
+                RefreshTime = offlineDataFrom is { } dataFrom
+                    ? $"⚠ Offline · showing times from {dataFrom:hh:mm tt}"
+                    : string.Format(AppMessages.CurrentStatusAsOf, DateTime.Now.ToString("hh:mm:ss tt"));
             }
             catch (Exception ex)
             {
@@ -434,6 +447,18 @@ namespace iRailTracker.ViewModel
             {
                 IsBusy = false;
                 _searchLock.Release();
+            }
+        }
+
+        private static bool IsOffline()
+        {
+            try
+            {
+                return Connectivity.Current.NetworkAccess != NetworkAccess.Internet;
+            }
+            catch (NotImplementedException)
+            {
+                return false;
             }
         }
 

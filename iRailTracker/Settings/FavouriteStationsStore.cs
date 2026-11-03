@@ -34,6 +34,11 @@ namespace iRailTracker
         public static void Save(List<string> stations)
         {
             Preferences.Set(AppPreferences.FavouriteStations, JsonSerializer.Serialize(stations));
+
+#if ANDROID
+            // The home-screen widget shows the first favourite; refresh it now
+            DeparturesWidgetProvider.RequestUpdate(Android.App.Application.Context);
+#endif
         }
     }
 }

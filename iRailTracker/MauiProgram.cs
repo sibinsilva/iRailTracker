@@ -15,6 +15,8 @@ namespace iRailTracker
     {
         public static MauiApp CreateMauiApp()
         {
+            CrashLog.Init();
+
             var builder = MauiApp.CreateBuilder();
             builder
                 .UseMauiApp<App>()

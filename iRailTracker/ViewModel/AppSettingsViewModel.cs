@@ -201,5 +201,33 @@ namespace iRailTracker.ViewModel
         }
 
         #endregion
+
+        #region Diagnostics
+
+        public bool HasCrashLog => CrashLog.HasEntries;
+
+        public string CrashLogStatus => HasCrashLog
+            ? "A crash was recorded. Share the log with the developer to help fix it."
+            : "No crashes recorded.";
+
+        public ICommand ShareCrashLogCommand => new Command(async () =>
+        {
+            if (!CrashLog.HasEntries)
+                return;
+            await Share.Default.RequestAsync(new ShareFileRequest
+            {
+                Title = "iRailTracker crash log",
+                File = new ShareFile(CrashLog.FilePath, "text/plain")
+            });
+        });
+
+        public ICommand ClearCrashLogCommand => new Command(() =>
+        {
+            CrashLog.Clear();
+            OnPropertyChanged(nameof(HasCrashLog));
+            OnPropertyChanged(nameof(CrashLogStatus));
+        });
+
+        #endregion
     }
 }

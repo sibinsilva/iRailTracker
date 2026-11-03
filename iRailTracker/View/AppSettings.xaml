@@ -126,6 +126,21 @@
                 </VerticalStackLayout>
             </Border>
 
+            <!-- DIAGNOSTICS -->
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="🩺  Diagnostics" Style="{StaticResource CardTitle}" />
+                    <Label Text="{Binding CrashLogStatus}" Style="{StaticResource CardHint}" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10" IsVisible="{Binding HasCrashLog}">
+                        <Button Text="Share crash log" Command="{Binding ShareCrashLogCommand}" />
+                        <Button Grid.Column="1" Text="Clear"
+                                Command="{Binding ClearCrashLogCommand}"
+                                BackgroundColor="{AppThemeBinding Light={StaticResource PageBackgroundLight}, Dark={StaticResource PageBackgroundDark}}"
+                                TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

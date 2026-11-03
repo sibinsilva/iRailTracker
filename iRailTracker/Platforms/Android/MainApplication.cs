@@ -15,6 +15,10 @@ namespace iRailTracker
 
         public override void OnCreate()
         {
+            // Exceptions thrown from Android callbacks arrive here rather than in AppDomain
+            AndroidEnvironment.UnhandledExceptionRaiser += (_, e) =>
+                iRailTracker.Service.CrashLog.Write("Android unhandled exception", e.Exception);
+
             base.OnCreate();
 
             // Replaced by "journey_status" (Android won't let an app raise a channel's importance,

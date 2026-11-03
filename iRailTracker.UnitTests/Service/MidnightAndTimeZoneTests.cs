@@ -101,6 +101,16 @@ public class MidnightAndTimeZoneTests
     }
 
     [Fact]
+    public void HasJourneyEnded_ActualArrivalRecorded_IsTrueImmediately()
+    {
+        var movements = LateNightTrain();
+        movements[^1].Arrival = "00:44:30";
+        var now = new DateTime(2026, 11, 4, 0, 44, 40);
+
+        Assert.True(TrainMovementAnalysis.HasJourneyEnded(movements, now, ServiceDate, TimeSpan.FromMinutes(5)));
+    }
+
+    [Fact]
     public void HasJourneyEnded_UnknownArrival_IsFalse()
     {
         var movements = new List<TrainMovement> { Stop(1, "A", "O", expectedDeparture: "10:00:00"), Stop(2, "B", "D") };

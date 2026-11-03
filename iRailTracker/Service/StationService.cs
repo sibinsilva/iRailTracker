@@ -90,8 +90,11 @@ namespace iRailTracker.Service
                 errorCallback?.Invoke($"Request timed out: {url}");
                 return null;
             }
-            catch (HttpRequestException ex)
+            catch (Exception ex)
             {
+                // On Android a DNS failure in airplane mode can surface as a Java exception
+                // (e.g. "Unable to resolve host") rather than HttpRequestException, so treat any
+                // failure here as a network error instead of letting it reach the UI as a crash/alert.
                 errorCallback?.Invoke($"Network error fetching {url}: {ex.Message}");
                 return null;
             }

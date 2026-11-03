@@ -28,11 +28,18 @@
     </NavigationPage.TitleView>
 
     <ContentPage.ToolbarItems>
+        <!-- Font glyph instead of settings.png, which is white and vanished on the light toolbar -->
         <ToolbarItem
-            IconImageSource="settings.png"
             Priority="0"
             Order="Primary"
-            Command="{Binding OpenSettingsCommand}" />
+            Text="Settings"
+            Command="{Binding OpenSettingsCommand}">
+            <ToolbarItem.IconImageSource>
+                <FontImageSource Glyph="⚙"
+                                 Size="22"
+                                 Color="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}" />
+            </ToolbarItem.IconImageSource>
+        </ToolbarItem>
         <ToolbarItem
             Text="About"
             Priority="1"

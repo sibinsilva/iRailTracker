@@ -22,6 +22,7 @@ public partial class TrainLiveStatusPage : ContentPage
     private bool _refreshing;
     private MRect? _routeExtent;
     private MPoint? _trainPoint;
+    private bool _followTrain;
 
     // OpenStreetMap's tile usage policy requires a User-Agent that identifies
     // the app; Mapsui's generic default is blocked with HTTP 403.
@@ -69,7 +70,7 @@ public partial class TrainLiveStatusPage : ContentPage
 
             foreach (var movement in movements.OrderBy(m => m.LocationOrder))
             {
-                var station = FindStation(movement.LocationCode);
+                var station = FindStation(movement.LocationCode, movement.LocationFullName);
                 if (station is null)
                     continue;
 
@@ -171,7 +172,7 @@ public partial class TrainLiveStatusPage : ContentPage
                 var currentStop = TrainMovementAnalysis.DetermineCurrentStop(movements, IrishTime.Now, journey.TrainDate);
                 ShowLiveStatus(currentStop);
 
-                var station = currentStop is null ? null : FindStation(currentStop.LocationCode);
+                var station = currentStop is null ? null : FindStation(currentStop.LocationCode, currentStop.LocationFullName);
                 if (station is not null)
                     MoveCurrentPin(ToMapPoint(station));
             }
@@ -210,6 +211,10 @@ public partial class TrainLiveStatusPage : ContentPage
             _currentStationLayer.DataHasChanged();
         }
 
+        // After "Train" is tapped, keep the train in view as it moves (until "Route" is tapped)
+        if (_followTrain)
+            map.Navigator.CenterOn(point, 500);
+
         map.RefreshGraphics();
     }
 
@@ -224,7 +229,11 @@ public partial class TrainLiveStatusPage : ContentPage
             if (await Permissions.CheckStatusAsync<Permissions.LocationWhenInUse>() != PermissionStatus.Granted)
                 return;
 
-            var location = await Geolocation.GetLastKnownLocationAsync();
+            // The last known position is often empty when no other app asked for location
+            // recently, so fall back to a fresh, quick, medium-accuracy fix.
+            var location = await Geolocation.GetLastKnownLocationAsync()
+                           ?? await Geolocation.GetLocationAsync(
+                               new GeolocationRequest(GeolocationAccuracy.Medium, TimeSpan.FromSeconds(10)));
             if (location is null)
                 return;
 
@@ -260,12 +269,14 @@ public partial class TrainLiveStatusPage : ContentPage
         if (_trainPoint is null)
             return;
 
-        // About street level, so the next stops are visible around the train
+        // About street level, so the next stops are visible around the train; then follow it
+        _followTrain = true;
         TrainMapControl.Map.Navigator.CenterOnAndZoomTo(_trainPoint, 20, 500);
     }
 
     private void OnShowRouteClicked(object? sender, EventArgs e)
     {
+        _followTrain = false;
         if (_routeExtent is not null)
             TrainMapControl.Map.Navigator.ZoomToBox(_routeExtent, MBoxFit.Fit, 500);
     }
@@ -420,8 +431,18 @@ public partial class TrainLiveStatusPage : ContentPage
         return lastLocation.Contains(movementStationName, StringComparison.OrdinalIgnoreCase);
     }
 
-    private Station? FindStation(string name)
+    /// <param name="fullName">The stop's full name from train movements. Some stations have a
+    /// different code there than in the station list (Adamstown: ADMTN vs ADAMS), so fall back to
+    /// the name; otherwise those stops were missing from the map and the train pin didn't move.</param>
+    private Station? FindStation(string name, string? fullName = null)
     {
+        if (!string.IsNullOrWhiteSpace(fullName))
+        {
+            var byName = _stations.FirstOrDefault(s => s.StationDesc.Trim().Equals(fullName.Trim(), StringComparison.OrdinalIgnoreCase));
+            if (byName is not null)
+                return byName;
+        }
+
         var normalized = name.Trim();
 
         return _stations.FirstOrDefault(s =>

@@ -9,6 +9,8 @@ namespace iRailTracker.Service
     /// </summary>
     public static class NotificationPermissionHelper
     {
+        private const string AskedKey = "notification_permission_asked";
+
         /// <summary>
         /// Returns true if notifications are allowed, asking the user first if needed. If the user
         /// has turned them off, offers to open the app's settings and returns false.
@@ -20,8 +22,16 @@ namespace iRailTracker.Service
             if (await LocalNotificationCenter.Current.AreNotificationsEnabled(permission))
                 return true;
 
+            // The first time, the system prompt is the explanation; if the user says no there,
+            // respect it rather than following up with a second dialog straight away.
+            var askedBefore = Preferences.Get(AskedKey, false);
+            Preferences.Set(AskedKey, true);
+
             if (await LocalNotificationCenter.Current.RequestNotificationPermission(permission))
                 return true;
+
+            if (!askedBefore)
+                return false;
 
             // Android won't show the prompt again once the user has said no; send them to settings
             var page = Application.Current?.Windows.FirstOrDefault()?.Page;

@@ -40,4 +40,8 @@ public class TrainMovement
 
     [XmlElement("ScheduledDeparture")]
     public string ScheduledDeparture { get; set; } = string.Empty;
+
+    /// <summary>Actual arrival time ("HH:mm:ss"), filled in by Irish Rail once the train has arrived.</summary>
+    [XmlElement("Arrival")]
+    public string Arrival { get; set; } = string.Empty;
 }

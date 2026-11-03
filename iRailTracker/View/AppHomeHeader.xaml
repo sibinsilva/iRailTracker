@@ -25,26 +25,66 @@
                    FontAttributes="Bold"
                    HorizontalOptions="Start" />
 
-            <!-- RADIO OPTIONS -->
-            <Grid ColumnDefinitions="*,*"
-                  ColumnSpacing="12"
-                  HorizontalOptions="Fill">
+            <!-- MODE TOGGLE (replaces radio buttons, whose unselected circle was nearly invisible in light mode) -->
+            <Border StrokeShape="RoundRectangle 12"
+                    Stroke="{AppThemeBinding Light={StaticResource CardStrokeLight}, Dark={StaticResource CardStrokeDark}}"
+                    Padding="3">
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="3">
+                    <Border x:Name="Find_Station"
+                            Grid.Column="0"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 9"
+                            Padding="8,10"
+                            BackgroundColor="Transparent">
+                        <Border.Triggers>
+                            <DataTrigger TargetType="Border" Binding="{Binding IsFindNearbyStationChecked}" Value="True">
+                                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDarkText}}" />
+                            </DataTrigger>
+                        </Border.Triggers>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding SelectNearbyModeCommand}" />
+                        </Border.GestureRecognizers>
+                        <Label Text="{x:Static strings:AppStrings.LocateNearbyStation}"
+                               FontSize="13"
+                               HorizontalTextAlignment="Center"
+                               TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}">
+                            <Label.Triggers>
+                                <DataTrigger TargetType="Label" Binding="{Binding IsFindNearbyStationChecked}" Value="True">
+                                    <Setter Property="TextColor" Value="White" />
+                                    <Setter Property="FontAttributes" Value="Bold" />
+                                </DataTrigger>
+                            </Label.Triggers>
+                        </Label>
+                    </Border>
 
-                <RadioButton x:Name="Find_Station"
-                             Grid.Column="0"
-                             Content="{x:Static strings:AppStrings.LocateNearbyStation}"
-                             FontSize="14"
-                             IsChecked="{Binding IsFindNearbyStationChecked}"
-                             HorizontalOptions="Start" />
-
-                <RadioButton x:Name="Search_Station"
-                             Grid.Column="1"
-                             Content="{x:Static strings:AppStrings.PickTrainStation}"
-                             FontSize="14"
-                             IsChecked="{Binding IsLocateStationChecked}"
-                             HorizontalOptions="Start" />
-
-            </Grid>
+                    <Border x:Name="Search_Station"
+                            Grid.Column="1"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 9"
+                            Padding="8,10"
+                            BackgroundColor="Transparent">
+                        <Border.Triggers>
+                            <DataTrigger TargetType="Border" Binding="{Binding IsLocateStationChecked}" Value="True">
+                                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDarkText}}" />
+                            </DataTrigger>
+                        </Border.Triggers>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding SelectPickModeCommand}" />
+                        </Border.GestureRecognizers>
+                        <Label Text="{x:Static strings:AppStrings.PickTrainStation}"
+                               FontSize="13"
+                               HorizontalTextAlignment="Center"
+                               TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}">
+                            <Label.Triggers>
+                                <DataTrigger TargetType="Label" Binding="{Binding IsLocateStationChecked}" Value="True">
+                                    <Setter Property="TextColor" Value="White" />
+                                    <Setter Property="FontAttributes" Value="Bold" />
+                                </DataTrigger>
+                            </Label.Triggers>
+                        </Label>
+                    </Border>
+                </Grid>
+            </Border>
 
             <!-- DIVIDER -->
             <BoxView HeightRequest="1"

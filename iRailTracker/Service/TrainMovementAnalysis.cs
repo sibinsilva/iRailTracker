@@ -65,6 +65,13 @@ namespace iRailTracker.Service
             var destination = ResolveTimes(movements, serviceDate)
                 .FirstOrDefault(x => x.Movement.LocationType == "D");
 
+            // Irish Rail records the actual arrival once the train gets in: stop right away
+            if (destination.Movement is not null && TryParseTime(destination.Movement.Arrival?.Trim() ?? "", out var actual) &&
+                actual.TimeOfDay != ZeroSentinel)
+            {
+                return true;
+            }
+
             return destination.EffectiveTime is { } arrival && now - arrival > grace;
         }
 

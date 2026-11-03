@@ -8,8 +8,9 @@
     <VersionMinor>0</VersionMinor>
     <VersionPatch>0</VersionPatch>
 
-    <!-- 👉 Store-safe build number (must always increase) -->
-    <ApplicationVersion>$([System.DateTime]::UtcNow.ToString("yyMM"))</ApplicationVersion>
+    <!-- 👉 Store-safe build number (must always increase): computed from the version in
+         ComputeDisplayVersion below, e.g. 2.44.0 -> 2044000. This is only the fallback. -->
+    <ApplicationVersion>1</ApplicationVersion>
 
     <!-- Release safety flag -->
     <ConfirmMajorBump>false</ConfirmMajorBump>
@@ -97,6 +98,8 @@
   <Target Name="ComputeDisplayVersion" BeforeTargets="_GetAndroidPackageName;PrepareForBuild" DependsOnTargets="ComputePatchFromTag">
     <PropertyGroup>
       <ApplicationDisplayVersion>$(VersionMajor).$(VersionMinor).$(VersionPatch)</ApplicationDisplayVersion>
+      <!-- major*1000000 + minor*1000 + patch: grows with every commit (minor = commit count) -->
+      <ApplicationVersion>$([MSBuild]::Add($([MSBuild]::Add($([MSBuild]::Multiply($(VersionMajor), 1000000)), $([MSBuild]::Multiply($(VersionMinor), 1000)))), $(VersionPatch)))</ApplicationVersion>
     </PropertyGroup>
     <Message Importance="high" Text="📦 ApplicationDisplayVersion=$(ApplicationDisplayVersion) Build=$(ApplicationVersion)" />
   </Target>

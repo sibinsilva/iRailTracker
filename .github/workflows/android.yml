@@ -99,6 +99,23 @@ jobs:
         if: steps.keystore.outputs.signed != 'true'
         run: dotnet publish "$PROJECT" -f "$TFM" -c Release -o out -p:ConfirmMajorBump=true
 
+      - name: Build signed Play Store bundle (tags only)
+        if: startsWith(github.ref, 'refs/tags/v') && steps.keystore.outputs.signed == 'true'
+        env:
+          ANDROID_KEYSTORE_PASS: ${{ secrets.ANDROID_KEYSTORE_PASS }}
+          ANDROID_KEY_PASS: ${{ secrets.ANDROID_KEY_PASS }}
+          ANDROID_KEY_ALIAS: ${{ vars.ANDROID_KEY_ALIAS }}
+        run: >
+          dotnet publish "$PROJECT" -f "$TFM" -c Release -o out-aab
+          -p:ConfirmMajorBump=true
+          -p:AndroidPackageFormat=aab
+          -p:RuntimeIdentifiers="android-arm64%3Bandroid-arm"
+          -p:AndroidKeyStore=true
+          -p:AndroidSigningKeyStore="$RUNNER_TEMP/release.p12"
+          -p:AndroidSigningKeyAlias="$ANDROID_KEY_ALIAS"
+          -p:AndroidSigningStorePass=env:ANDROID_KEYSTORE_PASS
+          -p:AndroidSigningKeyPass=env:ANDROID_KEY_PASS
+
       - name: Remove keystore
         if: always()
         run: rm -f "$RUNNER_TEMP/release.p12"
@@ -124,4 +141,27 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v') && steps.keystore.outputs.signed == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" "${{ steps.apk.outputs.path }}" --title "$GITHUB_REF_NAME" --generate-notes
+        run: |
+          aab=$(ls out-aab/*-Signed.aab | head -n1)
+          cp "$aab" "iRailTracker-${GITHUB_REF_NAME}.aab"
+          gh release create "$GITHUB_REF_NAME" "${{ steps.apk.outputs.path }}" "iRailTracker-${GITHUB_REF_NAME}.aab" \
+            --title "$GITHUB_REF_NAME" --generate-notes
+
+      # Optional: upload to the Play Console internal testing track. Inactive until a
+      # PLAY_SERVICE_ACCOUNT_JSON secret exists (a Play Console service account key).
+      - name: Check for Play Console credentials
+        id: play
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          PLAY_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: echo "enabled=$([ -n "$PLAY_JSON" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload to Play Console (internal track)
+        if: steps.play.outputs.enabled == 'true'
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.app.irailtracker
+          releaseFiles: iRailTracker-${{ github.ref_name }}.aab
+          track: internal
+          status: completed

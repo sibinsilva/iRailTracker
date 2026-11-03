@@ -22,7 +22,7 @@
             <Label Text="iRailTracker"
                    FontSize="Title"
                    FontAttributes="Bold"
-                   TextColor="White"
+                   TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
                    VerticalOptions="Center" />
         </HorizontalStackLayout>
     </NavigationPage.TitleView>
@@ -71,6 +71,23 @@
 
         <!-- LIST -->
         <views:AppHomeListView x:Name="JourneysListView" Grid.Row="2" />
+
+        <!-- FIRST-RUN HINT: nothing selected yet -->
+        <VerticalStackLayout Grid.Row="2"
+                             Padding="32,24"
+                             Spacing="8"
+                             VerticalOptions="Start"
+                             IsVisible="{Binding ShowStartHint}">
+            <Label Text="🚆" FontSize="40" HorizontalOptions="Center" />
+            <Label Text="Choose a station to see live departures"
+                   FontSize="16"
+                   FontAttributes="Bold"
+                   HorizontalTextAlignment="Center" />
+            <Label Text="Pick one above or use your location. Add favourites in Settings to open them with one tap."
+                   FontSize="13"
+                   HorizontalTextAlignment="Center"
+                   TextColor="{AppThemeBinding Light={StaticResource SubtleTextLight}, Dark={StaticResource SubtleTextDark}}" />
+        </VerticalStackLayout>
 
         <!-- EMPTY / NO DATA OVERLAY -->
         <Grid Grid.Row="2"

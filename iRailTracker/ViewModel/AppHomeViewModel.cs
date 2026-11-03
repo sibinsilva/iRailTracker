@@ -38,6 +38,7 @@ namespace iRailTracker.ViewModel
         private string _selectedDestination = AnyDestination;
         private readonly ObservableCollection<string> _destinationOptions;
         public const string AnyDestination = "Any destination";
+        private const string LastStationKey = "last_station";
         private string _noJourneyMsg;
         private string _refreshTime;
         private string _buttonText;
@@ -86,7 +87,7 @@ namespace iRailTracker.ViewModel
         public bool IsBusy
         {
             get => _isBusy;
-            set { _isBusy = value; OnPropertyChanged(); }
+            set { _isBusy = value; OnPropertyChanged(); OnPropertyChanged(nameof(ShowStartHint)); }
         }
 
         public string NoJourneyMsg
@@ -110,13 +111,16 @@ namespace iRailTracker.ViewModel
         public bool NoJourneyFound
         {
             get => _noJourneys;
-            set { _noJourneys = value; OnPropertyChanged(); }
+            set { _noJourneys = value; OnPropertyChanged(); OnPropertyChanged(nameof(ShowStartHint)); }
         }
+
+        /// <summary>True before any board has been loaded, to explain the empty screen.</summary>
+        public bool ShowStartHint => !EnableListView && !NoJourneyFound && !IsBusy;
 
         public bool EnableListView
         {
             get => _enableListView;
-            set { _enableListView = value; OnPropertyChanged(); }
+            set { _enableListView = value; OnPropertyChanged(); OnPropertyChanged(nameof(ShowStartHint)); }
         }
 
         public bool IsFindNearbyStationChecked
@@ -247,10 +251,15 @@ namespace iRailTracker.ViewModel
                 EnableListView = false;
                 _selectedStation = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(StationDisplay));
             }
         }
 
         public ObservableCollection<string> DestinationOptions => _destinationOptions;
+
+        public string StationDisplay => string.IsNullOrEmpty(_selectedStation) ? "Select a station" : _selectedStation;
+
+        public string DestinationDisplay => $"Going to: {_selectedDestination}";
 
         /// <summary>
         /// Optional "going to" station: when set, only trains that stop there after the selected
@@ -264,6 +273,8 @@ namespace iRailTracker.ViewModel
                 var newValue = string.IsNullOrEmpty(value) ? AnyDestination : value;
                 if (!SetProperty(ref _selectedDestination, newValue))
                     return;
+
+                OnPropertyChanged(nameof(DestinationDisplay));
 
                 // Re-filter the list that's already showing
                 if (EnableListView || NoJourneyFound)
@@ -309,6 +320,8 @@ namespace iRailTracker.ViewModel
         public ICommand OpenSettingsCommand => new Command(async () => await GoToSettings());
         public ICommand OpenJourneyCommand => _openJourneyCommand ??= new Command<TrainJourney>(async (journey) => await OpenJourney(journey));
         public ICommand SelectFavouriteCommand => new Command<string>(async (station) => await LoadStationAsync(station));
+        public ICommand ChooseStationCommand => new Command(async () => await ChooseStationAsync());
+        public ICommand ChooseDestinationCommand => new Command(async () => await ChooseDestinationAsync());
         public ICommand ToggleTrackingCommand => new Command<TrainJourney>(async (journey) => await ToggleTracking(journey));
 
         #endregion
@@ -413,6 +426,8 @@ namespace iRailTracker.ViewModel
                                 : journey.Status,
                             LastLocation = journey.Lastlocation,
                             DueIn = $"{journey.Duein} min{(journey.Duein > 1 ? "s" : "")}",
+                            DueText = journey.Duein <= 0 ? "Due" : $"{journey.Duein} min",
+                            LateBadgeColor = journey.Late <= 0 ? Color.FromArgb("#2916A34A") : Color.FromArgb("#29DC2626"),
                             ExpectedArrival = DateTime.ParseExact(journey.Exparrival, "HH:mm", CultureInfo.InvariantCulture)
                                 .ToString("hh:mm tt").ToLower(),
                             Late = Math.Abs(journey.Late).ToString(),
@@ -435,6 +450,8 @@ namespace iRailTracker.ViewModel
                         : $"No trains from {_selectedStation} to {_selectedDestination} right now.";
                 }
 
+                Preferences.Set(LastStationKey, _selectedStation);
+
                 RefreshTime = offlineDataFrom is { } dataFrom
                     ? $"⚠ Offline · showing times from {dataFrom:hh:mm tt}"
                     : string.Format(AppMessages.CurrentStatusAsOf, DateTime.Now.ToString("hh:mm:ss tt"));
@@ -448,6 +465,31 @@ namespace iRailTracker.ViewModel
                 IsBusy = false;
                 _searchLock.Release();
             }
+        }
+
+        private async Task ChooseStationAsync()
+        {
+            var nav = Application.Current?.Windows[0].Page?.Navigation;
+            if (nav is null)
+                return;
+
+            var station = await StationSearchPage.PickAsync(nav, "Select station", StationOptions);
+            if (station is null)
+                return;
+
+            SelectedStation = station;
+            await ExecuteTrainServiceSearch(waitForLock: true);
+        }
+
+        private async Task ChooseDestinationAsync()
+        {
+            var nav = Application.Current?.Windows[0].Page?.Navigation;
+            if (nav is null)
+                return;
+
+            var destination = await StationSearchPage.PickAsync(nav, "Going to", DestinationOptions);
+            if (destination is not null)
+                SelectedDestination = destination;
         }
 
         private static bool IsOffline()
@@ -640,12 +682,14 @@ namespace iRailTracker.ViewModel
         {
             FavouriteStations = new ObservableCollection<string>(FavouriteStationsStore.Load());
 
-            var favourite = FavouriteStations.FirstOrDefault();
+            // First favourite, otherwise the station that was open last time
+            var station = FavouriteStations.FirstOrDefault()
+                          ?? Preferences.Get(LastStationKey, string.Empty);
 
-            if (string.IsNullOrEmpty(favourite))
+            if (string.IsNullOrEmpty(station))
                 return;
 
-            await LoadStationAsync(favourite);
+            await LoadStationAsync(station);
         }
 
         private async Task LoadStationAsync(string? station)

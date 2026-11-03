@@ -20,6 +20,8 @@ public partial class TrainLiveStatusPage : ContentPage
     private IDispatcherTimer? _liveTimer;
     private bool _mapBuilt;
     private bool _refreshing;
+    private MRect? _routeExtent;
+    private MPoint? _trainPoint;
 
     // OpenStreetMap's tile usage policy requires a User-Agent that identifies
     // the app; Mapsui's generic default is blocked with HTTP 403.
@@ -118,6 +120,7 @@ public partial class TrainLiveStatusPage : ContentPage
         var extent = new MRect(
             allPoints.Min(p => p.X), allPoints.Min(p => p.Y),
             allPoints.Max(p => p.X), allPoints.Max(p => p.Y));
+        _routeExtent = extent;
         map.Navigator.ZoomToBox(extent, MBoxFit.Fit);
 
         StartBlinking();
@@ -192,6 +195,7 @@ public partial class TrainLiveStatusPage : ContentPage
     private void MoveCurrentPin(MPoint point)
     {
         var map = TrainMapControl.Map;
+        _trainPoint = point;
 
         if (_currentStationLayer is null)
         {
@@ -250,6 +254,21 @@ public partial class TrainLiveStatusPage : ContentPage
     }
 
     #endregion
+
+    private void OnCenterOnTrainClicked(object? sender, EventArgs e)
+    {
+        if (_trainPoint is null)
+            return;
+
+        // About street level, so the next stops are visible around the train
+        TrainMapControl.Map.Navigator.CenterOnAndZoomTo(_trainPoint, 20, 500);
+    }
+
+    private void OnShowRouteClicked(object? sender, EventArgs e)
+    {
+        if (_routeExtent is not null)
+            TrainMapControl.Map.Navigator.ZoomToBox(_routeExtent, MBoxFit.Fit, 500);
+    }
 
     private void OnMapInfo(object? sender, MapInfoEventArgs e)
     {
@@ -345,6 +364,7 @@ public partial class TrainLiveStatusPage : ContentPage
 
     private void AddCurrentStationPin(MPoint point, MapsuiMap map)
     {
+        _trainPoint = point;
         var feature = new PointFeature(point);
         feature["Label"] = "Current";
 

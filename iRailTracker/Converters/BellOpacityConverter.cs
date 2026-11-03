@@ -6,7 +6,7 @@ namespace iRailTracker.Converters
     public class BellOpacityConverter : IValueConverter
     {
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
-            => value is true ? 1.0 : 0.4;
+            => value is true ? 1.0 : 0.3;
 
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
             => throw new NotSupportedException();

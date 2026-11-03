@@ -74,7 +74,8 @@
 
                                     <Label Grid.Column="1"
                                        Text="{Binding IsTracking, Converter={StaticResource BellGlyphConverter}}"
-                                       FontSize="20"
+                                       FontSize="22"
+                                       Padding="8,0,0,8"
                                        VerticalOptions="Start"
                                        Opacity="{Binding IsTracking, Converter={StaticResource BellOpacityConverter}}">
                                         <Label.GestureRecognizers>
@@ -91,37 +92,40 @@
                                    LineBreakMode="WordWrap"
                                    TextColor="{AppThemeBinding Light={StaticResource SubtleTextLight}, Dark={StaticResource SubtleTextDark}}" />
 
-                                <!-- TIMING GRID -->
-                                <Grid ColumnDefinitions="*,*"
-                                  RowDefinitions="Auto,Auto"
-                                  Margin="0,6,0,0">
+                                <!-- ARRIVAL: minutes as the headline, status as a coloured badge -->
+                                <Grid ColumnDefinitions="*,Auto"
+                                      RowDefinitions="Auto,Auto"
+                                      Margin="0,4,0,0">
 
-                                    <Label Text="Arriving in"
-                                       FontSize="13"
-                                       TextColor="{AppThemeBinding Light={StaticResource MutedTextLight}, Dark={StaticResource MutedTextDark}}" />
+                                    <Label Text="{Binding DueText}"
+                                           FontSize="26"
+                                           FontAttributes="Bold"
+                                           TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
 
-                                    <Label Text="{Binding DueIn}"
-                                       Grid.Column="1"
-                                       HorizontalTextAlignment="End"
-                                       FontSize="13" />
+                                    <Label Grid.Row="1"
+                                           FontSize="12"
+                                           TextColor="{AppThemeBinding Light={StaticResource SubtleTextLight}, Dark={StaticResource SubtleTextDark}}">
+                                        <Label.FormattedText>
+                                            <FormattedString>
+                                                <Span Text="Expected " />
+                                                <Span Text="{Binding ExpectedArrival}" FontAttributes="Bold" />
+                                            </FormattedString>
+                                        </Label.FormattedText>
+                                    </Label>
 
-                                    <Label Text="Expected"
-                                       Grid.Row="1"
-                                       FontSize="13"
-                                       TextColor="{AppThemeBinding Light={StaticResource MutedTextLight}, Dark={StaticResource MutedTextDark}}" />
-
-                                    <Label Text="{Binding ExpectedArrival}"
-                                       Grid.Row="1"
-                                       Grid.Column="1"
-                                       HorizontalTextAlignment="End"
-                                       FontSize="13" />
+                                    <Border Grid.Column="1"
+                                            Grid.RowSpan="2"
+                                            VerticalOptions="Center"
+                                            StrokeThickness="0"
+                                            StrokeShape="RoundRectangle 12"
+                                            Padding="10,4"
+                                            BackgroundColor="{Binding LateBadgeColor}">
+                                        <Label Text="{Binding LateDisplay}"
+                                               FontSize="12"
+                                               FontAttributes="Bold"
+                                               TextColor="{Binding LateColor}" />
+                                    </Border>
                                 </Grid>
-
-                                <!-- DELAY -->
-                                <Label Text="{Binding LateDisplay}"
-                                   FontSize="13"
-                                   HorizontalOptions="End"
-                                   TextColor="{Binding LateColor}" />
 
                             </VerticalStackLayout>
 

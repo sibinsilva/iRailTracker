@@ -16,6 +16,10 @@ namespace iRailTracker.Model
         public string Late { get; set; } = string.Empty;
         public string LateDisplay { get; set; } = string.Empty;
         public Color LateColor { get; set; } = Color.FromArgb("#DC2626");
+        /// <summary>Headline for the card: "Due" or "12 min".</summary>
+        public string DueText { get; set; } = string.Empty;
+        /// <summary>Translucent tint of <see cref="LateColor"/> behind the status badge (works in light and dark).</summary>
+        public Color LateBadgeColor { get; set; } = Color.FromArgb("#29DC2626");
 
 #pragma warning disable MVVMTK0045 // Partial-property ObservableProperty isn't generating for this project; field-based is fine since we don't publish Native AOT.
         [ObservableProperty]

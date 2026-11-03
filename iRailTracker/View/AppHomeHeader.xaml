@@ -55,16 +55,22 @@
             <Grid ColumnDefinitions="*,Auto"
                   ColumnSpacing="12">
 
-                <Picker x:Name="stationPicker"
-                        Title="{x:Static strings:AppStrings.SelectStationTitle}"
-                        ItemsSource="{Binding StationOptions}"
-                        SelectedItem="{Binding SelectedStation, Mode=TwoWay}"
+                <!-- Opens the searchable station list -->
+                <Border x:Name="stationPicker"
+                        Grid.Column="0"
                         IsVisible="{Binding IsStationListLoaded}"
-                        IsEnabled="{Binding IsStationListLoaded}"
-                        FontSize="15"
-                        HorizontalOptions="Fill"
-                        VerticalOptions="Center"
-                        Grid.Column="0"/>
+                        StrokeShape="RoundRectangle 10"
+                        Stroke="{AppThemeBinding Light={StaticResource CardStrokeLight}, Dark={StaticResource CardStrokeDark}}"
+                        Padding="12,10"
+                        VerticalOptions="Center">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ChooseStationCommand}" />
+                    </Border.GestureRecognizers>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="{Binding StationDisplay}" FontSize="15" LineBreakMode="TailTruncation" VerticalOptions="Center" />
+                        <Label Grid.Column="1" Text="🔍" FontSize="14" VerticalOptions="Center" />
+                    </Grid>
+                </Border>
 
                 <Button Text="{Binding ButtonText}"
                         Command="{Binding SearchServiceCommand}"
@@ -76,12 +82,18 @@
             </Grid>
 
             <!-- OPTIONAL DESTINATION FILTER -->
-            <Picker Title="Going to (optional)"
-                    ItemsSource="{Binding DestinationOptions}"
-                    SelectedItem="{Binding SelectedDestination, Mode=TwoWay}"
-                    IsVisible="{Binding IsStationListLoaded}"
-                    FontSize="15"
-                    HorizontalOptions="Fill" />
+            <Border IsVisible="{Binding IsStationListLoaded}"
+                    StrokeShape="RoundRectangle 10"
+                    Stroke="{AppThemeBinding Light={StaticResource CardStrokeLight}, Dark={StaticResource CardStrokeDark}}"
+                    Padding="12,10">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding ChooseDestinationCommand}" />
+                </Border.GestureRecognizers>
+                <Label Text="{Binding DestinationDisplay}"
+                       FontSize="14"
+                       LineBreakMode="TailTruncation"
+                       TextColor="{AppThemeBinding Light={StaticResource SubtleTextLight}, Dark={StaticResource SubtleTextDark}}" />
+            </Border>
 
             <!-- SEARCH BUTTON / LOADER / REFRESH INFO -->
             <VerticalStackLayout Spacing="8"

@@ -4,6 +4,14 @@ public partial class ChangelogPage : ContentPage
 {
     private static readonly List<ChangelogEntry> Entries =
     [
+        new("2.48", [
+            "🗺️ Live map: the train moves as it travels, with your location, a legend and recenter buttons",
+            "🎯 \"Going to\" filter shows only trains that stop at your destination",
+            "🔍 Searchable station list",
+            "📱 Home-screen widget with the next departures from your favourite station",
+            "📡 Offline mode keeps the last departures on screen",
+            "🎨 Clearer journey cards and route header",
+        ]),
         new("2.0", [
             "🚂 Live train tracking with interactive map",
             "⭐ Favourite station quick access",

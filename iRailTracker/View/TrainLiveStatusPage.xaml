@@ -7,16 +7,86 @@
 
     <Grid RowDefinitions="Auto,*" Padding="12">
 
-        <VerticalStackLayout Grid.Row="0" Spacing="4">
-            <Label Text="{Binding Origin}" FontAttributes="Bold" FontSize="16" />
-            <Label Text="{Binding Destination}" FontAttributes="Bold" FontSize="16" />
-            <Label Text="{Binding CurrentStatus}" FontSize="13" TextColor="{AppThemeBinding Light={StaticResource SubtleTextLight}, Dark={StaticResource SubtleTextDark}}" />
-            <Label x:Name="LiveStatusLabel" IsVisible="False" FontSize="13" FontAttributes="Bold"
-                   TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
-        </VerticalStackLayout>
+        <!-- ROUTE HEADER -->
+        <Border Grid.Row="0"
+                StrokeShape="RoundRectangle 14"
+                StrokeThickness="0"
+                Padding="14,12"
+                Margin="0,0,0,10"
+                BackgroundColor="{AppThemeBinding Light={StaticResource CardBackgroundLight}, Dark={StaticResource CardBackgroundDark}}">
+            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" RowSpacing="4">
+                <Label FontSize="17" FontAttributes="Bold" LineBreakMode="WordWrap">
+                    <Label.FormattedText>
+                        <FormattedString>
+                            <Span Text="{Binding Origin}" />
+                            <Span Text="  →  " TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+                            <Span Text="{Binding Destination}" />
+                        </FormattedString>
+                    </Label.FormattedText>
+                </Label>
+
+                <Border Grid.Column="1"
+                        VerticalOptions="Start"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 12"
+                        Padding="10,4"
+                        BackgroundColor="{Binding LateBadgeColor}">
+                    <Label Text="{Binding LateDisplay}" FontSize="12" FontAttributes="Bold" TextColor="{Binding LateColor}" />
+                </Border>
+
+                <Label Grid.Row="1" Grid.ColumnSpan="2" FontSize="13"
+                       TextColor="{AppThemeBinding Light={StaticResource SubtleTextLight}, Dark={StaticResource SubtleTextDark}}">
+                    <Label.FormattedText>
+                        <FormattedString>
+                            <Span Text="Expected " />
+                            <Span Text="{Binding ExpectedArrival}" FontAttributes="Bold" />
+                            <Span Text="  ·  " />
+                            <Span Text="{Binding CurrentStatus}" />
+                        </FormattedString>
+                    </Label.FormattedText>
+                </Label>
+
+                <Label x:Name="LiveStatusLabel" Grid.Row="2" Grid.ColumnSpan="2"
+                       IsVisible="False" FontSize="13" FontAttributes="Bold"
+                       TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+            </Grid>
+        </Border>
 
         <Grid Grid.Row="1">
             <mapsui:MapControl x:Name="TrainMapControl" />
+
+            <!-- LEGEND -->
+            <Border VerticalOptions="End"
+                    HorizontalOptions="Start"
+                    Margin="8"
+                    Padding="10,6"
+                    StrokeShape="RoundRectangle 10"
+                    StrokeThickness="0"
+                    BackgroundColor="{AppThemeBinding Light=#E6FFFFFF, Dark=#E62D2D2D}">
+                <HorizontalStackLayout Spacing="10">
+                    <Label FontSize="11"><Label.FormattedText><FormattedString>
+                        <Span Text="● " TextColor="#FFA500" FontSize="14" /><Span Text="Train" />
+                    </FormattedString></Label.FormattedText></Label>
+                    <Label FontSize="11"><Label.FormattedText><FormattedString>
+                        <Span Text="● " TextColor="#228B22" FontSize="14" /><Span Text="Start" />
+                    </FormattedString></Label.FormattedText></Label>
+                    <Label FontSize="11"><Label.FormattedText><FormattedString>
+                        <Span Text="● " TextColor="#4169E1" FontSize="14" /><Span Text="Stops" />
+                    </FormattedString></Label.FormattedText></Label>
+                    <Label FontSize="11"><Label.FormattedText><FormattedString>
+                        <Span Text="● " TextColor="#DC143C" FontSize="14" /><Span Text="End" />
+                    </FormattedString></Label.FormattedText></Label>
+                </HorizontalStackLayout>
+            </Border>
+
+            <!-- RECENTER BUTTONS -->
+            <VerticalStackLayout VerticalOptions="End"
+                                 HorizontalOptions="End"
+                                 Margin="8,8,8,48"
+                                 Spacing="8">
+                <Button Text="🚆 Train" FontSize="13" Padding="12,6" CornerRadius="18" Clicked="OnCenterOnTrainClicked" />
+                <Button Text="⤢ Route" FontSize="13" Padding="12,6" CornerRadius="18" Clicked="OnShowRouteClicked" />
+            </VerticalStackLayout>
 
             <Border x:Name="PinInfoOverlay"
                     IsVisible="False"

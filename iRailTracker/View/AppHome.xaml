@@ -35,8 +35,10 @@
             Text="Settings"
             Command="{Binding OpenSettingsCommand}">
             <ToolbarItem.IconImageSource>
-                <FontImageSource Glyph="⚙"
-                                 Size="22"
+                <!-- Material "settings" gear (the ⚙ emoji glyph rendered like a sun icon) -->
+                <FontImageSource FontFamily="MaterialIcons"
+                                 Glyph="&#xe8b8;"
+                                 Size="24"
                                  Color="White" />
             </ToolbarItem.IconImageSource>
         </ToolbarItem>

@@ -10,7 +10,7 @@
             <Setter Property="FontSize" Value="13" />
             <Setter Property="Padding" Value="14,8" />
             <Setter Property="CornerRadius" Value="20" />
-            <Setter Property="HeightRequest" Value="40" />
+            <Setter Property="MinimumHeightRequest" Value="40" />
             <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource CardBackgroundLight}, Dark={StaticResource CardBackgroundDark}}" />
             <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
             <Setter Property="Shadow">
@@ -24,7 +24,7 @@
         <mapsui:MapControl x:Name="TrainMapControl" />
 
         <!-- ROUTE CARD -->
-        <Border Style="{StaticResource Card}"
+        <Border Style="{StaticResource FloatingCard}"
                 VerticalOptions="Start"
                 Margin="12"
                 Padding="16,14">
@@ -70,7 +70,7 @@
 
         <!-- TAPPED PIN DETAILS -->
         <Border x:Name="PinInfoOverlay"
-                Style="{StaticResource Card}"
+                Style="{StaticResource FloatingCard}"
                 IsVisible="False"
                 VerticalOptions="End"
                 HorizontalOptions="Center"
@@ -112,8 +112,10 @@
                              HorizontalOptions="End"
                              Margin="0,0,12,16"
                              Spacing="10">
-            <Button Text="🚆  Follow train" Style="{StaticResource MapButton}" Clicked="OnCenterOnTrainClicked" />
-            <Button Text="⤢  Whole route" Style="{StaticResource MapButton}" Clicked="OnShowRouteClicked" />
+            <Button Text="🚆  Follow train" Style="{StaticResource MapButton}" Clicked="OnCenterOnTrainClicked"
+                    SemanticProperties.Description="Centre the map on the train and follow it" />
+            <Button Text="⤢  Whole route" Style="{StaticResource MapButton}" Clicked="OnShowRouteClicked"
+                    SemanticProperties.Description="Show the whole route" />
         </VerticalStackLayout>
     </Grid>
 </ContentPage>

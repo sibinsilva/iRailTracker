@@ -391,13 +391,22 @@
     </Style>
 
     <!-- Shared surfaces: use Style="{StaticResource Card}" / "Chip" for a consistent look -->
+    <!-- Cards in lists use a hairline border, not a shadow: the Android shadow drew square grey
+         corners behind the rounded card in light mode -->
     <Style x:Key="Card" TargetType="Border">
-        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource CardStrokeLight}, Dark={StaticResource CardStrokeDark}}" />
         <Setter Property="StrokeShape" Value="RoundRectangle 18" />
         <Setter Property="Padding" Value="16" />
+        <Setter Property="HorizontalOptions" Value="Fill" />
         <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource CardBackgroundLight}, Dark={StaticResource CardBackgroundDark}}" />
+    </Style>
+
+    <!-- Cards floating over the map keep a shadow so they lift off the tiles -->
+    <Style x:Key="FloatingCard" TargetType="Border" BasedOn="{StaticResource Card}">
+        <Setter Property="StrokeThickness" Value="0" />
         <Setter Property="Shadow">
-            <Shadow Brush="Black" Opacity="0.08" Radius="14" Offset="0,4" />
+            <Shadow Brush="Black" Opacity="0.18" Radius="12" Offset="0,3" />
         </Setter>
     </Style>
 

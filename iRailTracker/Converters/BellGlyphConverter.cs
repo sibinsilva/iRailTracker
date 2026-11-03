@@ -6,8 +6,9 @@ namespace iRailTracker.Converters
     public class BellGlyphConverter : IValueConverter
     {
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
-            // Same bell both ways: a faded bell reads as "off", the crossed-out 🔕 looked like an error
-            => "🔔";
+            // Material Icons: filled "notifications_active" when tracking, outline "notifications_none"
+            // when not (the old crossed-out 🔕 emoji looked like an error)
+            => value is true ? "\ue7f7" : "\ue7f5";
 
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
             => throw new NotSupportedException();

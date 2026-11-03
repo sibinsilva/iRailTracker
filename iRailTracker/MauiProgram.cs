@@ -55,6 +55,8 @@ namespace iRailTracker
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
+                    // Google Material Icons (Apache 2.0): settings, bell, map buttons
+                    fonts.AddFont("MaterialIcons-Regular.ttf", "MaterialIcons");
                 });
 
 #if DEBUG

@@ -51,12 +51,13 @@
                             </Border.GestureRecognizers>
 
                             <!-- Status colour strip | content -->
-                            <Grid ColumnDefinitions="5,*">
+                            <Grid ColumnDefinitions="5,*" HorizontalOptions="Fill">
                                 <BoxView Color="{Binding LateColor}" />
 
                                 <Grid Grid.Column="1"
-                                      Padding="14,12,10,12"
-                                      ColumnDefinitions="*,Auto"
+                                      Padding="14,12,6,12"
+                                      HorizontalOptions="Fill"
+                                      ColumnDefinitions="*,48"
                                       RowDefinitions="Auto,Auto,Auto,Auto"
                                       RowSpacing="2">
 
@@ -69,9 +70,13 @@
                                     <Label Grid.Column="1"
                                            Grid.RowSpan="2"
                                            Text="{Binding IsTracking, Converter={StaticResource BellGlyphConverter}}"
-                                           FontSize="22"
-                                           Padding="10,0,4,8"
+                                           FontFamily="MaterialIcons"
+                                           FontSize="26"
+                                           HorizontalOptions="End"
+                                           HorizontalTextAlignment="End"
+                                           Padding="8,0,6,8"
                                            VerticalOptions="Start"
+                                           TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
                                            SemanticProperties.Description="Track this journey"
                                            Opacity="{Binding IsTracking, Converter={StaticResource BellOpacityConverter}}">
                                         <Label.GestureRecognizers>

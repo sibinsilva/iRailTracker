@@ -21,7 +21,7 @@ namespace iRailTracker.Service
         /// stations (Adamstown is ADAMS in the station list but ADMTN in train movements).</param>
         public async Task<List<StationData>> FilterCallingAtAsync(
             Settings settings, IReadOnlyList<StationData> board, Station from, Station to,
-            StationService? stationService = null)
+            StationService? stationService = null, Action<StationData>? onKept = null)
         {
             stationService ??= new StationService();
             PruneOldRoutes();
@@ -31,15 +31,21 @@ namespace iRailTracker.Service
             {
                 // Trains ending at the destination obviously go there: no route lookup needed
                 if (SameName(train.Destination, to.StationDesc))
+                {
+                    onKept?.Invoke(train);
                     return (train, keep: true);
+                }
 
                 await throttle.WaitAsync();
                 try
                 {
                     var route = await GetRouteAsync(settings, train, stationService);
                     // If a route couldn't be fetched, keep the train rather than hide one that may be right
-                    return (train, keep: route.Count == 0 ||
-                        CallsAtAfter(route, from.StationCode, to.StationCode, from.StationDesc, to.StationDesc));
+                    var keep = route.Count == 0 ||
+                        CallsAtAfter(route, from.StationCode, to.StationCode, from.StationDesc, to.StationDesc);
+                    if (keep)
+                        onKept?.Invoke(train);
+                    return (train, keep);
                 }
                 finally
                 {

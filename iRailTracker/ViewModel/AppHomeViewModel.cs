@@ -24,6 +24,9 @@ namespace iRailTracker.ViewModel
 
         private readonly DataService<List<Station>> _stationListService;
         private readonly DataService<Settings> _settings;
+        private readonly StationService _stationService;
+        private readonly RouteFilterService _routeFilter;
+        private readonly object _journeysLock = new();
         private ObservableCollection<string> _stationOptions;
         private ObservableCollection<TrainJourney> _trainJourneys;
         private ObservableCollection<string> _favouriteStations;
@@ -59,10 +62,14 @@ namespace iRailTracker.ViewModel
 
         #region Constructor
 
-        public AppHomeViewModel(DataService<List<Station>> stationListService, DataService<Settings> settingsService)
+        /// <param name="stationService">Optional: tests pass one backed by a fake HttpClient.</param>
+        public AppHomeViewModel(DataService<List<Station>> stationListService, DataService<Settings> settingsService,
+            StationService? stationService = null, RouteFilterService? routeFilter = null)
         {
             _stationListService = stationListService;
             _settings = settingsService;
+            _stationService = stationService ?? new StationService();
+            _routeFilter = routeFilter ?? RouteFilterService.Instance;
 
             // Null if the station list couldn't be loaded at startup; App shows an alert for that
             stationList = _stationListService.Data ?? [];
@@ -342,7 +349,7 @@ namespace iRailTracker.ViewModel
 
         #region Private Methods
 
-        private async Task ExecuteTrainServiceSearch(bool waitForLock = false, bool bypassCache = false)
+        internal async Task ExecuteTrainServiceSearch(bool waitForLock = false, bool bypassCache = false)
         {
             if (string.IsNullOrEmpty(_selectedStation))
             {
@@ -380,8 +387,7 @@ namespace iRailTracker.ViewModel
                 {
                     // Fetch fresh data
                     string? fetchError = null;
-                    StationService trainService = new StationService();
-                    journeyList = await trainService.GetTrainServicesAsync(
+                    journeyList = await _stationService.GetTrainServicesAsync(
                         _settings.Data,
                         stationCode,
                         error => fetchError = error);
@@ -410,8 +416,14 @@ namespace iRailTracker.ViewModel
                 var origin = stationList.FirstOrDefault(s => s.StationCode == stationCode);
                 if (destination is not null && origin is not null && destination.StationCode != origin.StationCode)
                 {
-                    journeyList = await RouteFilterService.Instance.FilterCallingAtAsync(
-                        _settings.Data, journeyList, origin, destination);
+                    // Show matching trains as each route is confirmed instead of after all of them
+                    TrainJourneys = new ObservableCollection<TrainJourney>();
+                    NoJourneyFound = false;
+                    EnableListView = true;
+
+                    journeyList = await _routeFilter.FilterCallingAtAsync(
+                        _settings.Data, journeyList, origin, destination, _stationService,
+                        onKept: train => RunOnUiThread(() => InsertByDueTime(ToJourney(train))));
                 }
 
                 if (journeyList.Count > 0)
@@ -421,8 +433,56 @@ namespace iRailTracker.ViewModel
 
                     journeyList.Sort((x, y) => x.Duein.CompareTo(y.Duein));
 
-                    TrainJourneys = new ObservableCollection<TrainJourney>(
-                        journeyList.Select(journey => new TrainJourney
+                    TrainJourneys = new ObservableCollection<TrainJourney>(journeyList.Select(ToJourney));
+                }
+                else
+                {
+                    EnableListView = false;
+                    NoJourneyFound = true;
+                    ButtonText = AppStrings.FindServices;
+                    NoJourneyMsg = destinationCode is null
+                        ? string.Format(AppMessages.NoJourneysForStation, _selectedStation)
+                        : $"No trains from {_selectedStation} to {_selectedDestination} right now.";
+                }
+
+                SafePreferences.Set(LastStationKey, _selectedStation);
+
+                RefreshTime = offlineDataFrom is { } dataFrom
+                    ? $"⚠ Offline · showing times from {dataFrom:hh:mm tt}"
+                    : string.Format(AppMessages.CurrentStatusAsOf, DateTime.Now.ToString("hh:mm:ss tt"));
+            }
+            catch (Exception ex)
+            {
+                ShowError(string.Format(AppMessages.TrainServiceError, ex.Message));
+            }
+            finally
+            {
+                IsBusy = false;
+                _searchLock.Release();
+            }
+        }
+
+        private void InsertByDueTime(TrainJourney journey)
+        {
+            lock (_journeysLock)
+            {
+                var index = 0;
+                while (index < TrainJourneys.Count && TrainJourneys[index].DueMinutes <= journey.DueMinutes)
+                    index++;
+                TrainJourneys.Insert(index, journey);
+            }
+        }
+
+        private static void RunOnUiThread(Action action)
+        {
+            var dispatcher = Application.Current?.Dispatcher;
+            if (dispatcher is null)
+                action(); // unit tests: no UI thread
+            else
+                dispatcher.Dispatch(action);
+        }
+
+        private static TrainJourney ToJourney(StationData journey) => new()
                         {
                             TrainCode = journey.Traincode,
                             TrainDate = IrishTime.ParseTrainDate(journey.Traindate),
@@ -444,35 +504,9 @@ namespace iRailTracker.ViewModel
                                         ? $"Early by {Math.Abs(journey.Late)} min{(Math.Abs(journey.Late) > 1 ? "s" : "")}"
                                         : $"Delayed by {journey.Late} min{(journey.Late > 1 ? "s" : "")}",
                             LateColor = journey.Late <= 0 ? Color.FromArgb("#16A34A") : Color.FromArgb("#DC2626"),
+                            DueMinutes = journey.Duein,
                             IsTracking = JourneyTrackingService.Instance.IsTracking(journey.Traincode)
-                        }));
-                }
-                else
-                {
-                    EnableListView = false;
-                    NoJourneyFound = true;
-                    ButtonText = AppStrings.FindServices;
-                    NoJourneyMsg = destinationCode is null
-                        ? string.Format(AppMessages.NoJourneysForStation, _selectedStation)
-                        : $"No trains from {_selectedStation} to {_selectedDestination} right now.";
-                }
-
-                Preferences.Set(LastStationKey, _selectedStation);
-
-                RefreshTime = offlineDataFrom is { } dataFrom
-                    ? $"⚠ Offline · showing times from {dataFrom:hh:mm tt}"
-                    : string.Format(AppMessages.CurrentStatusAsOf, DateTime.Now.ToString("hh:mm:ss tt"));
-            }
-            catch (Exception ex)
-            {
-                ShowError(string.Format(AppMessages.TrainServiceError, ex.Message));
-            }
-            finally
-            {
-                IsBusy = false;
-                _searchLock.Release();
-            }
-        }
+                        };
 
         private async Task ChooseStationAsync()
         {
@@ -694,7 +728,7 @@ namespace iRailTracker.ViewModel
 
             // First favourite, otherwise the station that was open last time
             var station = FavouriteStations.FirstOrDefault()
-                          ?? Preferences.Get(LastStationKey, string.Empty);
+                          ?? SafePreferences.Get(LastStationKey, string.Empty);
 
             if (string.IsNullOrEmpty(station))
                 return;

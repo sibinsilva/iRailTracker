@@ -163,6 +163,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Lets the unit tests drive internal view model methods directly -->
+    <InternalsVisibleTo Include="iRailTracker.UnitTests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <EmbeddedResource Include="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>

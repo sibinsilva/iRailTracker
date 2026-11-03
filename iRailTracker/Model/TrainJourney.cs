@@ -21,6 +21,8 @@ namespace iRailTracker.Model
         public Color LateColor { get; set; } = Color.FromArgb("#DC2626");
         /// <summary>Headline for the card: "Due" or "12 min".</summary>
         public string DueText { get; set; } = string.Empty;
+        /// <summary>Minutes until due, for ordering.</summary>
+        public int DueMinutes { get; set; }
         /// <summary>Translucent tint of <see cref="LateColor"/> behind the status badge (works in light and dark).</summary>
         public Color LateBadgeColor { get; set; } = Color.FromArgb("#29DC2626");
 

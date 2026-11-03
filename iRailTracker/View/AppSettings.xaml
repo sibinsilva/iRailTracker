@@ -9,110 +9,122 @@
     <ContentPage.Resources>
         <ResourceDictionary>
             <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
+
+            <Style x:Key="CardTitle" TargetType="Label">
+                <Setter Property="FontSize" Value="16" />
+                <Setter Property="FontFamily" Value="OpenSansSemibold" />
+            </Style>
+            <Style x:Key="CardHint" TargetType="Label">
+                <Setter Property="FontSize" Value="13" />
+                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource SubtleTextLight}, Dark={StaticResource SubtleTextDark}}" />
+            </Style>
         </ResourceDictionary>
     </ContentPage.Resources>
-    
+
     <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="24">
+        <VerticalStackLayout Padding="12" Spacing="12">
 
-            <!-- AUTO REFRESH TOGGLE -->
-            <Label Text="Auto Refresh"
-                   FontAttributes="Bold"
-                   FontSize="16" />
+            <!-- AUTO REFRESH -->
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout Spacing="2" VerticalOptions="Center">
+                            <Label Text="🔄  Auto refresh" Style="{StaticResource CardTitle}" />
+                            <Label Text="Keep the departure board up to date" Style="{StaticResource CardHint}" />
+                        </VerticalStackLayout>
+                        <Switch Grid.Column="1"
+                                IsToggled="{Binding IsAutoRefreshEnabled}"
+                                OnColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                                SemanticProperties.Description="Auto refresh"
+                                VerticalOptions="Center" />
+                    </Grid>
 
-            <HorizontalStackLayout Spacing="20">
+                    <Border Style="{StaticResource FieldBox}" Padding="10,2" IsEnabled="{Binding IsAutoRefreshEnabled}">
+                        <Picker Title="Refresh every"
+                                ItemsSource="{Binding RefreshIntervals}"
+                                ItemDisplayBinding="{Binding Display}"
+                                SelectedItem="{Binding SelectedRefreshInterval}"
+                                IsEnabled="{Binding IsAutoRefreshEnabled}" />
+                    </Border>
+                </VerticalStackLayout>
+            </Border>
 
-                <RadioButton Content="On"
-             GroupName="AutoRefreshGroup"
-             IsChecked="{Binding IsAutoRefreshEnabled}" />
+            <!-- FAVOURITE STATIONS -->
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="★  Favourite stations" Style="{StaticResource CardTitle}" />
+                    <Label Text="Quick-access chips on Home. The first one opens on startup and is shown in the widget."
+                           Style="{StaticResource CardHint}" />
 
-                <RadioButton Content="Off"
-             GroupName="AutoRefreshGroup"
-             IsChecked="{Binding IsAutoRefreshEnabled, Converter={StaticResource InverseBoolConverter}}" />
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                        <Border Style="{StaticResource FieldBox}" Padding="10,2">
+                            <Picker Title="Add a station"
+                                    ItemsSource="{Binding StationNames}"
+                                    SelectedIndex="{Binding SelectedStationToAddIndex, Mode=TwoWay}"
+                                    FontSize="15" />
+                        </Border>
+                        <Button Grid.Column="1"
+                                Text="Add"
+                                Command="{Binding AddFavouriteCommand}"
+                                VerticalOptions="Center" />
+                    </Grid>
 
-            </HorizontalStackLayout>
-
-            <!-- TIMER SECTION -->
-            <Label Text="Auto Refresh Interval"
-                   FontAttributes="Bold"
-                   FontSize="16" />
-
-            <Picker Title="Select interval"
-                    ItemsSource="{Binding RefreshIntervals}"
-                    ItemDisplayBinding="{Binding Display}"
-                    SelectedItem="{Binding SelectedRefreshInterval}" 
-                    IsEnabled="{Binding IsAutoRefreshEnabled}"/>
-
-                    <!-- FAVOURITE STATIONS -->
-            <Label Text="Favourite Stations"
-                   FontAttributes="Bold"
-                   FontSize="16" />
-
-            <Label Text="Add favourite stations for quick access and delay alerts. The first one auto-loads on startup."
-                   FontSize="13"
-                   Opacity="0.7" />
-
-            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
-                <Picker Title="Select a station to add"
-                        ItemsSource="{Binding StationNames}"
-                        SelectedIndex="{Binding SelectedStationToAddIndex, Mode=TwoWay}"
-                        FontSize="15"
-                        Grid.Column="0" />
-
-                <Button Text="Add"
-                        Command="{Binding AddFavouriteCommand}"
-                        FontSize="14"
-                        Padding="12,8"
-                        Grid.Column="1"
-                        VerticalOptions="Center" />
-            </Grid>
-
-            <VerticalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding FavouriteStations}">
-                <BindableLayout.ItemTemplate>
-                    <DataTemplate>
-                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
-                            <Label Text="{Binding .}"
-                                   FontSize="15"
-                                   VerticalOptions="Center"
-                                   Grid.Column="0" />
-
-                            <Button Text="Remove"
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:AppSettingsViewModel}}, Path=RemoveFavouriteCommand}"
-                                    CommandParameter="{Binding .}"
-                                    FontSize="13"
-                                    Padding="10,6"
-                                    Grid.Column="1" />
-                        </Grid>
-                    </DataTemplate>
-                </BindableLayout.ItemTemplate>
-            </VerticalStackLayout>
+                    <VerticalStackLayout Spacing="6" BindableLayout.ItemsSource="{Binding FavouriteStations}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource Chip}" Padding="14,6">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <Label Text="{Binding .}"
+                                               FontSize="15"
+                                               FontFamily="OpenSansSemibold"
+                                               VerticalOptions="Center"
+                                               TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+                                        <Label Grid.Column="1"
+                                               Text="✕"
+                                               FontSize="16"
+                                               Padding="12,6,4,6"
+                                               VerticalOptions="Center"
+                                               SemanticProperties.Description="Remove favourite"
+                                               TextColor="{AppThemeBinding Light={StaticResource SubtleTextLight}, Dark={StaticResource SubtleTextDark}}">
+                                            <Label.GestureRecognizers>
+                                                <TapGestureRecognizer
+                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:AppSettingsViewModel}}, Path=RemoveFavouriteCommand}"
+                                                    CommandParameter="{Binding .}" />
+                                            </Label.GestureRecognizers>
+                                        </Label>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Border>
 
             <!-- DELAY NOTIFICATIONS -->
-            <Label Text="Delay Notifications"
-                   FontAttributes="Bold"
-                   FontSize="16" />
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout Spacing="2" VerticalOptions="Center">
+                            <Label Text="🔔  Delay alerts" Style="{StaticResource CardTitle}" />
+                            <Label Text="Alert me when a journey I'm tracking runs late"
+                                   Style="{StaticResource CardHint}" />
+                        </VerticalStackLayout>
+                        <Switch Grid.Column="1"
+                                IsToggled="{Binding IsDelayNotificationsEnabled}"
+                                OnColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                                SemanticProperties.Description="Delay alerts"
+                                VerticalOptions="Center" />
+                    </Grid>
 
-            <Label Text="Get notified when a journey you're tracking (tap the bell on a journey card) is delayed past the threshold below."
-                   FontSize="13"
-                   Opacity="0.7" />
-
-            <HorizontalStackLayout Spacing="20">
-
-                <RadioButton Content="On"
-             GroupName="DelayNotificationsGroup"
-             IsChecked="{Binding IsDelayNotificationsEnabled}" />
-
-                <RadioButton Content="Off"
-             GroupName="DelayNotificationsGroup"
-             IsChecked="{Binding IsDelayNotificationsEnabled, Converter={StaticResource InverseBoolConverter}}" />
-
-            </HorizontalStackLayout>
-
-            <Picker Title="Select delay threshold"
-                    ItemsSource="{Binding DelayThresholds}"
-                    ItemDisplayBinding="{Binding Display}"
-                    SelectedItem="{Binding SelectedDelayThreshold}"
-                    IsEnabled="{Binding IsDelayNotificationsEnabled}" />
+                    <Border Style="{StaticResource FieldBox}" Padding="10,2">
+                        <Picker Title="Alert when late by"
+                                ItemsSource="{Binding DelayThresholds}"
+                                ItemDisplayBinding="{Binding Display}"
+                                SelectedItem="{Binding SelectedDelayThreshold}"
+                                IsEnabled="{Binding IsDelayNotificationsEnabled}" />
+                    </Border>
+                </VerticalStackLayout>
+            </Border>
 
         </VerticalStackLayout>
     </ScrollView>

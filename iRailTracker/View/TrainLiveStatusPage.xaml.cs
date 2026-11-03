@@ -17,6 +17,11 @@ public partial class TrainLiveStatusPage : ContentPage
     private IDispatcherTimer? _blinkTimer;
     private MemoryLayer? _currentStationLayer;
 
+    // OpenStreetMap's tile usage policy requires a User-Agent that identifies
+    // the app; Mapsui's generic default is blocked with HTTP 403.
+    private static readonly string OsmUserAgent =
+        $"iRailTracker/{AppInfo.Current.VersionString} ({AppInfo.Current.PackageName}; contact: sibinsilva@gmail.com)";
+
     public TrainLiveStatusPage(TrainJourney journey, IReadOnlyList<Station> stations)
     {
         InitializeComponent();
@@ -32,7 +37,7 @@ public partial class TrainLiveStatusPage : ContentPage
             return;
 
         var map = TrainMapControl.Map;
-        map.Layers.Add(OpenStreetMap.CreateTileLayer());
+        map.Layers.Add(OpenStreetMap.CreateTileLayer(OsmUserAgent));
 
         TrainMapControl.Info += OnMapInfo;
 

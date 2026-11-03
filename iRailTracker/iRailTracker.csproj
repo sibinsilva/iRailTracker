@@ -56,7 +56,7 @@
   <!-- =============================== -->
   <!-- 🔷 AUTO MINOR FROM GIT -->
   <!-- =============================== -->
-  <Target Name="ComputeGitMinor" BeforeTargets="Build">
+  <Target Name="ComputeGitMinor" BeforeTargets="PrepareForBuild">
     <Exec Command="git rev-list --count HEAD"
         ConsoleToMSBuild="true"
         IgnoreExitCode="true">
@@ -72,7 +72,7 @@
   <!-- =============================== -->
   <!-- 🔷 OPTIONAL PATCH FROM TAG -->
   <!-- =============================== -->
-  <Target Name="ComputePatchFromTag" BeforeTargets="Build" DependsOnTargets="ComputeGitMinor">
+  <Target Name="ComputePatchFromTag" BeforeTargets="PrepareForBuild" DependsOnTargets="ComputeGitMinor">
     <Exec Command="git describe --tags --abbrev=0 2>nul"
         Condition="$([MSBuild]::IsOSPlatform('windows'))"
         ConsoleToMSBuild="true"
@@ -94,7 +94,7 @@
   <!-- =============================== -->
   <!-- 🔷 DISPLAY VERSION -->
   <!-- =============================== -->
-  <Target Name="ComputeDisplayVersion" BeforeTargets="Build" DependsOnTargets="ComputePatchFromTag">
+  <Target Name="ComputeDisplayVersion" BeforeTargets="PrepareForBuild" DependsOnTargets="ComputePatchFromTag">
     <PropertyGroup>
       <ApplicationDisplayVersion>$(VersionMajor).$(VersionMinor).$(VersionPatch)</ApplicationDisplayVersion>
     </PropertyGroup>
@@ -107,7 +107,7 @@
   <!-- Blocks CLI release builds unless -p:ConfirmMajorBump=true is passed.
        Visual Studio (Archive, etc.) is always allowed through. -->
   <Target Name="GuardRelease"
-      BeforeTargets="Build"
+      BeforeTargets="PrepareForBuild"
       DependsOnTargets="ComputeDisplayVersion"
       Condition="'$(Configuration)'=='Release' AND '$(BuildingInsideVisualStudio)'!='true'">
 

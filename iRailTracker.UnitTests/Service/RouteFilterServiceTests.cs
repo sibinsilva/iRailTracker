@@ -51,6 +51,39 @@ public class RouteFilterServiceTests
         Assert.False(RouteFilterService.CallsAtAfter(BrayToHowth, "MHIDE", "HOWTH"));
     }
 
+    [Fact]
+    public void CallsAtAfter_StationWithDifferentCodeInMovements_MatchesByName()
+    {
+        // Real data (3 Nov 2026): the station list has Adamstown as ADAMS, train movements as ADMTN.
+        // Train D415 Dublin Connolly -> Newbridge from Adamstown wrongly showed "No trains" before.
+        var d415 = new List<TrainMovement>
+        {
+            new() { LocationOrder = 13, LocationCode = "KISHO", LocationFullName = "Kishoge", LocationType = "S" },
+            new() { LocationOrder = 14, LocationCode = "ADMTN", LocationFullName = "Adamstown", LocationType = "S" },
+            new() { LocationOrder = 15, LocationCode = "HZLCH", LocationFullName = "Hazelhatch", LocationType = "S" },
+            new() { LocationOrder = 20, LocationCode = "NBRGE", LocationFullName = "Newbridge", LocationType = "D" },
+        };
+
+        Assert.False(RouteFilterService.CallsAtAfter(d415, "ADAMS", "NBRGE"));
+        Assert.True(RouteFilterService.CallsAtAfter(d415, "ADAMS", "NBRGE", "Adamstown", "Newbridge"));
+    }
+
+    [Fact]
+    public async Task FilterCallingAtAsync_TrainEndingAtDestination_KeptWithoutRouteLookup()
+    {
+        var handler = new RouteHandler(new());
+        var board = new List<StationData> { new() { Traincode = "D415", Destination = "Newbridge ", Traindate = IrishTime.FormatTrainDate(IrishTime.Today) } };
+
+        var result = await new RouteFilterService().FilterCallingAtAsync(
+            new Settings { GetTrainMovementsUrl = "https://example.test/m" }, board,
+            new Station { StationCode = "ADAMS", StationDesc = "Adamstown" },
+            new Station { StationCode = "NBRGE", StationDesc = "Newbridge" },
+            new StationService(new HttpClient(handler)));
+
+        Assert.Single(result);
+        Assert.Equal(0, handler.Requests);
+    }
+
     private sealed class RouteHandler(Dictionary<string, string> routesByTrain) : HttpMessageHandler
     {
         private int _requests;
@@ -94,12 +127,15 @@ public class RouteFilterServiceTests
         };
         var filter = new RouteFilterService();
 
-        var result = await filter.FilterCallingAtAsync(settings, board, "DLERY", "HOWTH", stationService);
+        var from = new Station { StationCode = "DLERY", StationDesc = "Dun Laoghaire" };
+        var to = new Station { StationCode = "HOWTH", StationDesc = "Howth" };
+
+        var result = await filter.FilterCallingAtAsync(settings, board, from, to, stationService);
 
         Assert.Equal(["E101", "E103"], result.Select(t => t.Traincode));
 
         // Second refresh: known routes come from the cache, only the failed one is retried
-        await filter.FilterCallingAtAsync(settings, board, "DLERY", "HOWTH", stationService);
+        await filter.FilterCallingAtAsync(settings, board, from, to, stationService);
         Assert.Equal(4, handler.Requests);
     }
 }

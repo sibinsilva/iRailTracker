@@ -10,14 +10,17 @@ namespace iRailTracker.Service
     /// </summary>
     public class RouteFilterService
     {
-        private const int MaxParallelRequests = 4;
+        private const int MaxParallelRequests = 8;
 
         private readonly ConcurrentDictionary<(string TrainCode, DateTime Date), List<TrainMovement>> _routes = new();
 
         public static RouteFilterService Instance { get; } = new();
 
+        /// <param name="from">The selected station; <paramref name="to"/> the destination. Stops are
+        /// matched by code or name because Irish Rail's endpoints use different codes for some
+        /// stations (Adamstown is ADAMS in the station list but ADMTN in train movements).</param>
         public async Task<List<StationData>> FilterCallingAtAsync(
-            Settings settings, IReadOnlyList<StationData> board, string fromCode, string toCode,
+            Settings settings, IReadOnlyList<StationData> board, Station from, Station to,
             StationService? stationService = null)
         {
             stationService ??= new StationService();
@@ -26,12 +29,17 @@ namespace iRailTracker.Service
 
             var checks = board.Select(async train =>
             {
+                // Trains ending at the destination obviously go there: no route lookup needed
+                if (SameName(train.Destination, to.StationDesc))
+                    return (train, keep: true);
+
                 await throttle.WaitAsync();
                 try
                 {
                     var route = await GetRouteAsync(settings, train, stationService);
                     // If a route couldn't be fetched, keep the train rather than hide one that may be right
-                    return (train, keep: route.Count == 0 || CallsAtAfter(route, fromCode, toCode));
+                    return (train, keep: route.Count == 0 ||
+                        CallsAtAfter(route, from.StationCode, to.StationCode, from.StationDesc, to.StationDesc));
                 }
                 finally
                 {
@@ -47,7 +55,8 @@ namespace iRailTracker.Service
         /// True if the route stops at <paramref name="fromCode"/> and then, later on, stops at
         /// <paramref name="toCode"/>. Timing points the train passes without stopping (type "T") don't count.
         /// </summary>
-        public static bool CallsAtAfter(IEnumerable<TrainMovement> route, string fromCode, string toCode)
+        public static bool CallsAtAfter(IEnumerable<TrainMovement> route, string fromCode, string toCode,
+            string? fromName = null, string? toName = null)
         {
             var seenFrom = false;
 
@@ -56,13 +65,11 @@ namespace iRailTracker.Service
                 if (stop.LocationType == "T")
                     continue;
 
-                var code = stop.LocationCode.Trim();
-
                 if (!seenFrom)
                 {
-                    seenFrom = code.Equals(fromCode.Trim(), StringComparison.OrdinalIgnoreCase);
+                    seenFrom = IsStop(stop, fromCode, fromName);
                 }
-                else if (code.Equals(toCode.Trim(), StringComparison.OrdinalIgnoreCase))
+                else if (IsStop(stop, toCode, toName))
                 {
                     return true;
                 }
@@ -70,6 +77,13 @@ namespace iRailTracker.Service
 
             return false;
         }
+
+        private static bool IsStop(TrainMovement stop, string code, string? name) =>
+            stop.LocationCode.Trim().Equals(code.Trim(), StringComparison.OrdinalIgnoreCase) ||
+            (name is not null && SameName(stop.LocationFullName, name));
+
+        private static bool SameName(string a, string b) =>
+            a.Trim().Length > 0 && a.Trim().Equals(b.Trim(), StringComparison.OrdinalIgnoreCase);
 
         private void PruneOldRoutes()
         {

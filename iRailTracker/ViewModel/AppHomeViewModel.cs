@@ -17,6 +17,7 @@ namespace iRailTracker.ViewModel
         IRecipient<AutoRefreshSettingsChangedMessage>,
         IRecipient<FavouriteStationsChangedMessage>,
         IRecipient<TrackingStoppedMessage>,
+        IRecipient<TrackingRestoredMessage>,
         IRecipient<NavigateToTrackedJourneyMessage>
     {
         #region Fields
@@ -322,6 +323,17 @@ namespace iRailTracker.ViewModel
         public ICommand OpenSettingsCommand => new Command(async () => await GoToSettings());
         public ICommand OpenJourneyCommand => _openJourneyCommand ??= new Command<TrainJourney>(async (journey) => await OpenJourney(journey));
         public ICommand SelectFavouriteCommand => new Command<string>(async (station) => await LoadStationAsync(station));
+        // The two mode toggles are mutually exclusive (formerly a radio group)
+        public ICommand SelectNearbyModeCommand => new Command(() =>
+        {
+            IsLocateStationChecked = false;
+            IsFindNearbyStationChecked = true;
+        });
+        public ICommand SelectPickModeCommand => new Command(() =>
+        {
+            IsFindNearbyStationChecked = false;
+            IsLocateStationChecked = true;
+        });
         public ICommand ChooseStationCommand => new Command(async () => await ChooseStationAsync());
         public ICommand ChooseDestinationCommand => new Command(async () => await ChooseDestinationAsync());
         public ICommand ToggleTrackingCommand => new Command<TrainJourney>(async (journey) => await ToggleTracking(journey));
@@ -393,12 +405,13 @@ namespace iRailTracker.ViewModel
                     }
                 }
 
-                var destinationCode = GetDestinationStationCode();
-                if (destinationCode is not null && !string.IsNullOrEmpty(stationCode) &&
-                    !destinationCode.Equals(stationCode, StringComparison.OrdinalIgnoreCase))
+                var destination = GetDestinationStation();
+                var destinationCode = destination?.StationCode;
+                var origin = stationList.FirstOrDefault(s => s.StationCode == stationCode);
+                if (destination is not null && origin is not null && destination.StationCode != origin.StationCode)
                 {
                     journeyList = await RouteFilterService.Instance.FilterCallingAtAsync(
-                        _settings.Data, journeyList, stationCode, destinationCode);
+                        _settings.Data, journeyList, origin, destination);
                 }
 
                 if (journeyList.Count > 0)
@@ -498,13 +511,12 @@ namespace iRailTracker.ViewModel
             }
         }
 
-        private string? GetDestinationStationCode()
+        private Station? GetDestinationStation()
         {
             if (string.IsNullOrEmpty(_selectedDestination) || _selectedDestination == AnyDestination)
                 return null;
 
-            return stationList.FirstOrDefault(s => s.StationDesc.Equals(_selectedDestination, StringComparison.OrdinalIgnoreCase))
-                ?.StationCode;
+            return stationList.FirstOrDefault(s => s.StationDesc.Equals(_selectedDestination, StringComparison.OrdinalIgnoreCase));
         }
 
         private async Task ExecuteLocationSearch()
@@ -656,8 +668,7 @@ namespace iRailTracker.ViewModel
         {
             // Tracking may have stopped while another page was open (notification button, or the
             // train arrived); messages aren't received then, so re-sync the bells.
-            foreach (var journey in TrainJourneys)
-                journey.IsTracking = JourneyTrackingService.Instance.IsTracking(journey.TrainCode);
+            SyncTrackingState();
 
             if (_isRegisteredForAutoRefreshMessages)
                 return;
@@ -707,6 +718,15 @@ namespace iRailTracker.ViewModel
         }
 
         public event EventHandler<TrainJourney>? ScrollToJourneyRequested;
+
+        public void Receive(TrackingRestoredMessage message) =>
+            MainThread.BeginInvokeOnMainThread(SyncTrackingState);
+
+        private void SyncTrackingState()
+        {
+            foreach (var journey in TrainJourneys)
+                journey.IsTracking = JourneyTrackingService.Instance.IsTracking(journey.TrainCode);
+        }
 
         public void Receive(TrackingStoppedMessage message)
         {

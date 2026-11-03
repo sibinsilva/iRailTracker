@@ -11,6 +11,7 @@
         <ResourceDictionary>
             <converters:BellGlyphConverter x:Key="BellGlyphConverter" />
             <converters:BellOpacityConverter x:Key="BellOpacityConverter" />
+            <converters:TrackingDescriptionConverter x:Key="TrackingDescriptionConverter" />
         </ResourceDictionary>
     </ContentView.Resources>
 
@@ -42,7 +43,8 @@
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
 
-                        <Border Style="{StaticResource Card}" Padding="0" Margin="0,6">
+                        <Border Style="{StaticResource Card}" Padding="0" Margin="0,6"
+                                SemanticProperties.Hint="Opens the live map for this train">
 
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer
@@ -77,7 +79,7 @@
                                            Padding="8,0,6,8"
                                            VerticalOptions="Start"
                                            TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
-                                           SemanticProperties.Description="Track this journey"
+                                           SemanticProperties.Description="{Binding IsTracking, Converter={StaticResource TrackingDescriptionConverter}}"
                                            Opacity="{Binding IsTracking, Converter={StaticResource BellOpacityConverter}}">
                                         <Label.GestureRecognizers>
                                             <TapGestureRecognizer

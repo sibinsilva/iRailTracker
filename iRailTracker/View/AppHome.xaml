@@ -33,6 +33,7 @@
             Priority="0"
             Order="Primary"
             Text="Settings"
+            SemanticProperties.Description="Settings"
             Command="{Binding OpenSettingsCommand}">
             <ToolbarItem.IconImageSource>
                 <!-- Material "settings" gear (the ⚙ emoji glyph rendered like a sun icon) -->
@@ -63,7 +64,8 @@
                                    BindableLayout.ItemsSource="{Binding FavouriteStations}">
                 <BindableLayout.ItemTemplate>
                     <DataTemplate>
-                        <Border Style="{StaticResource Chip}">
+                        <Border Style="{StaticResource Chip}"
+                                SemanticProperties.Description="{Binding ., StringFormat='Favourite station {0}'}">
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type vm:AppHomeViewModel}}, Path=SelectFavouriteCommand}"

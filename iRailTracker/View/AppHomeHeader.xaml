@@ -20,6 +20,7 @@
                     BackgroundColor="{AppThemeBinding Light={StaticResource PageBackgroundLight}, Dark={StaticResource PageBackgroundDark}}">
                 <Grid ColumnDefinitions="*,*" ColumnSpacing="4">
                     <Border x:Name="Find_Station"
+                            SemanticProperties.Description="Find stations near me"
                             Grid.Column="0"
                             StrokeThickness="0"
                             StrokeShape="RoundRectangle 9"
@@ -47,6 +48,7 @@
                     </Border>
 
                     <Border x:Name="Search_Station"
+                            SemanticProperties.Description="Pick a station from the list"
                             Grid.Column="1"
                             StrokeThickness="0"
                             StrokeShape="RoundRectangle 9"
@@ -83,7 +85,9 @@
             <!-- STATION + DESTINATION FIELDS (open the searchable list) -->
             <VerticalStackLayout Spacing="8" IsVisible="{Binding IsStationListLoaded}">
 
-                <Border x:Name="stationPicker" Style="{StaticResource FieldBox}">
+                <Border x:Name="stationPicker" Style="{StaticResource FieldBox}"
+                        SemanticProperties.Description="{Binding StationDisplay, StringFormat='From: {0}'}"
+                        SemanticProperties.Hint="Opens the station list">
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Command="{Binding ChooseStationCommand}" />
                     </Border.GestureRecognizers>
@@ -97,7 +101,9 @@
                     </Grid>
                 </Border>
 
-                <Border Style="{StaticResource FieldBox}">
+                <Border Style="{StaticResource FieldBox}"
+                        SemanticProperties.Description="{Binding SelectedDestination, StringFormat='Going to: {0}'}"
+                        SemanticProperties.Hint="Only list trains that stop at this station">
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Command="{Binding ChooseDestinationCommand}" />
                     </Border.GestureRecognizers>

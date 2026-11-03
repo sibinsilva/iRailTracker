@@ -269,6 +269,12 @@ namespace iRailTracker.ViewModel
                 ShowError("Choose the stations you travel from and to first.");
                 return;
             }
+            if (!_commute.Enabled)
+            {
+                // IsActiveAt is false when off, which used to be reported as "outside your window"
+                ShowError("Commute alerts are off. Switch them on to get alerts.");
+                return;
+            }
 #if ANDROID
             CommuteScheduler.RunNow();
 #endif

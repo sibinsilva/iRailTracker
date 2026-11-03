@@ -1,4 +1,5 @@
-﻿using iRailTracker.Model;
+﻿using iRailTracker.Resources.Strings;
+using iRailTracker.Model;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
@@ -52,7 +53,7 @@ namespace iRailTracker.Service
                 {
                     errorCallback?.Invoke(fetchError is null
                         ? "Failed to load station list."
-                        : "Couldn't download the station list. Check your internet connection and reopen the app.");
+                        : AppMessages.StationListDownloadFailed);
                     return;
                 }
 

@@ -282,7 +282,7 @@ namespace iRailTracker.ViewModel
             ApplyDirectionFilter();
         });
 
-        public string StationDisplay => string.IsNullOrEmpty(_selectedStation) ? "Select a station" : _selectedStation;
+        public string StationDisplay => string.IsNullOrEmpty(_selectedStation) ? AppMessages.SelectAStation : _selectedStation;
 
         public string DestinationDisplay => $"Going to: {_selectedDestination}";
 
@@ -465,16 +465,16 @@ namespace iRailTracker.ViewModel
                     NoJourneyFound = true;
                     ButtonText = AppStrings.FindServices;
                     NoJourneyMsg = offlineNoData
-                        ? "📡 You're offline. Connect to the internet to see live train times."
+                        ? AppMessages.OfflineNoData
                         : destinationCode is null
                             ? string.Format(AppMessages.NoJourneysForStation, _selectedStation)
-                            : $"No trains from {_selectedStation} to {_selectedDestination} right now.";
+                            : string.Format(AppMessages.NoTrainsToDestination, _selectedStation, _selectedDestination);
                 }
 
                 SafePreferences.Set(LastStationKey, _selectedStation);
 
                 RefreshTime = offlineDataFrom is { } dataFrom
-                    ? $"⚠ Offline · showing times from {dataFrom:hh:mm tt}"
+                    ? string.Format(AppMessages.OfflineShowingTimesFrom, dataFrom.ToString("hh:mm tt"))
                     : string.Format(AppMessages.CurrentStatusAsOf, DateTime.Now.ToString("hh:mm:ss tt"));
             }
             catch (Exception ex)
@@ -710,9 +710,7 @@ namespace iRailTracker.ViewModel
             }
             else
             {
-                if (!await NotificationPermissionHelper.EnsureAsync(
-                        "Journey tracking shows the train's live position and delay in a notification. " +
-                        "Allow notifications for iRailTracker in its settings to use it."))
+                if (!await NotificationPermissionHelper.EnsureAsync(AppMessages.NotificationsNeededForTracking))
                     return;
 
                 await JourneyTrackingService.Instance.StartTracking(journey, _settings.Data);

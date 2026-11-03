@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
+﻿using iRailTracker.Resources.Strings;
+using CommunityToolkit.Mvvm.Messaging;
 using iRailTracker.Model;
 using iRailTracker.Service;
 using Plugin.LocalNotification;
@@ -193,8 +194,7 @@ namespace iRailTracker.ViewModel
 
         private async Task RequestNotificationPermissionAsync()
         {
-            var granted = await NotificationPermissionHelper.EnsureAsync(
-                "Delay alerts are sent as notifications. Allow notifications for iRailTracker in its settings to receive them.");
+            var granted = await NotificationPermissionHelper.EnsureAsync(AppMessages.NotificationsNeededForDelayAlerts);
 
             if (!granted)
                 IsDelayNotificationsEnabled = false;

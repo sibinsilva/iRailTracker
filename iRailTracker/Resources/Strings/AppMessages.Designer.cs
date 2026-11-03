@@ -104,5 +104,76 @@ namespace iRailTracker.Resources.Strings {
                 return ResourceManager.GetString("TrainServiceError", resourceCulture);
             }
         }
+            /// <summary>
+        ///   Looks up a localized string similar to No trains from {0} to {1} right now..
+        /// </summary>
+        internal static string NoTrainsToDestination {
+            get {
+                return ResourceManager.GetString("NoTrainsToDestination", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 📡 You&#x27;re offline. Connect to the internet to see live train times..
+        /// </summary>
+        internal static string OfflineNoData {
+            get {
+                return ResourceManager.GetString("OfflineNoData", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ⚠ Offline · showing times from {0}.
+        /// </summary>
+        internal static string OfflineShowingTimesFrom {
+            get {
+                return ResourceManager.GetString("OfflineShowingTimesFrom", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Journey tracking shows the train&#x27;s live position and delay in a notification. Allow notifications for iRailTracker in its settings to use it..
+        /// </summary>
+        internal static string NotificationsNeededForTracking {
+            get {
+                return ResourceManager.GetString("NotificationsNeededForTracking", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Delay alerts are sent as notifications. Allow notifications for iRailTracker in its settings to receive them..
+        /// </summary>
+        internal static string NotificationsNeededForDelayAlerts {
+            get {
+                return ResourceManager.GetString("NotificationsNeededForDelayAlerts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Couldn&#x27;t download the station list. Check your internet connection and reopen the app..
+        /// </summary>
+        internal static string StationListDownloadFailed {
+            get {
+                return ResourceManager.GetString("StationListDownloadFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Loading the station list is taking too long. Check your internet connection..
+        /// </summary>
+        internal static string StationListTooSlow {
+            get {
+                return ResourceManager.GetString("StationListTooSlow", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select a station.
+        /// </summary>
+        internal static string SelectAStation {
+            get {
+                return ResourceManager.GetString("SelectAStation", resourceCulture);
+            }
+        }
     }
 }

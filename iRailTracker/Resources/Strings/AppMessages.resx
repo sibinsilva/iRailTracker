@@ -132,4 +132,28 @@
   <data name="TrainServiceError" xml:space="preserve">
     <value>An unexpected error occurred while searching for train services: {0}</value>
   </data>
+  <data name="NoTrainsToDestination" xml:space="preserve">
+    <value>No trains from {0} to {1} right now.</value>
+  </data>
+  <data name="OfflineNoData" xml:space="preserve">
+    <value>📡 You're offline. Connect to the internet to see live train times.</value>
+  </data>
+  <data name="OfflineShowingTimesFrom" xml:space="preserve">
+    <value>⚠ Offline · showing times from {0}</value>
+  </data>
+  <data name="NotificationsNeededForTracking" xml:space="preserve">
+    <value>Journey tracking shows the train's live position and delay in a notification. Allow notifications for iRailTracker in its settings to use it.</value>
+  </data>
+  <data name="NotificationsNeededForDelayAlerts" xml:space="preserve">
+    <value>Delay alerts are sent as notifications. Allow notifications for iRailTracker in its settings to receive them.</value>
+  </data>
+  <data name="StationListDownloadFailed" xml:space="preserve">
+    <value>Couldn't download the station list. Check your internet connection and reopen the app.</value>
+  </data>
+  <data name="StationListTooSlow" xml:space="preserve">
+    <value>Loading the station list is taking too long. Check your internet connection.</value>
+  </data>
+  <data name="SelectAStation" xml:space="preserve">
+    <value>Select a station</value>
+  </data>
 </root>

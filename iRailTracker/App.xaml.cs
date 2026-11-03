@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
+﻿using iRailTracker.Resources.Strings;
+using CommunityToolkit.Mvvm.Messaging;
 using iRailTracker.Service;
 using iRailTracker.View;
 using Microsoft.Extensions.Configuration;
@@ -45,7 +46,7 @@ namespace iRailTracker
             }
             catch (TimeoutException)
             {
-                loadError ??= "Loading the station list is taking too long. Check your internet connection.";
+                loadError ??= AppMessages.StationListTooSlow;
             }
 
             await MainThread.InvokeOnMainThreadAsync(async () =>

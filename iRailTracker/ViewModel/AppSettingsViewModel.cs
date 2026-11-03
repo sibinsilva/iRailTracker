@@ -15,7 +15,7 @@ namespace iRailTracker.ViewModel
         public AppSettingsViewModel(DataService<List<Station>> stationListService)
         {
             // Auto refresh
-            _isAutoRefreshEnabled = Preferences.Get(AppPreferences.AutoRefreshEnabled, false);
+            _isAutoRefreshEnabled = Preferences.Get(AppPreferences.AutoRefreshEnabled, true);
 
             // Interval
             var savedInterval = Preferences.Get(AppPreferences.RefreshIntervalSeconds, 30);

@@ -52,7 +52,7 @@ public partial class AppHome : ContentPage
             _isScrollHandlerSubscribed = true;
         }
 
-        var enabled = Preferences.Get(AppPreferences.AutoRefreshEnabled, false);
+        var enabled = Preferences.Get(AppPreferences.AutoRefreshEnabled, true);
         var interval = Preferences.Get(AppPreferences.RefreshIntervalSeconds, 30);
 
         AutoRefreshService.Instance.Start(enabled, interval);
@@ -109,16 +109,14 @@ public partial class AppHome : ContentPage
                 var exit = await DisplayAlertAsync("Exit", "Do you want to exit the app?", "Exit", "Cancel");
                 if (exit)
                 {
-                    try
-                    {
-                        Application.Current?.Quit();
-                    }
-                    catch
-                    {
+                    // Application.Quit() killed the process while the dialog was still being
+                    // drawn, crashing natively on RenderThread. Close the activity normally instead
+                    // (journey tracking, if any, keeps running in its foreground service).
 #if ANDROID
-                        Platform.CurrentActivity?.FinishAffinity();
+                    Platform.CurrentActivity?.FinishAffinity();
+#else
+                    Application.Current?.Quit();
 #endif
-                    }
                 }
             }
             finally

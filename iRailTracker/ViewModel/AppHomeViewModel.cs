@@ -391,6 +391,7 @@ namespace iRailTracker.ViewModel
 
                 List<StationData> journeyList;
                 DateTime? offlineDataFrom = null;
+                var offlineNoData = false;
 
                 if (!bypassCache && _journeyCache.TryGetValue(stationCode, out var cacheEntry) &&
                     DateTime.UtcNow - cacheEntry.fetchedAt < CacheDuration)
@@ -410,19 +411,24 @@ namespace iRailTracker.ViewModel
                     if (fetchError is null)
                     {
                         _journeyCache[stationCode] = (DateTime.UtcNow, journeyList);
+                        BoardCache.Save(stationCode, journeyList);
                     }
-                    else if (_journeyCache.TryGetValue(stationCode, out var lastGood))
+                    else if (_journeyCache.TryGetValue(stationCode, out var lastGood) ||
+                             BoardCache.TryLoad(stationCode, out lastGood))
                     {
-                        // Offline or the API is down: keep showing the last board we got, marked
-                        // with its age, instead of an alert on every auto-refresh.
+                        // Offline or the API is down: keep showing the last board we got (from this
+                        // session, or saved on the device for a cold start), marked with its age.
                         journeyList = lastGood.data;
                         offlineDataFrom = lastGood.fetchedAt.ToLocalTime();
                     }
+                    else if (IsOffline())
+                    {
+                        // Nothing to show: say so on Home itself rather than in a popup
+                        offlineNoData = true;
+                    }
                     else
                     {
-                        ShowError(IsOffline()
-                            ? "You're offline. Connect to the internet to see live train times."
-                            : fetchError);
+                        ShowError(fetchError);
                     }
                 }
 
@@ -458,9 +464,11 @@ namespace iRailTracker.ViewModel
                     EnableListView = false;
                     NoJourneyFound = true;
                     ButtonText = AppStrings.FindServices;
-                    NoJourneyMsg = destinationCode is null
-                        ? string.Format(AppMessages.NoJourneysForStation, _selectedStation)
-                        : $"No trains from {_selectedStation} to {_selectedDestination} right now.";
+                    NoJourneyMsg = offlineNoData
+                        ? "📡 You're offline. Connect to the internet to see live train times."
+                        : destinationCode is null
+                            ? string.Format(AppMessages.NoJourneysForStation, _selectedStation)
+                            : $"No trains from {_selectedStation} to {_selectedDestination} right now.";
                 }
 
                 SafePreferences.Set(LastStationKey, _selectedStation);
@@ -629,6 +637,16 @@ namespace iRailTracker.ViewModel
                         IsStationListLoaded = true;
                         HideSearchButton = false;
                         ButtonText = AppStrings.FindServices;
+
+                        // Load the nearest station's board straight away; the FROM field lists the
+                        // other nearby stations. Before, nothing visible happened after the search.
+                        IsBusy = false;
+                        SelectedStation = stationList[0];
+                        await ExecuteTrainServiceSearch(waitForLock: true);
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine("Nearby search returned no stations");
                     }
                 }
             }

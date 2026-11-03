@@ -124,9 +124,10 @@ public partial class TrainLiveStatusPage : ContentPage
 
         // Pad the frame: extra room at the top for the floating route card and at the bottom
         // for the legend and buttons, so no stop is hidden behind them
+        // (bottom: legend + two buttons ≈ 130 dp; top: route card ≈ 140 dp on a ~700 dp map)
         var extent = new MRect(
-            minX - width * 0.12, minY - height * 0.25,
-            maxX + width * 0.12, maxY + height * 0.45);
+            minX - width * 0.15, minY - height * 0.45,
+            maxX + width * 0.15, maxY + height * 0.55);
         _routeExtent = extent;
         map.Navigator.ZoomToBox(extent, MBoxFit.Fit);
 
@@ -202,19 +203,17 @@ public partial class TrainLiveStatusPage : ContentPage
     private void MoveCurrentPin(MPoint point)
     {
         var map = TrainMapControl.Map;
-        _trainPoint = point;
 
-        if (_currentStationLayer is null)
+        // Replacing the features of the existing layer (Features = [...] + DataHasChanged) made the
+        // pin vanish after a refresh. Swap in a fresh layer instead, and only when the train moved.
+        var moved = _trainPoint is null || _trainPoint.X != point.X || _trainPoint.Y != point.Y;
+        if (_currentStationLayer is null || moved)
         {
+            if (_currentStationLayer is not null)
+                map.Layers.Remove(_currentStationLayer);
+
             AddCurrentStationPin(point, map);
             StartBlinking();
-        }
-        else
-        {
-            var feature = new PointFeature(point);
-            feature["Label"] = "Current";
-            _currentStationLayer.Features = [feature];
-            _currentStationLayer.DataHasChanged();
         }
 
         // After "Train" is tapped, keep the train in view as it moves (until "Route" is tapped)
@@ -418,9 +417,14 @@ public partial class TrainLiveStatusPage : ContentPage
 
         _blinkTimer = Dispatcher.CreateTimer();
         _blinkTimer.Interval = TimeSpan.FromMilliseconds(600);
+        // Pulse the pin's opacity rather than hiding the layer, so it is never left invisible
+        var dim = false;
         _blinkTimer.Tick += (_, _) =>
         {
-            _currentStationLayer.Enabled = !_currentStationLayer.Enabled;
+            if (_currentStationLayer?.Style is not MapsuiSymbolStyle style)
+                return;
+            dim = !dim;
+            style.Opacity = dim ? 0.35f : 1f;
             TrainMapControl.Map.RefreshGraphics();
         };
         _blinkTimer.Start();

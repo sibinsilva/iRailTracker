@@ -37,8 +37,10 @@ namespace iRailTracker.Service
                 {
                     location = await Geolocation.GetLocationAsync(new GeolocationRequest
                     {
-                        DesiredAccuracy = GeolocationAccuracy.High,
-                        Timeout = TimeSpan.FromSeconds(30)
+                        // Medium (network/Wi-Fi) is plenty to pick the nearest station and returns
+                        // in seconds; High waited up to 30 s for GPS and looked like nothing happened
+                        DesiredAccuracy = GeolocationAccuracy.Medium,
+                        Timeout = TimeSpan.FromSeconds(15)
                     });
                 }
 

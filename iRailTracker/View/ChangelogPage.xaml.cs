@@ -4,7 +4,7 @@ public partial class ChangelogPage : ContentPage
 {
     private static readonly List<ChangelogEntry> Entries =
     [
-        new("2.48", [
+        new("2.54", [
             "🗺️ Live map: the train moves as it travels, with your location, a legend and recenter buttons",
             "🎯 \"Going to\" filter shows only trains that stop at your destination",
             "🔍 Searchable station list",

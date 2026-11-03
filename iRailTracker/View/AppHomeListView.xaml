@@ -113,40 +113,47 @@
                                         </Label>
                                     </HorizontalStackLayout>
 
-                                    <!-- Minutes as the headline, departure time beside it, status badge on the right -->
-                                    <HorizontalStackLayout Grid.Row="2" Spacing="10" Margin="0,8,0,0" VerticalOptions="End">
-                                        <Label Text="{Binding DueText}"
-                                               FontSize="26"
-                                               FontFamily="OpenSansSemibold"
-                                               VerticalOptions="End"
-                                               TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
-                                        <Label FontSize="13"
-                                               VerticalOptions="End"
-                                               Margin="0,0,0,4"
-                                               TextColor="{AppThemeBinding Light={StaticResource SubtleTextLight}, Dark={StaticResource SubtleTextDark}}">
-                                            <Label.FormattedText>
-                                                <FormattedString>
-                                                    <Span Text="{Binding ExpectedTimeLabel}" />
-                                                    <Span Text=" " />
-                                                    <Span Text="{Binding ExpectedArrival}" FontFamily="OpenSansSemibold" />
-                                                </FormattedString>
-                                            </Label.FormattedText>
-                                        </Label>
-                                    </HorizontalStackLayout>
+                                    <!-- Minutes as the headline with the departure time, status badge on the right.
+                                         Spans both columns: in the bell's narrow column the badge wrapped letter by letter. -->
+                                    <Grid Grid.Row="2"
+                                          Grid.ColumnSpan="2"
+                                          Margin="0,8,0,0"
+                                          ColumnDefinitions="*,Auto"
+                                          ColumnSpacing="8">
+                                        <HorizontalStackLayout Spacing="10" VerticalOptions="End">
+                                            <Label Text="{Binding DueText}"
+                                                   FontSize="26"
+                                                   FontFamily="OpenSansSemibold"
+                                                   VerticalOptions="End"
+                                                   TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+                                            <Label FontSize="13"
+                                                   VerticalOptions="End"
+                                                   Margin="0,0,0,4"
+                                                   TextColor="{AppThemeBinding Light={StaticResource SubtleTextLight}, Dark={StaticResource SubtleTextDark}}">
+                                                <Label.FormattedText>
+                                                    <FormattedString>
+                                                        <Span Text="{Binding ExpectedTimeLabel}" />
+                                                        <Span Text=" " />
+                                                        <Span Text="{Binding ExpectedArrival}" FontFamily="OpenSansSemibold" />
+                                                    </FormattedString>
+                                                </Label.FormattedText>
+                                            </Label>
+                                        </HorizontalStackLayout>
 
-                                    <Border Grid.Row="2"
-                                            Grid.Column="1"
-                                            VerticalOptions="End"
-                                            Margin="0,0,4,4"
-                                            StrokeThickness="0"
-                                            StrokeShape="RoundRectangle 12"
-                                            Padding="10,4"
-                                            BackgroundColor="{Binding LateBadgeColor}">
-                                        <Label Text="{Binding LateDisplay}"
-                                               FontSize="12"
-                                               FontFamily="OpenSansSemibold"
-                                               TextColor="{Binding LateColor}" />
-                                    </Border>
+                                        <Border Grid.Column="1"
+                                                VerticalOptions="End"
+                                                Margin="0,0,6,4"
+                                                StrokeThickness="0"
+                                                StrokeShape="RoundRectangle 12"
+                                                Padding="10,4"
+                                                BackgroundColor="{Binding LateBadgeColor}">
+                                            <Label Text="{Binding LateDisplay}"
+                                                   FontSize="12"
+                                                   FontFamily="OpenSansSemibold"
+                                                   LineBreakMode="NoWrap"
+                                                   TextColor="{Binding LateColor}" />
+                                        </Border>
+                                    </Grid>
 
                                     <!-- Where the train is now -->
                                     <Label Grid.Row="3"

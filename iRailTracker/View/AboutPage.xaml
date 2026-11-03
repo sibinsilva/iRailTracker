@@ -64,7 +64,7 @@
 
                     <VerticalStackLayout Spacing="2">
                         <Label Text="DATA" Style="{StaticResource SectionLabel}" />
-                        <Label Text="Irish Rail Realtime API · Map © OpenStreetMap contributors · Dark map © CARTO"
+                        <Label Text="Irish Rail Realtime API · Map © OpenStreetMap contributors"
                                FontSize="13"
                                TextColor="{AppThemeBinding Light={StaticResource SubtleTextLight}, Dark={StaticResource SubtleTextDark}}" />
                     </VerticalStackLayout>

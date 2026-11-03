@@ -12,7 +12,7 @@ public partial class ChangelogPage : ContentPage
         ]),
         new("2.61", [
             "🧭 Direction chips (Northbound, Southbound, …) and a DART badge on the board",
-            "🌙 Dark map in dark mode, and the map loads faster (tiles are saved on your phone)",
+            "🗺️ The map loads faster (tiles are saved on your phone)",
             "🔁 Tracking resumes after your phone restarts, and uses less battery on long trips",
             "⏹️ Stop tracking straight from the notification",
             "🕐 Cards show when your train departs (or arrives, if it ends at your station)",

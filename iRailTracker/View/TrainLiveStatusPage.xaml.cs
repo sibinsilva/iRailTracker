@@ -54,8 +54,8 @@ public partial class TrainLiveStatusPage : ContentPage
         _mapBuilt = true;
 
         var map = TrainMapControl.Map;
-        // Cached tiles; dark CARTO tiles in dark mode (see MapTiles)
-        map.Layers.Add(MapTiles.CreateLayer(Application.Current?.RequestedTheme == AppTheme.Dark));
+        // OpenStreetMap tiles, cached on the device (see MapTiles)
+        map.Layers.Add(MapTiles.CreateLayer());
 
         var allPoints = new List<MPoint>();
         var movements = await FetchMovementsAsync(journey.TrainCode, journey.TrainDate);

@@ -7,9 +7,11 @@ using Mapsui.Tiling.Layers;
 namespace iRailTracker.Service
 {
     /// <summary>
-    /// Creates the Live Status map's base layer: OpenStreetMap tiles in light mode, CARTO's dark
-    /// tiles in dark mode. Tiles are cached on the device for 30 days. OpenStreetMap's tile usage
-    /// policy expects apps to cache, which also makes reopening the map fast and partly offline.
+    /// Creates the Live Status map's base layer: OpenStreetMap tiles, cached on the device for 30
+    /// days. OpenStreetMap's tile usage policy expects apps to cache, which also makes reopening the
+    /// map fast and partly offline.
+    /// CARTO's dark tiles were used in dark mode, but CARTO now requires an API key and serves an
+    /// "API KEY REQUIRED" placeholder without one; every keyless dark style has the same problem.
     /// </summary>
     public static class MapTiles
     {
@@ -18,10 +20,24 @@ namespace iRailTracker.Service
         public static string UserAgent { get; } =
             $"iRailTracker/{AppInfo.Current.VersionString} ({AppInfo.Current.PackageName}; contact: sibinsilva@gmail.com)";
 
-        public static TileLayer CreateLayer(bool dark)
+        public static TileLayer CreateLayer()
         {
-            var source = dark ? CreateDarkSource() : CreateOsmSource();
-            return new TileLayer(source) { Name = dark ? "CartoDark" : "OpenStreetMap" };
+            RemoveOldCartoCache();
+            return new TileLayer(CreateOsmSource()) { Name = "OpenStreetMap" };
+        }
+
+        /// <summary>Deletes the cached "API KEY REQUIRED" placeholders from the CARTO dark tiles.</summary>
+        private static void RemoveOldCartoCache()
+        {
+            try
+            {
+                var dir = Path.Combine(FileSystem.Current.CacheDirectory, "tiles", "carto-dark");
+                if (System.IO.Directory.Exists(dir))
+                    System.IO.Directory.Delete(dir, recursive: true);
+            }
+            catch (IOException)
+            {
+            }
         }
 
         private static HttpTileSource CreateOsmSource() => new(
@@ -30,15 +46,6 @@ namespace iRailTracker.Service
             name: "OpenStreetMap",
             persistentCache: CreateCache("osm"),
             attribution: new Attribution("© OpenStreetMap contributors", "https://www.openstreetmap.org/copyright"),
-            configureHttpRequestMessage: AddUserAgent);
-
-        private static HttpTileSource CreateDarkSource() => new(
-            new GlobalSphericalMercator(),
-            "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
-            serverNodes: ["a", "b", "c", "d"],
-            name: "CartoDark",
-            persistentCache: CreateCache("carto-dark"),
-            attribution: new Attribution("© OpenStreetMap contributors © CARTO", "https://carto.com/attributions"),
             configureHttpRequestMessage: AddUserAgent);
 
         private static void AddUserAgent(HttpRequestMessage request) =>

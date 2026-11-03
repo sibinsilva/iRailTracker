@@ -108,8 +108,9 @@
                     Orientation="Horizontal"
                     HorizontalScrollBarVisibility="Never"
                     IsVisible="{Binding DirectionChips.Count, Converter={StaticResource CountToBoolConverter}}">
+            <!-- Extra end padding so the last chip clearly scrolls rather than looking cut off -->
             <HorizontalStackLayout Spacing="8"
-                                   Padding="12,0,12,6"
+                                   Padding="12,0,40,6"
                                    BindableLayout.ItemsSource="{Binding DirectionChips}">
                 <BindableLayout.ItemTemplate>
                     <DataTemplate>

@@ -35,6 +35,9 @@ namespace iRailTracker.ViewModel
         private bool _enableListView;
         private bool _noJourneys;
         private string _selectedStation;
+        private string _selectedDestination = AnyDestination;
+        private readonly ObservableCollection<string> _destinationOptions;
+        public const string AnyDestination = "Any destination";
         private string _noJourneyMsg;
         private string _refreshTime;
         private string _buttonText;
@@ -67,6 +70,7 @@ namespace iRailTracker.ViewModel
 
             _stationNames = stationNames;
             _stationOptions = new ObservableCollection<string>(stationNames);
+            _destinationOptions = new ObservableCollection<string>(stationNames.Prepend(AnyDestination));
             _trainJourneys = new ObservableCollection<TrainJourney>();
             _favouriteStations = new ObservableCollection<string>();
             _selectedStation = string.Empty;
@@ -246,6 +250,27 @@ namespace iRailTracker.ViewModel
             }
         }
 
+        public ObservableCollection<string> DestinationOptions => _destinationOptions;
+
+        /// <summary>
+        /// Optional "going to" station: when set, only trains that stop there after the selected
+        /// station are listed.
+        /// </summary>
+        public string SelectedDestination
+        {
+            get => _selectedDestination;
+            set
+            {
+                var newValue = string.IsNullOrEmpty(value) ? AnyDestination : value;
+                if (!SetProperty(ref _selectedDestination, newValue))
+                    return;
+
+                // Re-filter the list that's already showing
+                if (EnableListView || NoJourneyFound)
+                    _ = ExecuteTrainServiceSearch(waitForLock: true);
+            }
+        }
+
         public bool IsRefreshing
         {
             get => _isRefreshing;
@@ -350,6 +375,14 @@ namespace iRailTracker.ViewModel
                         _journeyCache[stationCode] = (DateTime.UtcNow, journeyList);
                 }
 
+                var destinationCode = GetDestinationStationCode();
+                if (destinationCode is not null && !string.IsNullOrEmpty(stationCode) &&
+                    !destinationCode.Equals(stationCode, StringComparison.OrdinalIgnoreCase))
+                {
+                    journeyList = await RouteFilterService.Instance.FilterCallingAtAsync(
+                        _settings.Data, journeyList, stationCode, destinationCode);
+                }
+
                 if (journeyList.Count > 0)
                 {
                     NoJourneyFound = false;
@@ -386,7 +419,9 @@ namespace iRailTracker.ViewModel
                     EnableListView = false;
                     NoJourneyFound = true;
                     ButtonText = AppStrings.FindServices;
-                    NoJourneyMsg = string.Format(AppMessages.NoJourneysForStation, _selectedStation);
+                    NoJourneyMsg = destinationCode is null
+                        ? string.Format(AppMessages.NoJourneysForStation, _selectedStation)
+                        : $"No trains from {_selectedStation} to {_selectedDestination} right now.";
                 }
 
                 RefreshTime = string.Format(AppMessages.CurrentStatusAsOf,DateTime.Now.ToString("hh:mm:ss tt"));
@@ -400,6 +435,15 @@ namespace iRailTracker.ViewModel
                 IsBusy = false;
                 _searchLock.Release();
             }
+        }
+
+        private string? GetDestinationStationCode()
+        {
+            if (string.IsNullOrEmpty(_selectedDestination) || _selectedDestination == AnyDestination)
+                return null;
+
+            return stationList.FirstOrDefault(s => s.StationDesc.Equals(_selectedDestination, StringComparison.OrdinalIgnoreCase))
+                ?.StationCode;
         }
 
         private async Task ExecuteLocationSearch()

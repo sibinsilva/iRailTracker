@@ -75,6 +75,14 @@
                         Grid.Column="1"/>
             </Grid>
 
+            <!-- OPTIONAL DESTINATION FILTER -->
+            <Picker Title="Going to (optional)"
+                    ItemsSource="{Binding DestinationOptions}"
+                    SelectedItem="{Binding SelectedDestination, Mode=TwoWay}"
+                    IsVisible="{Binding IsStationListLoaded}"
+                    FontSize="15"
+                    HorizontalOptions="Fill" />
+
             <!-- SEARCH BUTTON / LOADER / REFRESH INFO -->
             <VerticalStackLayout Spacing="8"
                                  HorizontalOptions="Center">

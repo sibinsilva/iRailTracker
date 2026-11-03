@@ -72,6 +72,13 @@
   <!-- =============================== -->
   <Target Name="ComputePatchFromTag" BeforeTargets="Build" DependsOnTargets="ComputeGitMinor">
     <Exec Command="git describe --tags --abbrev=0 2>nul"
+        Condition="$([MSBuild]::IsOSPlatform('windows'))"
+        ConsoleToMSBuild="true"
+        IgnoreExitCode="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="GitTagRaw" />
+    </Exec>
+    <Exec Command="git describe --tags --abbrev=0 2>/dev/null"
+        Condition="!$([MSBuild]::IsOSPlatform('windows'))"
         ConsoleToMSBuild="true"
         IgnoreExitCode="true">
       <Output TaskParameter="ConsoleOutput" PropertyName="GitTagRaw" />

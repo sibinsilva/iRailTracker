@@ -361,4 +361,10 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-/iRailTracker/appsettings.json
+
+# Signing keys and credentials - never commit
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.env

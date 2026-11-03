@@ -4,6 +4,12 @@ public partial class ChangelogPage : ContentPage
 {
     private static readonly List<ChangelogEntry> Entries =
     [
+        new("2.62", [
+            "🧳 Commute alerts: get notified when a train on your usual journey runs late (Settings)",
+            "🧳 \"My commute\" shortcut on Home",
+            "📱 Choose the station for each widget, plus a new one-row widget",
+            "♿ Better screen-reader support",
+        ]),
         new("2.61", [
             "🧭 Direction chips (Northbound, Southbound, …) and a DART badge on the board",
             "🌙 Dark map in dark mode, and the map loads faster (tiles are saved on your phone)",

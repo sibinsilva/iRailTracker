@@ -6,7 +6,7 @@
   <PropertyGroup>
     <!-- Release version, used when no vX.Y.Z tag exists (bump when releasing) -->
     <VersionMajor>2</VersionMajor>
-    <VersionMinor>61</VersionMinor>
+    <VersionMinor>62</VersionMinor>
     <VersionPatch>0</VersionPatch>
 
     <!-- Store-safe build number (must always increase): computed in ComputeDisplayVersion
@@ -159,6 +159,11 @@
 
   <ItemGroup>
     <None Remove="appsettings.json" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+    <!-- WorkManager: periodic background check for commute delay alerts -->
+    <PackageReference Include="Xamarin.AndroidX.Work.Runtime" Version="2.10.3" />
   </ItemGroup>
 
   <ItemGroup>

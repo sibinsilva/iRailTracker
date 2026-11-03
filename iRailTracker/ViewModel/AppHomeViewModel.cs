@@ -18,6 +18,7 @@ namespace iRailTracker.ViewModel
         IRecipient<FavouriteStationsChangedMessage>,
         IRecipient<TrackingStoppedMessage>,
         IRecipient<TrackingRestoredMessage>,
+        IRecipient<CommuteChangedMessage>,
         IRecipient<NavigateToTrackedJourneyMessage>
     {
         #region Fields
@@ -825,6 +826,35 @@ namespace iRailTracker.ViewModel
         }
 
         public event EventHandler<TrainJourney>? ScrollToJourneyRequested;
+
+        /// <summary>"From → To" for the commute shortcut chip on Home; empty when no commute is set.</summary>
+        public string CommuteChipText
+        {
+            get
+            {
+                var preset = CommuteService.Load();
+                return preset.IsComplete ? $"{preset.From} → {preset.To}" : string.Empty;
+            }
+        }
+
+        public bool HasCommute => !string.IsNullOrEmpty(CommuteChipText);
+
+        public ICommand LoadCommuteCommand => new Command(async () =>
+        {
+            var preset = CommuteService.Load();
+            if (!preset.IsComplete || !_stationNames.Contains(preset.From))
+                return;
+            IsLocateStationChecked = true;
+            SelectedStation = preset.From;
+            SelectedDestination = preset.To;
+            await ExecuteTrainServiceSearch(waitForLock: true);
+        });
+
+        public void Receive(CommuteChangedMessage message)
+        {
+            OnPropertyChanged(nameof(CommuteChipText));
+            OnPropertyChanged(nameof(HasCommute));
+        }
 
         public void Receive(TrackingRestoredMessage message) =>
             MainThread.BeginInvokeOnMainThread(SyncTrackingState);

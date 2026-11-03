@@ -26,7 +26,7 @@ namespace iRailTracker.ViewModel
                 ?? RefreshIntervals.First();
 
             // Favourite stations
-            var stationNames = stationListService.Data
+            var stationNames = (stationListService.Data ?? [])
                 .Select(s => s.StationDesc)
                 .Distinct()
                 .OrderBy(n => n)
@@ -42,6 +42,13 @@ namespace iRailTracker.ViewModel
             SelectedDelayThreshold =
                 DelayThresholds.FirstOrDefault(x => x.Value == savedThreshold)
                 ?? DelayThresholds.First();
+
+            // Commute
+            _commute = CommuteService.Load();
+            var days = new[] { DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday,
+                               DayOfWeek.Friday, DayOfWeek.Saturday, DayOfWeek.Sunday };
+            WeekdayChips = new ObservableCollection<WeekdayChip>(days.Select(d => new WeekdayChip(d, _commute.Days.Contains(d))));
+            _selectedCommuteThreshold = DelayThresholds.FirstOrDefault(x => x.Value == _commute.ThresholdMinutes) ?? DelayThresholds.First();
         }
 
         #endregion
@@ -198,6 +205,111 @@ namespace iRailTracker.ViewModel
 
             if (!granted)
                 IsDelayNotificationsEnabled = false;
+        }
+
+        #endregion
+
+        #region Commute
+
+        private CommutePreset _commute;
+        private RefreshIntervalOption _selectedCommuteThreshold;
+
+        public ObservableCollection<WeekdayChip> WeekdayChips { get; }
+
+        public bool IsCommuteEnabled
+        {
+            get => _commute.Enabled;
+            set
+            {
+                if (value == _commute.Enabled)
+                    return;
+                if (value)
+                    _ = EnableCommuteAsync();
+                else
+                    SaveCommute(_commute with { Enabled = false });
+            }
+        }
+
+        public string CommuteFromDisplay => string.IsNullOrEmpty(_commute.From) ? "Choose station" : _commute.From;
+        public string CommuteToDisplay => string.IsNullOrEmpty(_commute.To) ? "Choose station" : _commute.To;
+
+        public TimeSpan CommuteStart
+        {
+            get => _commute.WindowStart;
+            set { if (value != _commute.WindowStart) SaveCommute(_commute with { WindowStart = value }); }
+        }
+
+        public TimeSpan CommuteEnd
+        {
+            get => _commute.WindowEnd;
+            set { if (value != _commute.WindowEnd) SaveCommute(_commute with { WindowEnd = value }); }
+        }
+
+        public RefreshIntervalOption SelectedCommuteThreshold
+        {
+            get => _selectedCommuteThreshold;
+            set
+            {
+                if (value is null || !SetProperty(ref _selectedCommuteThreshold, value))
+                    return;
+                SaveCommute(_commute with { ThresholdMinutes = value.Value });
+            }
+        }
+
+        public string CommuteStatus => !_commute.IsComplete
+            ? "Choose both stations, then switch it on."
+            : _commute.Enabled
+                ? $"Checking every 15 min, {_commute.WindowStart:hh\\:mm}–{_commute.WindowEnd:hh\\:mm} on the selected days."
+                : "Off";
+
+        public ICommand ChooseCommuteFromCommand => new Command(async () => await ChooseCommuteStationAsync(isFrom: true));
+        public ICommand ChooseCommuteToCommand => new Command(async () => await ChooseCommuteStationAsync(isFrom: false));
+
+        public ICommand ToggleWeekdayCommand => new Command<WeekdayChip>(chip =>
+        {
+            if (chip is null)
+                return;
+            chip.IsSelected = !chip.IsSelected;
+            SaveCommute(_commute with { Days = WeekdayChips.Where(c => c.IsSelected).Select(c => c.Day).ToArray() });
+        });
+
+        private async Task ChooseCommuteStationAsync(bool isFrom)
+        {
+            var nav = Application.Current?.Windows[0].Page?.Navigation;
+            if (nav is null)
+                return;
+
+            var station = await View.StationSearchPage.PickAsync(nav, isFrom ? "Commute from" : "Commute to", StationNames);
+            if (station is null)
+                return;
+
+            SaveCommute(isFrom ? _commute with { From = station } : _commute with { To = station });
+        }
+
+        private async Task EnableCommuteAsync()
+        {
+            if (!_commute.IsComplete)
+            {
+                ShowError("Choose the stations you travel from and to first.");
+                OnPropertyChanged(nameof(IsCommuteEnabled));
+                return;
+            }
+
+            var granted = await NotificationPermissionHelper.EnsureAsync(AppMessages.NotificationsNeededForDelayAlerts);
+            SaveCommute(_commute with { Enabled = granted });
+        }
+
+        private void SaveCommute(CommutePreset preset)
+        {
+            _commute = preset;
+            CommuteService.Save(preset);
+            OnPropertyChanged(nameof(IsCommuteEnabled));
+            OnPropertyChanged(nameof(CommuteFromDisplay));
+            OnPropertyChanged(nameof(CommuteToDisplay));
+            OnPropertyChanged(nameof(CommuteStart));
+            OnPropertyChanged(nameof(CommuteEnd));
+            OnPropertyChanged(nameof(CommuteStatus));
+            WeakReferenceMessenger.Default.Send(new CommuteChangedMessage());
         }
 
         #endregion

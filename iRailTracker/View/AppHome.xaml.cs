@@ -136,7 +136,7 @@ public partial class AppHome : ContentPage
     private async void ShowChangelogIfNeeded()
     {
         var lastSeen = Preferences.Get(AppPreferences.LastSeenChangelogVersion, string.Empty);
-        if (lastSeen == AppInfo.VersionString)
+        if (lastSeen == ChangelogPage.LatestEntryVersion)
             return;
 
         await Navigation.PushModalAsync(new NavigationPage(new ChangelogPage()));

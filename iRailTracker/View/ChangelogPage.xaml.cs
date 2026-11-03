@@ -4,6 +4,17 @@ public partial class ChangelogPage : ContentPage
 {
     private static readonly List<ChangelogEntry> Entries =
     [
+        new("2.61", [
+            "🧭 Direction chips (Northbound, Southbound, …) and a DART badge on the board",
+            "🌙 Dark map in dark mode, and the map loads faster (tiles are saved on your phone)",
+            "🔁 Tracking resumes after your phone restarts, and uses less battery on long trips",
+            "⏹️ Stop tracking straight from the notification",
+            "🕐 Cards show when your train departs (or arrives, if it ends at your station)",
+            "📡 Opens offline with your last departures",
+            "📍 \"Near me\" opens the nearest station's departures",
+            "🎨 Refreshed design throughout",
+            "🐞 Fixes: app stuck on \"Loading\", Exit crash, missing train pin, \"Going to\" missing trains",
+        ]),
         new("2.54", [
             "🗺️ Live map: the train moves as it travels, with your location, a legend and recenter buttons",
             "🎯 \"Going to\" filter shows only trains that stop at your destination",
@@ -58,9 +69,14 @@ public partial class ChangelogPage : ContentPage
         }
     }
 
+    /// <summary>
+    /// What's New appears when this changes, i.e. when a release adds an entry, not on every build.
+    /// </summary>
+    public static string LatestEntryVersion => Entries[0].Version;
+
     private async void OnDismissClicked(object? sender, EventArgs e)
     {
-        Preferences.Set(AppPreferences.LastSeenChangelogVersion, AppInfo.VersionString);
+        Preferences.Set(AppPreferences.LastSeenChangelogVersion, LatestEntryVersion);
         await Navigation.PopModalAsync();
     }
 

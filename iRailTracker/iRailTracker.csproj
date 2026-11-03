@@ -4,12 +4,13 @@
   <!-- 🔷 VERSIONING -->
   <!-- =============================== -->
   <PropertyGroup>
+    <!-- Release version, used when no vX.Y.Z tag exists (bump when releasing) -->
     <VersionMajor>2</VersionMajor>
-    <VersionMinor>0</VersionMinor>
+    <VersionMinor>61</VersionMinor>
     <VersionPatch>0</VersionPatch>
 
-    <!-- 👉 Store-safe build number (must always increase): computed from the version in
-         ComputeDisplayVersion below, e.g. 2.44.0 -> 2044000. This is only the fallback. -->
+    <!-- Store-safe build number (must always increase): computed in ComputeDisplayVersion
+         below from the commit count. This is only the fallback. -->
     <ApplicationVersion>1</ApplicationVersion>
 
     <!-- Release safety flag -->
@@ -55,9 +56,12 @@
   </PropertyGroup>
 
   <!-- =============================== -->
-  <!-- 🔷 AUTO MINOR FROM GIT -->
+  <!-- 🔷 VERSION FROM TAG, BUILD NUMBER FROM GIT -->
   <!-- =============================== -->
-  <Target Name="ComputeGitMinor" BeforeTargets="PrepareForBuild">
+  <!-- The version (2.61.0) comes from the latest vX.Y.Z tag, or the VersionMajor/Minor/Patch
+       properties above when there is none, so it only changes on purpose. The Android
+       versionCode still grows with every commit so each build installs over the last. -->
+  <Target Name="ComputeGitHeight" BeforeTargets="PrepareForBuild">
     <Exec Command="git rev-list --count HEAD"
         ConsoleToMSBuild="true"
         IgnoreExitCode="true">
@@ -65,41 +69,40 @@
     </Exec>
 
     <PropertyGroup>
-      <VersionMinor Condition="'$(GitHeightRaw)'!=''">$([System.String]::Copy('$(GitHeightRaw)').Trim())</VersionMinor>
-      <VersionMinor Condition="'$(VersionMinor)'==''">0</VersionMinor>
+      <GitHeight Condition="'$(GitHeightRaw)'!=''">$([System.String]::Copy('$(GitHeightRaw)').Trim())</GitHeight>
+      <GitHeight Condition="'$(GitHeight)'==''">0</GitHeight>
     </PropertyGroup>
   </Target>
 
-  <!-- =============================== -->
-  <!-- 🔷 OPTIONAL PATCH FROM TAG -->
-  <!-- =============================== -->
-  <Target Name="ComputePatchFromTag" BeforeTargets="PrepareForBuild" DependsOnTargets="ComputeGitMinor">
-    <Exec Command="git describe --tags --abbrev=0 2>nul"
+  <Target Name="ComputeVersionFromTag" BeforeTargets="PrepareForBuild" DependsOnTargets="ComputeGitHeight">
+    <Exec Command="git describe --tags --abbrev=0 --match v* 2>nul"
         Condition="$([MSBuild]::IsOSPlatform('windows'))"
         ConsoleToMSBuild="true"
         IgnoreExitCode="true">
       <Output TaskParameter="ConsoleOutput" PropertyName="GitTagRaw" />
     </Exec>
-    <Exec Command="git describe --tags --abbrev=0 2>/dev/null"
+    <Exec Command="git describe --tags --abbrev=0 --match 'v*' 2>/dev/null"
         Condition="!$([MSBuild]::IsOSPlatform('windows'))"
         ConsoleToMSBuild="true"
         IgnoreExitCode="true">
       <Output TaskParameter="ConsoleOutput" PropertyName="GitTagRaw" />
     </Exec>
 
-    <PropertyGroup>
-      <VersionPatch Condition="'$(GitTagRaw)'!='' AND $(GitTagRaw.Contains('.'))">$([System.Text.RegularExpressions.Regex]::Match('$(GitTagRaw)', '\d+\.\d+\.(\d+)').Groups[1].Value)</VersionPatch>
+    <PropertyGroup Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('$(GitTagRaw)', '^v\d+\.\d+\.\d+$'))">
+      <VersionMajor>$([System.Text.RegularExpressions.Regex]::Match('$(GitTagRaw)', '(\d+)\.(\d+)\.(\d+)').Groups[1].Value)</VersionMajor>
+      <VersionMinor>$([System.Text.RegularExpressions.Regex]::Match('$(GitTagRaw)', '(\d+)\.(\d+)\.(\d+)').Groups[2].Value)</VersionMinor>
+      <VersionPatch>$([System.Text.RegularExpressions.Regex]::Match('$(GitTagRaw)', '(\d+)\.(\d+)\.(\d+)').Groups[3].Value)</VersionPatch>
     </PropertyGroup>
   </Target>
 
   <!-- =============================== -->
   <!-- 🔷 DISPLAY VERSION -->
   <!-- =============================== -->
-  <Target Name="ComputeDisplayVersion" BeforeTargets="_GetAndroidPackageName;PrepareForBuild" DependsOnTargets="ComputePatchFromTag">
+  <Target Name="ComputeDisplayVersion" BeforeTargets="_GetAndroidPackageName;PrepareForBuild" DependsOnTargets="ComputeVersionFromTag">
     <PropertyGroup>
       <ApplicationDisplayVersion>$(VersionMajor).$(VersionMinor).$(VersionPatch)</ApplicationDisplayVersion>
-      <!-- major*1000000 + minor*1000 + patch: grows with every commit (minor = commit count) -->
-      <ApplicationVersion>$([MSBuild]::Add($([MSBuild]::Add($([MSBuild]::Multiply($(VersionMajor), 1000000)), $([MSBuild]::Multiply($(VersionMinor), 1000)))), $(VersionPatch)))</ApplicationVersion>
+      <!-- 2100000 + commit count: always above the old scheme's codes (2.60.0 was 2060000) -->
+      <ApplicationVersion>$([MSBuild]::Add(2100000, $(GitHeight)))</ApplicationVersion>
     </PropertyGroup>
     <Message Importance="high" Text="📦 ApplicationDisplayVersion=$(ApplicationDisplayVersion) Build=$(ApplicationVersion)" />
   </Target>

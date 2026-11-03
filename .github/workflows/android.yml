@@ -109,7 +109,7 @@ jobs:
           dotnet publish "$PROJECT" -f "$TFM" -c Release -o out-aab
           -p:ConfirmMajorBump=true
           -p:AndroidPackageFormat=aab
-          -p:RuntimeIdentifiers="android-arm64%3Bandroid-arm"
+          -p:BuildPlayBundle=true
           -p:AndroidKeyStore=true
           -p:AndroidSigningKeyStore="$RUNNER_TEMP/release.p12"
           -p:AndroidSigningKeyAlias="$ANDROID_KEY_ALIAS"

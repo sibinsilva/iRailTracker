@@ -7,7 +7,7 @@
     <!-- Release version, used when no vX.Y.Z tag exists (bump when releasing) -->
     <VersionMajor>2</VersionMajor>
     <VersionMinor>62</VersionMinor>
-    <VersionPatch>0</VersionPatch>
+    <VersionPatch>1</VersionPatch>
 
     <!-- Store-safe build number (must always increase): computed in ComputeDisplayVersion
          below from the commit count. This is only the fallback. -->
@@ -125,6 +125,9 @@
     <AndroidKeyStore>False</AndroidKeyStore>
     <!-- Ship only 64-bit ARM native code in release APKs (all current phones); roughly halves the size -->
     <RuntimeIdentifiers>android-arm64</RuntimeIdentifiers>
+    <!-- The Play Store bundle (CI: -p:BuildPlayBundle=true) also carries 32-bit ARM. Set here rather than
+         on the command line, where the list leaked into the net10.0 target and failed (NETSDK1083). -->
+    <RuntimeIdentifiers Condition="'$(BuildPlayBundle)'=='true'">android-arm64;android-arm</RuntimeIdentifiers>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net10.0|AnyCPU'">

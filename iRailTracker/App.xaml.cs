@@ -23,35 +23,63 @@ namespace iRailTracker
             LocalNotificationCenter.Current.NotificationActionTapped += OnNotificationActionTapped;
         }
 
+        private static readonly TimeSpan StartupTimeout = TimeSpan.FromSeconds(20);
+
         protected override Window CreateWindow(IActivationState? activationState)
         {
-            var startPage = new StartPage();
-            _ = InitializeAsync();
-            return new Window(startPage);
+            // Create the window first and hand it to InitializeAsync. Previously InitializeAsync
+            // looked the window up in Windows[0], but when startup finished synchronously (station
+            // list from the on-device cache) the window didn't exist yet, so Home was never shown
+            // and the app stayed on "Loading" forever.
+            var window = new Window(new StartPage());
+            _ = InitializeAsync(window);
+            return window;
         }
 
-        private async Task InitializeAsync()
+        private async Task InitializeAsync(Window window)
         {
             string? loadError = null;
-            await _configLoader.LoadSettingsAsync(_config, e => loadError = e);
-
-            // Resume journeys that were being tracked when the app was last closed or killed,
-            // before Home builds its cards so their bell icons show the right state.
-            if (_settings.Data is not null)
-                await JourneyTrackingService.Instance.RestoreAsync(_settings.Data);
-
-            if (Windows.Count > 0)
+            try
             {
-                Windows[0].Page = new NavigationPage(new AppHome());
-
-                // Previously a failed start just showed an empty Home with no explanation
-                if (loadError is not null)
-                    await Windows[0].Page!.DisplayAlertAsync("Can't load stations", loadError, "OK");
+                await _configLoader.LoadSettingsAsync(_config, e => loadError = e).WaitAsync(StartupTimeout);
             }
+            catch (TimeoutException)
+            {
+                loadError ??= "Loading the station list is taking too long. Check your internet connection.";
+            }
+
+            await MainThread.InvokeOnMainThreadAsync(async () =>
+            {
+                window.Page = new NavigationPage(new AppHome());
+
+                if (loadError is not null)
+                    await window.Page.DisplayAlertAsync("Can't load stations", loadError, "OK");
+            });
+
+            // Resume journeys tracked before the app was closed, in the background so it can
+            // never hold up startup. Home re-syncs its bell icons when this finishes.
+            if (_settings.Data is not null)
+                _ = RestoreTrackingAsync(_settings.Data);
 
             var launchDetails = LocalNotificationCenter.LaunchNotificationDetails;
             if (launchDetails is { DidNotificationLaunchApp: true })
                 HandleNotificationTap(launchDetails.Request?.ReturningData);
+        }
+
+        private static async Task RestoreTrackingAsync(Settings settings)
+        {
+            try
+            {
+                await JourneyTrackingService.Instance.RestoreAsync(settings).WaitAsync(TimeSpan.FromSeconds(30));
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Restoring tracked journeys failed: {ex}");
+            }
+            finally
+            {
+                WeakReferenceMessenger.Default.Send(new TrackingRestoredMessage());
+            }
         }
 
         private void OnNotificationActionTapped(NotificationActionEventArgs e)

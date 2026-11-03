@@ -63,7 +63,7 @@ jobs:
           -p:AcceptAndroidSdkLicenses=True
 
       - name: Run unit tests
-        run: dotnet test iRailTracker.UnitTests/iRailTracker.UnitTests.csproj -c Release
+        run: dotnet test iRailTracker.UnitTests/iRailTracker.UnitTests.csproj -c Debug
 
       - name: Decode signing keystore
         id: keystore

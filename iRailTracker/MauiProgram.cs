@@ -24,10 +24,14 @@ namespace iRailTracker
                     {
                         android.AddChannel(new AndroidNotificationChannelRequest
                         {
-                            Id = "journey_tracking",
+                            // Default importance so it shows with other notifications rather than
+                            // under "Silent"; sound and vibration stay off and updates only alert once.
+                            // (A new id is needed: Android never lets an app raise an existing
+                            // channel's importance.)
+                            Id = "journey_status",
                             Name = "Journey Tracking",
                             Description = "Ongoing status while a journey is being tracked",
-                            Importance = AndroidImportance.Low,
+                            Importance = AndroidImportance.Default,
                             EnableVibration = false,
                             EnableSound = false
                         });

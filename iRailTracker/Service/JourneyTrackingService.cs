@@ -216,8 +216,9 @@ namespace iRailTracker.Service
             ReturningData = tracked.TrainCode,
             Android =
             {
-                ChannelId = "journey_tracking",
+                ChannelId = "journey_status",
                 Ongoing = true,
+                OnlyAlertOnce = true,
                 AutoCancel = false
             }
         };

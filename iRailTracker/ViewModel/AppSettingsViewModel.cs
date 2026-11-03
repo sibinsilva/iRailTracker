@@ -193,18 +193,11 @@ namespace iRailTracker.ViewModel
 
         private async Task RequestNotificationPermissionAsync()
         {
-            var permission = new NotificationPermission();
-
-            if (await LocalNotificationCenter.Current.AreNotificationsEnabled(permission))
-                return;
-
-            var granted = await LocalNotificationCenter.Current.RequestNotificationPermission(permission);
+            var granted = await NotificationPermissionHelper.EnsureAsync(
+                "Delay alerts are sent as notifications. Allow notifications for iRailTracker in its settings to receive them.");
 
             if (!granted)
-            {
-                ShowError("Notification permission denied. Enable notifications in your device settings to receive delay alerts.");
                 IsDelayNotificationsEnabled = false;
-            }
         }
 
         #endregion

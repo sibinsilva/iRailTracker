@@ -553,6 +553,11 @@ namespace iRailTracker.ViewModel
             }
             else
             {
+                if (!await NotificationPermissionHelper.EnsureAsync(
+                        "Journey tracking shows the train's live position and delay in a notification. " +
+                        "Allow notifications for iRailTracker in its settings to use it."))
+                    return;
+
                 await JourneyTrackingService.Instance.StartTracking(journey, _settings.Data);
                 journey.IsTracking = true;
             }

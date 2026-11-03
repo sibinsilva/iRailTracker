@@ -12,7 +12,10 @@ namespace iRailTracker.Model
         public string CurrentStatus { get; set; } = string.Empty;
         public string LastLocation { get; set; } = string.Empty;
         public string DueIn { get; set; } = string.Empty;
+        /// <summary>Expected time at the selected station: departure, or arrival if the train terminates there.</summary>
         public string ExpectedArrival { get; set; } = string.Empty;
+        /// <summary>"Departs" or "Arrives", matching <see cref="ExpectedArrival"/>.</summary>
+        public string ExpectedTimeLabel { get; set; } = "Departs";
         public string Late { get; set; } = string.Empty;
         public string LateDisplay { get; set; } = string.Empty;
         public Color LateColor { get; set; } = Color.FromArgb("#DC2626");

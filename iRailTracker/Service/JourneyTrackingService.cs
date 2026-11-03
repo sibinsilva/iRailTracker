@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using CommunityToolkit.Mvvm.Messaging;
 using iRailTracker.Model;
 using Plugin.LocalNotification;
 using Plugin.LocalNotification.Core.Models;
@@ -15,6 +16,9 @@ namespace iRailTracker.Service
             _instance ??= new JourneyTrackingService();
 
         private const string StorageKey = "tracked_journeys";
+
+        /// <summary>Id of the "Stop tracking" button on the status notification (registered in MauiProgram).</summary>
+        public const int StopTrackingActionId = 100;
         private const int FirstNotificationId = 5000;
         private static readonly TimeSpan JourneyEndGrace = TimeSpan.FromMinutes(5);
 
@@ -65,6 +69,7 @@ namespace iRailTracker.Service
 
             tracked.Cts.Cancel();
             Save();
+            WeakReferenceMessenger.Default.Send(new TrackingStoppedMessage(trainCode));
 
             LocalNotificationCenter.Current.Cancel(tracked.NotificationId);
 
@@ -214,6 +219,7 @@ namespace iRailTracker.Service
             Title = $"{tracked.Info.Origin} → {tracked.Info.Destination}",
             Description = description,
             ReturningData = tracked.TrainCode,
+            CategoryType = NotificationCategoryType.Status,
             Android =
             {
                 ChannelId = "journey_status",

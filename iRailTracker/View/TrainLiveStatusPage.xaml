@@ -38,7 +38,8 @@
                        TextColor="{AppThemeBinding Light={StaticResource SubtleTextLight}, Dark={StaticResource SubtleTextDark}}">
                     <Label.FormattedText>
                         <FormattedString>
-                            <Span Text="Expected " />
+                            <Span Text="{Binding ExpectedTimeLabel}" />
+                                                <Span Text=" " />
                             <Span Text="{Binding ExpectedArrival}" FontAttributes="Bold" />
                             <Span Text="  ·  " />
                             <Span Text="{Binding CurrentStatus}" />

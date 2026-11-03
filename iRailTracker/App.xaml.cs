@@ -32,7 +32,8 @@ namespace iRailTracker
 
         private async Task InitializeAsync()
         {
-            await _configLoader.LoadSettingsAsync(_config);
+            string? loadError = null;
+            await _configLoader.LoadSettingsAsync(_config, e => loadError = e);
 
             // Resume journeys that were being tracked when the app was last closed or killed,
             // before Home builds its cards so their bell icons show the right state.
@@ -42,6 +43,10 @@ namespace iRailTracker
             if (Windows.Count > 0)
             {
                 Windows[0].Page = new NavigationPage(new AppHome());
+
+                // Previously a failed start just showed an empty Home with no explanation
+                if (loadError is not null)
+                    await Windows[0].Page!.DisplayAlertAsync("Can't load stations", loadError, "OK");
             }
 
             var launchDetails = LocalNotificationCenter.LaunchNotificationDetails;
@@ -51,6 +56,13 @@ namespace iRailTracker
 
         private void OnNotificationActionTapped(NotificationActionEventArgs e)
         {
+            if (e.ActionId == JourneyTrackingService.StopTrackingActionId &&
+                e.Request?.ReturningData is { Length: > 0 } trainCode)
+            {
+                _ = JourneyTrackingService.Instance.StopTracking(trainCode);
+                return;
+            }
+
             if (e.IsTapped)
                 HandleNotificationTap(e.Request?.ReturningData);
         }

@@ -33,21 +33,42 @@ namespace iRailTracker.Service
 
                 _settingsService.Data = settings;
 
-                // Fetch station list
                 var stationService = new StationService();
-                var stationList = await stationService.GetAllStationsAsync(settings, errorCallback);
-                if (stationList.Count == 0)
+
+                // Start from the copy saved on the device: instant, and works offline. Refresh it
+                // in the background so the next start picks up any changes.
+                var cached = StationListCache.Load();
+                if (cached.Count > 0)
                 {
-                    errorCallback?.Invoke("Failed to load station list.");
+                    _stationListService.Data = cached;
+                    _ = RefreshStationCacheAsync(stationService, settings);
                     return;
                 }
 
+                // First start (or cache lost): the list has to come from the network
+                string? fetchError = null;
+                var stationList = await stationService.GetAllStationsAsync(settings, e => fetchError = e);
+                if (stationList.Count == 0)
+                {
+                    errorCallback?.Invoke(fetchError is null
+                        ? "Failed to load station list."
+                        : "Couldn't download the station list. Check your internet connection and reopen the app.");
+                    return;
+                }
+
+                StationListCache.Save(stationList);
                 _stationListService.Data = stationList;
             }
             catch (Exception ex)
             {
                 errorCallback?.Invoke($"An error occurred while loading settings: {ex.Message}");
             }
+        }
+
+        private static async Task RefreshStationCacheAsync(StationService stationService, Settings settings)
+        {
+            var fresh = await stationService.GetAllStationsAsync(settings, null);
+            StationListCache.Save(fresh);
         }
     }
 }

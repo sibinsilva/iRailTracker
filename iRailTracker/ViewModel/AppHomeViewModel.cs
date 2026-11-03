@@ -16,6 +16,7 @@ namespace iRailTracker.ViewModel
         IRecipient<AutoRefreshMessage>,
         IRecipient<AutoRefreshSettingsChangedMessage>,
         IRecipient<FavouriteStationsChangedMessage>,
+        IRecipient<TrackingStoppedMessage>,
         IRecipient<NavigateToTrackedJourneyMessage>
     {
         #region Fields
@@ -62,7 +63,8 @@ namespace iRailTracker.ViewModel
             _stationListService = stationListService;
             _settings = settingsService;
 
-            stationList = _stationListService.Data;
+            // Null if the station list couldn't be loaded at startup; App shows an alert for that
+            stationList = _stationListService.Data ?? [];
 
             var stationNames = stationList.Select(station => station.StationDesc)
                                           .Distinct()
@@ -351,15 +353,7 @@ namespace iRailTracker.ViewModel
                 //if (IsBusy) return;
                 IsBusy = true;
 
-                var stationNames = _selectedStation
-                    .Split(new[] { '&' }, StringSplitOptions.RemoveEmptyEntries)
-                    .Select(s => s.Trim())
-                    .ToList();
-
-                var matchingStation = stationList.FirstOrDefault(station =>
-                    stationNames.Any(name => station.StationDesc.Contains(name, StringComparison.OrdinalIgnoreCase)));
-
-                var stationCode = matchingStation != null ? matchingStation.StationCode : "";
+                var stationCode = BoardFormatting.FindStationCode(stationList, _selectedStation) ?? "";
 
                 List<StationData> journeyList;
                 DateTime? offlineDataFrom = null;
@@ -428,8 +422,8 @@ namespace iRailTracker.ViewModel
                             DueIn = $"{journey.Duein} min{(journey.Duein > 1 ? "s" : "")}",
                             DueText = journey.Duein <= 0 ? "Due" : $"{journey.Duein} min",
                             LateBadgeColor = journey.Late <= 0 ? Color.FromArgb("#2916A34A") : Color.FromArgb("#29DC2626"),
-                            ExpectedArrival = DateTime.ParseExact(journey.Exparrival, "HH:mm", CultureInfo.InvariantCulture)
-                                .ToString("hh:mm tt").ToLower(),
+                            ExpectedTimeLabel = BoardFormatting.DescribeTime(journey).Label,
+                            ExpectedArrival = BoardFormatting.DescribeTime(journey).Time,
                             Late = Math.Abs(journey.Late).ToString(),
                             LateDisplay = journey.Late == 0
                             ? "On time"
@@ -660,6 +654,11 @@ namespace iRailTracker.ViewModel
 
         public void OnAppearing()
         {
+            // Tracking may have stopped while another page was open (notification button, or the
+            // train arrived); messages aren't received then, so re-sync the bells.
+            foreach (var journey in TrainJourneys)
+                journey.IsTracking = JourneyTrackingService.Instance.IsTracking(journey.TrainCode);
+
             if (_isRegisteredForAutoRefreshMessages)
                 return;
 
@@ -708,6 +707,15 @@ namespace iRailTracker.ViewModel
         }
 
         public event EventHandler<TrainJourney>? ScrollToJourneyRequested;
+
+        public void Receive(TrackingStoppedMessage message)
+        {
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                foreach (var journey in TrainJourneys.Where(j => j.TrainCode == message.TrainCode))
+                    journey.IsTracking = false;
+            });
+        }
 
         public void Receive(NavigateToTrackedJourneyMessage message)
         {

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
 using Plugin.LocalNotification;
+using Plugin.LocalNotification.Core.Models;
 using Plugin.LocalNotification.Core.Models.AndroidOption;
 using SkiaSharp.Views.Maui.Controls.Hosting;
 
@@ -20,6 +21,19 @@ namespace iRailTracker
                 .UseSkiaSharp()
                 .UseLocalNotification(config =>
                 {
+                    // "Stop tracking" button on the journey status notification
+                    config.AddCategory(new NotificationCategory(NotificationCategoryType.Status)
+                    {
+                        ActionList =
+                        [
+                            new NotificationAction(JourneyTrackingService.StopTrackingActionId)
+                            {
+                                Title = "Stop tracking",
+                                Android = { LaunchAppWhenTapped = false }
+                            }
+                        ]
+                    });
+
                     config.AddAndroid(android =>
                     {
                         android.AddChannel(new AndroidNotificationChannelRequest

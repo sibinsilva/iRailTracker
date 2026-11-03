@@ -15,11 +15,8 @@ namespace iRailTracker
             // Initialize MAUI Essentials
             Platform.Init(this, savedInstanceState);
 
-            // Request permissions for location access (if needed)
-            if (OperatingSystem.IsAndroidVersionAtLeast(23))
-            {
-                RequestPermissions([Android.Manifest.Permission.AccessFineLocation, Android.Manifest.Permission.AccessCoarseLocation], 0);
-            }
+            // Location is requested only when "Locate Nearby Station" is used (PlacesService),
+            // not on every launch.
         }
 
         public override void OnRequestPermissionsResult(int requestCode, string[] permissions, [GeneratedEnum] Permission[] grantResults)

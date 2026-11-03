@@ -118,9 +118,18 @@ public partial class TrainLiveStatusPage : ContentPage
         if (allPoints.Count == 0)
             return;
 
+        var minX = allPoints.Min(p => p.X);
+        var minY = allPoints.Min(p => p.Y);
+        var maxX = allPoints.Max(p => p.X);
+        var maxY = allPoints.Max(p => p.Y);
+        var width = Math.Max(maxX - minX, 2000);
+        var height = Math.Max(maxY - minY, 2000);
+
+        // Pad the frame: extra room at the top for the floating route card and at the bottom
+        // for the legend and buttons, so no stop is hidden behind them
         var extent = new MRect(
-            allPoints.Min(p => p.X), allPoints.Min(p => p.Y),
-            allPoints.Max(p => p.X), allPoints.Max(p => p.Y));
+            minX - width * 0.12, minY - height * 0.25,
+            maxX + width * 0.12, maxY + height * 0.45);
         _routeExtent = extent;
         map.Navigator.ZoomToBox(extent, MBoxFit.Fit);
 

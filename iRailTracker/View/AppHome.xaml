@@ -22,7 +22,7 @@
             <Label Text="iRailTracker"
                    FontSize="Title"
                    FontAttributes="Bold"
-                   TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
+                   TextColor="White"
                    VerticalOptions="Center" />
         </HorizontalStackLayout>
     </NavigationPage.TitleView>
@@ -37,7 +37,7 @@
             <ToolbarItem.IconImageSource>
                 <FontImageSource Glyph="⚙"
                                  Size="22"
-                                 Color="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}" />
+                                 Color="White" />
             </ToolbarItem.IconImageSource>
         </ToolbarItem>
         <ToolbarItem
@@ -61,15 +61,21 @@
                                    BindableLayout.ItemsSource="{Binding FavouriteStations}">
                 <BindableLayout.ItemTemplate>
                     <DataTemplate>
-                        <Border StrokeShape="RoundRectangle 16"
-                                BackgroundColor="{AppThemeBinding Light={StaticResource CardBackgroundLight}, Dark={StaticResource CardBackgroundDark}}"
-                                Padding="14,6">
+                        <Border Style="{StaticResource Chip}">
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type vm:AppHomeViewModel}}, Path=SelectFavouriteCommand}"
                                     CommandParameter="{Binding .}" />
                             </Border.GestureRecognizers>
-                            <Label Text="{Binding .}" FontSize="13" />
+                            <Label FontSize="13" FontFamily="OpenSansSemibold"
+                                   TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}">
+                                <Label.FormattedText>
+                                    <FormattedString>
+                                        <Span Text="★ " />
+                                        <Span Text="{Binding .}" />
+                                    </FormattedString>
+                                </Label.FormattedText>
+                            </Label>
                         </Border>
                     </DataTemplate>
                 </BindableLayout.ItemTemplate>
@@ -81,9 +87,10 @@
 
         <!-- FIRST-RUN HINT: nothing selected yet -->
         <VerticalStackLayout Grid.Row="2"
-                             Padding="32,24"
-                             Spacing="8"
+                             Padding="40,32"
+                             Spacing="10"
                              VerticalOptions="Start"
+                             Opacity="0.9"
                              IsVisible="{Binding ShowStartHint}">
             <Label Text="🚆" FontSize="40" HorizontalOptions="Center" />
             <Label Text="Choose a station to see live departures"

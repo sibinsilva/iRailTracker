@@ -36,18 +36,13 @@
                         ItemsSource="{Binding TrainJourneys}"
                         VerticalOptions="Fill"
                         HorizontalOptions="Fill"
-                        Margin="6"
+                        Margin="12,0"
                         >
 
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
 
-                        <Border Stroke="{AppThemeBinding Light={StaticResource CardStrokeLight}, Dark={StaticResource CardStrokeDark}}"
-                            StrokeShape="RoundRectangle 12"
-                            StrokeThickness="1"
-                            Padding="14"
-                            Margin="0,6"
-                            BackgroundColor="{AppThemeBinding Light={StaticResource CardBackgroundLight}, Dark={StaticResource CardBackgroundDark}}">
+                        <Border Style="{StaticResource Card}" Padding="0" Margin="0,6">
 
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer
@@ -55,81 +50,102 @@
                                     CommandParameter="{Binding .}" />
                             </Border.GestureRecognizers>
 
-                            <VerticalStackLayout Spacing="6">
+                            <!-- Status colour strip | content -->
+                            <Grid ColumnDefinitions="5,*">
+                                <BoxView Color="{Binding LateColor}" />
 
-                                <!-- ROUTE + TRACKING BELL -->
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <Label Grid.Column="0"
-                                       FontSize="16"
-                                       FontAttributes="Bold"
-                                       LineBreakMode="WordWrap">
-                                        <Label.FormattedText>
-                                            <FormattedString>
-                                                <Span Text="{Binding Origin}" />
-                                                <Span Text=" → " />
-                                                <Span Text="{Binding Destination}" />
-                                            </FormattedString>
-                                        </Label.FormattedText>
-                                    </Label>
+                                <Grid Grid.Column="1"
+                                      Padding="14,12,10,12"
+                                      ColumnDefinitions="*,Auto"
+                                      RowDefinitions="Auto,Auto,Auto,Auto"
+                                      RowSpacing="2">
+
+                                    <!-- Destination (what people scan for) + bell -->
+                                    <Label Text="{Binding Destination}"
+                                           FontSize="17"
+                                           FontFamily="OpenSansSemibold"
+                                           LineBreakMode="TailTruncation" />
 
                                     <Label Grid.Column="1"
-                                       Text="{Binding IsTracking, Converter={StaticResource BellGlyphConverter}}"
-                                       FontSize="22"
-                                       Padding="8,0,0,8"
-                                       VerticalOptions="Start"
-                                       Opacity="{Binding IsTracking, Converter={StaticResource BellOpacityConverter}}">
+                                           Grid.RowSpan="2"
+                                           Text="{Binding IsTracking, Converter={StaticResource BellGlyphConverter}}"
+                                           FontSize="22"
+                                           Padding="10,0,4,8"
+                                           VerticalOptions="Start"
+                                           SemanticProperties.Description="Track this journey"
+                                           Opacity="{Binding IsTracking, Converter={StaticResource BellOpacityConverter}}">
                                         <Label.GestureRecognizers>
                                             <TapGestureRecognizer
                                                 Command="{Binding BindingContext.ToggleTrackingCommand, Source={RelativeSource AncestorType={x:Type views:AppHomeListView}}}"
                                                 CommandParameter="{Binding .}" />
                                         </Label.GestureRecognizers>
                                     </Label>
-                                </Grid>
-
-                                <!-- CURRENT STATUS -->
-                                <Label Text="{Binding CurrentStatus}"
-                                   FontSize="13"
-                                   LineBreakMode="WordWrap"
-                                   TextColor="{AppThemeBinding Light={StaticResource SubtleTextLight}, Dark={StaticResource SubtleTextDark}}" />
-
-                                <!-- ARRIVAL: minutes as the headline, status as a coloured badge -->
-                                <Grid ColumnDefinitions="*,Auto"
-                                      RowDefinitions="Auto,Auto"
-                                      Margin="0,4,0,0">
-
-                                    <Label Text="{Binding DueText}"
-                                           FontSize="26"
-                                           FontAttributes="Bold"
-                                           TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
 
                                     <Label Grid.Row="1"
                                            FontSize="12"
+                                           LineBreakMode="TailTruncation"
                                            TextColor="{AppThemeBinding Light={StaticResource SubtleTextLight}, Dark={StaticResource SubtleTextDark}}">
                                         <Label.FormattedText>
                                             <FormattedString>
-                                                <Span Text="{Binding ExpectedTimeLabel}" />
-                                                <Span Text=" " />
-                                                <Span Text="{Binding ExpectedArrival}" FontAttributes="Bold" />
+                                                <Span Text="from " />
+                                                <Span Text="{Binding Origin}" />
+                                                <Span Text="  ·  " />
+                                                <Span Text="{Binding TrainCode}" />
                                             </FormattedString>
                                         </Label.FormattedText>
                                     </Label>
 
-                                    <Border Grid.Column="1"
-                                            Grid.RowSpan="2"
-                                            VerticalOptions="Center"
+                                    <!-- Minutes as the headline, departure time beside it, status badge on the right -->
+                                    <HorizontalStackLayout Grid.Row="2" Spacing="10" Margin="0,8,0,0" VerticalOptions="End">
+                                        <Label Text="{Binding DueText}"
+                                               FontSize="26"
+                                               FontFamily="OpenSansSemibold"
+                                               VerticalOptions="End"
+                                               TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+                                        <Label FontSize="13"
+                                               VerticalOptions="End"
+                                               Margin="0,0,0,4"
+                                               TextColor="{AppThemeBinding Light={StaticResource SubtleTextLight}, Dark={StaticResource SubtleTextDark}}">
+                                            <Label.FormattedText>
+                                                <FormattedString>
+                                                    <Span Text="{Binding ExpectedTimeLabel}" />
+                                                    <Span Text=" " />
+                                                    <Span Text="{Binding ExpectedArrival}" FontFamily="OpenSansSemibold" />
+                                                </FormattedString>
+                                            </Label.FormattedText>
+                                        </Label>
+                                    </HorizontalStackLayout>
+
+                                    <Border Grid.Row="2"
+                                            Grid.Column="1"
+                                            VerticalOptions="End"
+                                            Margin="0,0,4,4"
                                             StrokeThickness="0"
                                             StrokeShape="RoundRectangle 12"
                                             Padding="10,4"
                                             BackgroundColor="{Binding LateBadgeColor}">
                                         <Label Text="{Binding LateDisplay}"
                                                FontSize="12"
-                                               FontAttributes="Bold"
+                                               FontFamily="OpenSansSemibold"
                                                TextColor="{Binding LateColor}" />
                                     </Border>
+
+                                    <!-- Where the train is now -->
+                                    <Label Grid.Row="3"
+                                           Grid.ColumnSpan="2"
+                                           Margin="0,6,0,0"
+                                           FontSize="12"
+                                           LineBreakMode="TailTruncation"
+                                           TextColor="{AppThemeBinding Light={StaticResource SubtleTextLight}, Dark={StaticResource SubtleTextDark}}">
+                                        <Label.FormattedText>
+                                            <FormattedString>
+                                                <Span Text="📍 " />
+                                                <Span Text="{Binding CurrentStatus}" />
+                                            </FormattedString>
+                                        </Label.FormattedText>
+                                    </Label>
                                 </Grid>
-
-                            </VerticalStackLayout>
-
+                            </Grid>
                         </Border>
 
                     </DataTemplate>

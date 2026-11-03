@@ -5,31 +5,20 @@
              xmlns:vm="clr-namespace:iRailTracker.ViewModel"
              xmlns:strings="clr-namespace:iRailTracker.Resources.Strings">
 
-    <Border
-        StrokeShape="RoundRectangle 16"
-        BackgroundColor="{AppThemeBinding Light={StaticResource CardBackgroundLight}, Dark={StaticResource CardBackgroundDark}}"
-        Padding="16"
-        Margin="12">
+    <Border Style="{StaticResource Card}" Margin="12,12,12,8">
 
-        <Border.Shadow>
-            <Shadow Radius="12"
-                    Opacity="0.25"
-                    Offset="0,4" />
-        </Border.Shadow>
+        <VerticalStackLayout Spacing="12">
 
-        <VerticalStackLayout Spacing="16">
-
-            <!-- HEADER -->
-            <Label Text="{x:Static strings:AppStrings.HeaderChooseOption}"
+            <Label Text="Where are you travelling from?"
                    FontSize="18"
-                   FontAttributes="Bold"
-                   HorizontalOptions="Start" />
+                   FontFamily="OpenSansSemibold" />
 
             <!-- MODE TOGGLE (replaces radio buttons, whose unselected circle was nearly invisible in light mode) -->
-            <Border StrokeShape="RoundRectangle 12"
-                    Stroke="{AppThemeBinding Light={StaticResource CardStrokeLight}, Dark={StaticResource CardStrokeDark}}"
-                    Padding="3">
-                <Grid ColumnDefinitions="*,*" ColumnSpacing="3">
+            <Border StrokeThickness="0"
+                    StrokeShape="RoundRectangle 12"
+                    Padding="4"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource PageBackgroundLight}, Dark={StaticResource PageBackgroundDark}}">
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="4">
                     <Border x:Name="Find_Station"
                             Grid.Column="0"
                             StrokeThickness="0"
@@ -44,14 +33,14 @@
                         <Border.GestureRecognizers>
                             <TapGestureRecognizer Command="{Binding SelectNearbyModeCommand}" />
                         </Border.GestureRecognizers>
-                        <Label Text="{x:Static strings:AppStrings.LocateNearbyStation}"
-                               FontSize="13"
+                        <Label Text="📍  Near me"
+                               FontSize="14"
                                HorizontalTextAlignment="Center"
-                               TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}">
+                               TextColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray200}}">
                             <Label.Triggers>
                                 <DataTrigger TargetType="Label" Binding="{Binding IsFindNearbyStationChecked}" Value="True">
                                     <Setter Property="TextColor" Value="White" />
-                                    <Setter Property="FontAttributes" Value="Bold" />
+                                    <Setter Property="FontFamily" Value="OpenSansSemibold" />
                                 </DataTrigger>
                             </Label.Triggers>
                         </Label>
@@ -71,14 +60,14 @@
                         <Border.GestureRecognizers>
                             <TapGestureRecognizer Command="{Binding SelectPickModeCommand}" />
                         </Border.GestureRecognizers>
-                        <Label Text="{x:Static strings:AppStrings.PickTrainStation}"
-                               FontSize="13"
+                        <Label Text="🚉  Pick a station"
+                               FontSize="14"
                                HorizontalTextAlignment="Center"
-                               TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}">
+                               TextColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray200}}">
                             <Label.Triggers>
                                 <DataTrigger TargetType="Label" Binding="{Binding IsLocateStationChecked}" Value="True">
                                     <Setter Property="TextColor" Value="White" />
-                                    <Setter Property="FontAttributes" Value="Bold" />
+                                    <Setter Property="FontFamily" Value="OpenSansSemibold" />
                                 </DataTrigger>
                             </Label.Triggers>
                         </Label>
@@ -86,81 +75,63 @@
                 </Grid>
             </Border>
 
-            <!-- DIVIDER -->
-            <BoxView HeightRequest="1"
-                     Color="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}"
-                     HorizontalOptions="Fill" />
+            <!-- NEAR ME: find the closest stations -->
+            <Button Text="{x:Static strings:AppStrings.SearchStations}"
+                    IsVisible="{Binding HideSearchButton}"
+                    Command="{Binding SearchCommand}" />
 
-            <!-- PICKER + SEARCH -->
-            <Grid ColumnDefinitions="*,Auto"
-                  ColumnSpacing="12">
+            <!-- STATION + DESTINATION FIELDS (open the searchable list) -->
+            <VerticalStackLayout Spacing="8" IsVisible="{Binding IsStationListLoaded}">
 
-                <!-- Opens the searchable station list -->
-                <Border x:Name="stationPicker"
-                        Grid.Column="0"
-                        IsVisible="{Binding IsStationListLoaded}"
-                        StrokeShape="RoundRectangle 10"
-                        Stroke="{AppThemeBinding Light={StaticResource CardStrokeLight}, Dark={StaticResource CardStrokeDark}}"
-                        Padding="12,10"
-                        VerticalOptions="Center">
+                <Border x:Name="stationPicker" Style="{StaticResource FieldBox}">
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Command="{Binding ChooseStationCommand}" />
                     </Border.GestureRecognizers>
-                    <Grid ColumnDefinitions="*,Auto">
-                        <Label Text="{Binding StationDisplay}" FontSize="15" LineBreakMode="TailTruncation" VerticalOptions="Center" />
-                        <Label Grid.Column="1" Text="🔍" FontSize="14" VerticalOptions="Center" />
+                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                        <Label Text="🚉" FontSize="16" VerticalOptions="Center" />
+                        <VerticalStackLayout Grid.Column="1" Spacing="0" VerticalOptions="Center">
+                            <Label Text="FROM" Style="{StaticResource SectionLabel}" FontSize="10" />
+                            <Label Text="{Binding StationDisplay}" FontSize="16" FontFamily="OpenSansSemibold" LineBreakMode="TailTruncation" />
+                        </VerticalStackLayout>
+                        <Label Grid.Column="2" Text="🔍" FontSize="14" VerticalOptions="Center" Opacity="0.7" />
+                    </Grid>
+                </Border>
+
+                <Border Style="{StaticResource FieldBox}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ChooseDestinationCommand}" />
+                    </Border.GestureRecognizers>
+                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                        <Label Text="🎯" FontSize="16" VerticalOptions="Center" />
+                        <VerticalStackLayout Grid.Column="1" Spacing="0" VerticalOptions="Center">
+                            <Label Text="GOING TO (OPTIONAL)" Style="{StaticResource SectionLabel}" FontSize="10" />
+                            <Label Text="{Binding SelectedDestination}" FontSize="15" LineBreakMode="TailTruncation" />
+                        </VerticalStackLayout>
+                        <Label Grid.Column="2" Text="›" FontSize="20" VerticalOptions="Center" Opacity="0.5" />
                     </Grid>
                 </Border>
 
                 <Button Text="{Binding ButtonText}"
-                        Command="{Binding SearchServiceCommand}"
-                        IsVisible="{Binding IsStationListLoaded}"
-                        FontSize="15"
-                        Padding="16,10"
-                        VerticalOptions="Center"
-                        Grid.Column="1"/>
-            </Grid>
-
-            <!-- OPTIONAL DESTINATION FILTER -->
-            <Border IsVisible="{Binding IsStationListLoaded}"
-                    StrokeShape="RoundRectangle 10"
-                    Stroke="{AppThemeBinding Light={StaticResource CardStrokeLight}, Dark={StaticResource CardStrokeDark}}"
-                    Padding="12,10">
-                <Border.GestureRecognizers>
-                    <TapGestureRecognizer Command="{Binding ChooseDestinationCommand}" />
-                </Border.GestureRecognizers>
-                <Label Text="{Binding DestinationDisplay}"
-                       FontSize="14"
-                       LineBreakMode="TailTruncation"
-                       TextColor="{AppThemeBinding Light={StaticResource SubtleTextLight}, Dark={StaticResource SubtleTextDark}}" />
-            </Border>
-
-            <!-- SEARCH BUTTON / LOADER / REFRESH INFO -->
-            <VerticalStackLayout Spacing="8"
-                                 HorizontalOptions="Center">
-
-                <Button Text="{x:Static strings:AppStrings.SearchStations}"
-                        CornerRadius="12"
-                        Padding="24,12"
-                        IsVisible="{Binding HideSearchButton}"
-                        Command="{Binding SearchCommand}"
-                        HorizontalOptions="Center" />
-
-                <ActivityIndicator IsRunning="{Binding IsBusy}"
-                                   IsVisible="{Binding IsBusy}"
-                                   HorizontalOptions="Center"/>
-
-                <Label Text="{Binding RefreshTime}"
-                       IsVisible="{Binding EnableListView}"
-                       FontSize="13"
-                       HorizontalOptions="Center"/>
-
-                <Label Text="{Binding RefreshStatusText}"
-                       FontSize="11"
-                       Opacity="0.6"
-                       HorizontalOptions="Center"
-                       IsVisible="{Binding EnableListView}" />
+                        Command="{Binding SearchServiceCommand}" />
             </VerticalStackLayout>
+
+            <!-- LOADER / REFRESH INFO -->
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}"
+                               HeightRequest="28"
+                               HorizontalOptions="Center" />
+
+            <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding EnableListView}">
+                <Label Text="{Binding RefreshTime}"
+                       FontSize="12"
+                       VerticalOptions="Center"
+                       TextColor="{AppThemeBinding Light={StaticResource SubtleTextLight}, Dark={StaticResource SubtleTextDark}}" />
+                <Label Grid.Column="1"
+                       Text="{Binding RefreshStatusText}"
+                       FontSize="11"
+                       VerticalOptions="Center"
+                       TextColor="{AppThemeBinding Light={StaticResource MutedTextLight}, Dark={StaticResource MutedTextDark}}" />
+            </Grid>
 
         </VerticalStackLayout>
     </Border>

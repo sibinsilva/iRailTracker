@@ -5,17 +5,31 @@
              x:Class="iRailTracker.View.TrainLiveStatusPage"
              Title="Live Status">
 
-    <Grid RowDefinitions="Auto,*" Padding="12">
+    <ContentPage.Resources>
+        <Style x:Key="MapButton" TargetType="Button">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Padding" Value="14,8" />
+            <Setter Property="CornerRadius" Value="20" />
+            <Setter Property="HeightRequest" Value="40" />
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource CardBackgroundLight}, Dark={StaticResource CardBackgroundDark}}" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+            <Setter Property="Shadow">
+                <Shadow Brush="Black" Opacity="0.2" Radius="8" Offset="0,2" />
+            </Setter>
+        </Style>
+    </ContentPage.Resources>
 
-        <!-- ROUTE HEADER -->
-        <Border Grid.Row="0"
-                StrokeShape="RoundRectangle 14"
-                StrokeThickness="0"
-                Padding="14,12"
-                Margin="0,0,0,10"
-                BackgroundColor="{AppThemeBinding Light={StaticResource CardBackgroundLight}, Dark={StaticResource CardBackgroundDark}}">
+    <!-- Full-screen map with the route card, legend and buttons floating on top -->
+    <Grid>
+        <mapsui:MapControl x:Name="TrainMapControl" />
+
+        <!-- ROUTE CARD -->
+        <Border Style="{StaticResource Card}"
+                VerticalOptions="Start"
+                Margin="12"
+                Padding="16,14">
             <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" RowSpacing="4">
-                <Label FontSize="17" FontAttributes="Bold" LineBreakMode="WordWrap">
+                <Label FontSize="17" FontFamily="OpenSansSemibold" LineBreakMode="WordWrap">
                     <Label.FormattedText>
                         <FormattedString>
                             <Span Text="{Binding Origin}" />
@@ -27,85 +41,79 @@
 
                 <Border Grid.Column="1"
                         VerticalOptions="Start"
+                        Margin="8,0,0,0"
                         StrokeThickness="0"
                         StrokeShape="RoundRectangle 12"
                         Padding="10,4"
                         BackgroundColor="{Binding LateBadgeColor}">
-                    <Label Text="{Binding LateDisplay}" FontSize="12" FontAttributes="Bold" TextColor="{Binding LateColor}" />
+                    <Label Text="{Binding LateDisplay}" FontSize="12" FontFamily="OpenSansSemibold" TextColor="{Binding LateColor}" />
                 </Border>
 
-                <Label Grid.Row="1" Grid.ColumnSpan="2" FontSize="13"
+                <Label Grid.Row="1" Grid.ColumnSpan="2" FontSize="13" LineBreakMode="TailTruncation"
                        TextColor="{AppThemeBinding Light={StaticResource SubtleTextLight}, Dark={StaticResource SubtleTextDark}}">
                     <Label.FormattedText>
                         <FormattedString>
                             <Span Text="{Binding ExpectedTimeLabel}" />
-                                                <Span Text=" " />
-                            <Span Text="{Binding ExpectedArrival}" FontAttributes="Bold" />
+                            <Span Text=" " />
+                            <Span Text="{Binding ExpectedArrival}" FontFamily="OpenSansSemibold" />
                             <Span Text="  ·  " />
-                            <Span Text="{Binding CurrentStatus}" />
+                            <Span Text="{Binding TrainCode}" />
                         </FormattedString>
                     </Label.FormattedText>
                 </Label>
 
                 <Label x:Name="LiveStatusLabel" Grid.Row="2" Grid.ColumnSpan="2"
-                       IsVisible="False" FontSize="13" FontAttributes="Bold"
+                       IsVisible="False" FontSize="13" FontFamily="OpenSansSemibold"
                        TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
             </Grid>
         </Border>
 
-        <Grid Grid.Row="1">
-            <mapsui:MapControl x:Name="TrainMapControl" />
-
-            <!-- LEGEND -->
-            <Border VerticalOptions="End"
-                    HorizontalOptions="Start"
-                    Margin="8"
-                    Padding="10,6"
-                    StrokeShape="RoundRectangle 10"
-                    StrokeThickness="0"
-                    BackgroundColor="{AppThemeBinding Light=#E6FFFFFF, Dark=#E62D2D2D}">
-                <HorizontalStackLayout Spacing="10">
-                    <Label FontSize="11"><Label.FormattedText><FormattedString>
-                        <Span Text="● " TextColor="#FFA500" FontSize="14" /><Span Text="Train" />
-                    </FormattedString></Label.FormattedText></Label>
-                    <Label FontSize="11"><Label.FormattedText><FormattedString>
-                        <Span Text="● " TextColor="#228B22" FontSize="14" /><Span Text="Start" />
-                    </FormattedString></Label.FormattedText></Label>
-                    <Label FontSize="11"><Label.FormattedText><FormattedString>
-                        <Span Text="● " TextColor="#4169E1" FontSize="14" /><Span Text="Stops" />
-                    </FormattedString></Label.FormattedText></Label>
-                    <Label FontSize="11"><Label.FormattedText><FormattedString>
-                        <Span Text="● " TextColor="#DC143C" FontSize="14" /><Span Text="End" />
-                    </FormattedString></Label.FormattedText></Label>
-                </HorizontalStackLayout>
-            </Border>
-
-            <!-- RECENTER BUTTONS -->
-            <VerticalStackLayout VerticalOptions="End"
-                                 HorizontalOptions="End"
-                                 Margin="8,8,8,48"
-                                 Spacing="8">
-                <Button Text="🚆 Train" FontSize="13" Padding="12,6" CornerRadius="18" Clicked="OnCenterOnTrainClicked" />
-                <Button Text="⤢ Route" FontSize="13" Padding="12,6" CornerRadius="18" Clicked="OnShowRouteClicked" />
+        <!-- TAPPED PIN DETAILS -->
+        <Border x:Name="PinInfoOverlay"
+                Style="{StaticResource Card}"
+                IsVisible="False"
+                VerticalOptions="End"
+                HorizontalOptions="Center"
+                Margin="12,0,12,72"
+                Padding="16,10">
+            <VerticalStackLayout Spacing="2">
+                <Label x:Name="PinStationLabel" FontFamily="OpenSansSemibold" FontSize="15" />
+                <Label x:Name="PinArrivalLabel" FontSize="13"
+                       TextColor="{AppThemeBinding Light={StaticResource SubtleTextLight}, Dark={StaticResource SubtleTextDark}}" />
             </VerticalStackLayout>
+        </Border>
 
-            <Border x:Name="PinInfoOverlay"
-                    IsVisible="False"
-                    VerticalOptions="Start"
-                    HorizontalOptions="Center"
-                    Margin="0,12,0,0"
-                    Padding="14,10"
-                    BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#2D2D2D}"
-                    StrokeShape="RoundRectangle 8"
-                    Stroke="{AppThemeBinding Light=#E0E0E0, Dark=#444444}"
-                    Shadow="{OnPlatform Default={Shadow Brush=Black, Offset='2,2', Radius=4, Opacity=0.2}}">
-                <VerticalStackLayout Spacing="2">
-                    <Label x:Name="PinStationLabel" FontAttributes="Bold" FontSize="14" />
-                    <Label x:Name="PinArrivalLabel" FontSize="12"
-                           TextColor="{AppThemeBinding Light={StaticResource SubtleTextLight}, Dark={StaticResource SubtleTextDark}}" />
-                </VerticalStackLayout>
-            </Border>
-        </Grid>
+        <!-- LEGEND -->
+        <Border VerticalOptions="End"
+                HorizontalOptions="Start"
+                Margin="12,0,0,16"
+                Padding="12,8"
+                StrokeShape="RoundRectangle 14"
+                StrokeThickness="0"
+                BackgroundColor="{AppThemeBinding Light=#EBFFFFFF, Dark=#EB171C1C}">
+            <HorizontalStackLayout Spacing="10">
+                <Label FontSize="11"><Label.FormattedText><FormattedString>
+                    <Span Text="● " TextColor="#FFA500" FontSize="14" /><Span Text="Train" />
+                </FormattedString></Label.FormattedText></Label>
+                <Label FontSize="11"><Label.FormattedText><FormattedString>
+                    <Span Text="● " TextColor="#228B22" FontSize="14" /><Span Text="Start" />
+                </FormattedString></Label.FormattedText></Label>
+                <Label FontSize="11"><Label.FormattedText><FormattedString>
+                    <Span Text="● " TextColor="#4169E1" FontSize="14" /><Span Text="Stops" />
+                </FormattedString></Label.FormattedText></Label>
+                <Label FontSize="11"><Label.FormattedText><FormattedString>
+                    <Span Text="● " TextColor="#DC143C" FontSize="14" /><Span Text="End" />
+                </FormattedString></Label.FormattedText></Label>
+            </HorizontalStackLayout>
+        </Border>
 
+        <!-- MAP BUTTONS -->
+        <VerticalStackLayout VerticalOptions="End"
+                             HorizontalOptions="End"
+                             Margin="0,0,12,16"
+                             Spacing="10">
+            <Button Text="🚆  Follow train" Style="{StaticResource MapButton}" Clicked="OnCenterOnTrainClicked" />
+            <Button Text="⤢  Whole route" Style="{StaticResource MapButton}" Clicked="OnShowRouteClicked" />
+        </VerticalStackLayout>
     </Grid>
 </ContentPage>

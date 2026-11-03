@@ -4,6 +4,7 @@ using iRailTracker.Service;
 
 namespace iRailTracker.UnitTests.Service;
 
+[Collection(IrishClockCollection.Name)]
 public class RouteFilterServiceTests
 {
     private static TrainMovement Stop(int order, string code, string type = "S") =>

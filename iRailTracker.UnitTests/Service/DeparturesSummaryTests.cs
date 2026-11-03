@@ -3,6 +3,7 @@ using iRailTracker.Service;
 
 namespace iRailTracker.UnitTests.Service;
 
+[Collection(IrishClockCollection.Name)]
 public class DeparturesSummaryTests
 {
     [Fact]

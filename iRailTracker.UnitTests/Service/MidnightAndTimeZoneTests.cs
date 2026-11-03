@@ -3,6 +3,7 @@ using iRailTracker.Service;
 
 namespace iRailTracker.UnitTests.Service;
 
+[Collection(IrishClockCollection.Name)]
 public class MidnightAndTimeZoneTests
 {
     private static readonly DateTime ServiceDate = new(2026, 11, 3);

@@ -42,6 +42,9 @@ namespace iRailTracker.Service
 
         public bool IsTracking(string trainCode) => _tracked.ContainsKey(trainCode);
 
+        /// <summary>True if journeys were saved for resuming (checked by the boot receiver).</summary>
+        public static bool HasSavedJourneys() => LoadSaved().Count > 0;
+
         public Task StartTracking(TrainJourney journey, Settings settings) =>
             StartTracking(new TrackedJourneyInfo(journey.TrainCode, journey.Origin, journey.Destination, journey.TrainDate.Date), settings);
 
@@ -114,16 +117,15 @@ namespace iRailTracker.Service
 
         private async Task PollLoop(TrackedJourney tracked, Settings settings)
         {
-            var intervalSeconds = Math.Max(Preferences.Get(AppPreferences.RefreshIntervalSeconds, 30), 15);
-
             try
             {
-                await PollOnce(tracked, settings);
+                var untilNextStop = await PollOnce(tracked, settings);
 
                 while (!tracked.Cts.IsCancellationRequested)
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(intervalSeconds), tracked.Cts.Token);
-                    await PollOnce(tracked, settings);
+                    var userSeconds = Preferences.Get(AppPreferences.RefreshIntervalSeconds, 30);
+                    await Task.Delay(TrackingPollPolicy.NextDelay(untilNextStop, userSeconds), tracked.Cts.Token);
+                    untilNextStop = await PollOnce(tracked, settings);
                 }
             }
             catch (OperationCanceledException)
@@ -136,24 +138,25 @@ namespace iRailTracker.Service
             }
         }
 
-        private async Task PollOnce(TrackedJourney tracked, Settings settings)
+        /// <summary>Updates the notification; returns how long until the train reaches its next stop, if known.</summary>
+        private async Task<TimeSpan?> PollOnce(TrackedJourney tracked, Settings settings)
         {
             if (tracked.Cts.IsCancellationRequested)
-                return;
+                return null;
 
             var info = tracked.Info;
             var stationService = new StationService();
             var movements = await stationService.GetTrainMovementsAsync(settings, info.TrainCode, info.TrainDate, _ => { });
 
             if (movements.Count == 0 || tracked.Cts.IsCancellationRequested)
-                return;
+                return null;
 
             var now = IrishTime.Now;
 
             if (TrainMovementAnalysis.HasJourneyEnded(movements, now, info.TrainDate, JourneyEndGrace))
             {
                 await StopTracking(info.TrainCode);
-                return;
+                return null;
             }
 
             var currentStop = TrainMovementAnalysis.DetermineCurrentStop(movements, now, info.TrainDate);
@@ -161,7 +164,7 @@ namespace iRailTracker.Service
             var lateMinutes = await GetOfficialDelayMinutes(stationService, settings, info, movements, now);
 
             if (tracked.Cts.IsCancellationRequested)
-                return;
+                return null;
 
             await ShowStatusNotification(tracked, currentLocation, lateMinutes);
 
@@ -171,6 +174,10 @@ namespace iRailTracker.Service
                 var delay = new TrainDelayInfo(info.TrainCode, info.Origin, info.Destination, lateMinutes);
                 await DelayNotificationService.Instance.CheckAndNotify(delay, threshold);
             }
+
+            var nextStop = TrainMovementAnalysis.ResolveTimes(movements, info.TrainDate)
+                .FirstOrDefault(x => x.EffectiveTime > now);
+            return nextStop.EffectiveTime - now;
         }
 
         /// <summary>

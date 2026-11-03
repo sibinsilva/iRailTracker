@@ -24,10 +24,6 @@ public partial class TrainLiveStatusPage : ContentPage
     private MPoint? _trainPoint;
     private bool _followTrain;
 
-    // OpenStreetMap's tile usage policy requires a User-Agent that identifies
-    // the app; Mapsui's generic default is blocked with HTTP 403.
-    private static readonly string OsmUserAgent =
-        $"iRailTracker/{AppInfo.Current.VersionString} ({AppInfo.Current.PackageName}; contact: sibinsilva@gmail.com)";
 
     public TrainLiveStatusPage(TrainJourney journey, IReadOnlyList<Station> stations)
     {
@@ -58,7 +54,8 @@ public partial class TrainLiveStatusPage : ContentPage
         _mapBuilt = true;
 
         var map = TrainMapControl.Map;
-        map.Layers.Add(OpenStreetMap.CreateTileLayer(OsmUserAgent));
+        // Cached tiles; dark CARTO tiles in dark mode (see MapTiles)
+        map.Layers.Add(MapTiles.CreateLayer(Application.Current?.RequestedTheme == AppTheme.Dark));
 
         var allPoints = new List<MPoint>();
         var movements = await FetchMovementsAsync(journey.TrainCode, journey.TrainDate);

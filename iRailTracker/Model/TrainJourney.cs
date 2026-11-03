@@ -23,6 +23,10 @@ namespace iRailTracker.Model
         public string DueText { get; set; } = string.Empty;
         /// <summary>Minutes until due, for ordering.</summary>
         public int DueMinutes { get; set; }
+        /// <summary>Board direction, e.g. "Northbound" or "To Maynooth".</summary>
+        public string Direction { get; set; } = string.Empty;
+        /// <summary>True for DART services (the board's Traintype is "DART" or "Train").</summary>
+        public bool IsDart { get; set; }
         /// <summary>Translucent tint of <see cref="LateColor"/> behind the status badge (works in light and dark).</summary>
         public Color LateBadgeColor { get; set; } = Color.FromArgb("#29DC2626");
 

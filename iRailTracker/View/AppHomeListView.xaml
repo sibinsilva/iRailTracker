@@ -81,19 +81,30 @@
                                         </Label.GestureRecognizers>
                                     </Label>
 
-                                    <Label Grid.Row="1"
-                                           FontSize="12"
-                                           LineBreakMode="TailTruncation"
-                                           TextColor="{AppThemeBinding Light={StaticResource SubtleTextLight}, Dark={StaticResource SubtleTextDark}}">
-                                        <Label.FormattedText>
-                                            <FormattedString>
-                                                <Span Text="from " />
-                                                <Span Text="{Binding Origin}" />
-                                                <Span Text="  ·  " />
-                                                <Span Text="{Binding TrainCode}" />
-                                            </FormattedString>
-                                        </Label.FormattedText>
-                                    </Label>
+                                    <HorizontalStackLayout Grid.Row="1" Spacing="6">
+                                        <Border IsVisible="{Binding IsDart}"
+                                                StrokeThickness="0"
+                                                StrokeShape="RoundRectangle 6"
+                                                Padding="6,1"
+                                                VerticalOptions="Center"
+                                                BackgroundColor="{AppThemeBinding Light={StaticResource ChipBackgroundLight}, Dark={StaticResource ChipBackgroundDark}}">
+                                            <Label Text="DART" FontSize="10" FontFamily="OpenSansSemibold"
+                                                   TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+                                        </Border>
+                                        <Label FontSize="12"
+                                               VerticalOptions="Center"
+                                               LineBreakMode="TailTruncation"
+                                               TextColor="{AppThemeBinding Light={StaticResource SubtleTextLight}, Dark={StaticResource SubtleTextDark}}">
+                                            <Label.FormattedText>
+                                                <FormattedString>
+                                                    <Span Text="from " />
+                                                    <Span Text="{Binding Origin}" />
+                                                    <Span Text="  ·  " />
+                                                    <Span Text="{Binding TrainCode}" />
+                                                </FormattedString>
+                                            </Label.FormattedText>
+                                        </Label>
+                                    </HorizontalStackLayout>
 
                                     <!-- Minutes as the headline, departure time beside it, status badge on the right -->
                                     <HorizontalStackLayout Grid.Row="2" Spacing="10" Margin="0,8,0,0" VerticalOptions="End">

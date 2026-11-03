@@ -15,11 +15,14 @@ public class AppHomeViewModelSearchTests
     private const string Ns = "http://api.irishrail.ie/realtime/";
 
     private static string Board(params (string code, string destination, int duein)[] trains) =>
+        BoardWithDirections(trains.Select(t => (t.code, t.destination, t.duein, "Northbound", "Train")).ToArray());
+
+    private static string BoardWithDirections(params (string code, string destination, int duein, string direction, string type)[] trains) =>
         $"<ArrayOfObjStationData xmlns=\"{Ns}\">" +
         string.Concat(trains.Select(t =>
             $"<objStationData><Traincode>{t.code}</Traincode><Traindate>{IrishTime.FormatTrainDate(IrishTime.Today)}</Traindate>" +
             $"<Origin>Dublin Heuston</Origin><Destination>{t.destination}</Destination><Duein>{t.duein}</Duein>" +
-            "<Late>0</Late><Exparrival>10:00</Exparrival><Expdepart>10:01</Expdepart><Locationtype>S</Locationtype></objStationData>")) +
+            $"<Late>0</Late><Exparrival>10:00</Exparrival><Expdepart>10:01</Expdepart><Locationtype>S</Locationtype><Direction>{t.direction}</Direction><Traintype>{t.type}</Traintype></objStationData>")) +
         "</ArrayOfObjStationData>";
 
     private static string Route(params (string code, string name)[] stops) =>
@@ -123,6 +126,39 @@ public class AppHomeViewModelSearchTests
 
         Assert.Single(errors);
         Assert.True(vm.NoJourneyFound);
+    }
+
+    [Fact]
+    public async Task DirectionChips_FilterTheBoard_AndDartIsFlagged()
+    {
+        var (vm, api, _) = Create();
+        api.BoardXml = BoardWithDirections(
+            ("E101", "Malahide", 5, "Northbound", "DART"),
+            ("E102", "Bray", 7, "Southbound", "DART"),
+            ("A900", "Dundalk", 9, "To Dundalk", "Train"));
+
+        vm.SelectedStation = "Howth";
+        await vm.ExecuteTrainServiceSearch(waitForLock: true);
+
+        Assert.Equal(["All directions", "Northbound", "Southbound", "To Dundalk"], vm.DirectionChips.Select(c => c.Name));
+        Assert.True(vm.TrainJourneys[0].IsDart);
+        Assert.False(vm.TrainJourneys[2].IsDart);
+
+        vm.SelectDirectionCommand.Execute(vm.DirectionChips.First(c => c.Name == "Southbound"));
+
+        Assert.Equal(["E102"], vm.TrainJourneys.Select(j => j.TrainCode));
+    }
+
+    [Fact]
+    public async Task DirectionChips_HiddenWhenBoardHasOneDirection()
+    {
+        var (vm, api, _) = Create();
+        api.BoardXml = Board(("E101", "Malahide", 5), ("E103", "Howth", 8));
+
+        vm.SelectedStation = "Howth";
+        await vm.ExecuteTrainServiceSearch(waitForLock: true);
+
+        Assert.Empty(vm.DirectionChips);
     }
 
     [Fact]

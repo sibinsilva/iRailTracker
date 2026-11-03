@@ -27,6 +27,8 @@ namespace iRailTracker.ViewModel
         private readonly StationService _stationService;
         private readonly RouteFilterService _routeFilter;
         private readonly object _journeysLock = new();
+        private List<TrainJourney> _allJourneys = new();
+        private string _selectedDirection = DirectionChip.All;
         private ObservableCollection<string> _stationOptions;
         private ObservableCollection<TrainJourney> _trainJourneys;
         private ObservableCollection<string> _favouriteStations;
@@ -267,6 +269,19 @@ namespace iRailTracker.ViewModel
 
         public ObservableCollection<string> DestinationOptions => _destinationOptions;
 
+        /// <summary>Direction chips for the current board; empty when it only has one direction.</summary>
+        public ObservableCollection<DirectionChip> DirectionChips { get; } = new();
+
+        public ICommand SelectDirectionCommand => new Command<DirectionChip>(chip =>
+        {
+            if (chip is null)
+                return;
+            _selectedDirection = chip.Name;
+            foreach (var c in DirectionChips)
+                c.IsSelected = c.Name == chip.Name;
+            ApplyDirectionFilter();
+        });
+
         public string StationDisplay => string.IsNullOrEmpty(_selectedStation) ? "Select a station" : _selectedStation;
 
         public string DestinationDisplay => $"Going to: {_selectedDestination}";
@@ -417,6 +432,7 @@ namespace iRailTracker.ViewModel
                 if (destination is not null && origin is not null && destination.StationCode != origin.StationCode)
                 {
                     // Show matching trains as each route is confirmed instead of after all of them
+                    _allJourneys = new List<TrainJourney>();
                     TrainJourneys = new ObservableCollection<TrainJourney>();
                     NoJourneyFound = false;
                     EnableListView = true;
@@ -433,7 +449,9 @@ namespace iRailTracker.ViewModel
 
                     journeyList.Sort((x, y) => x.Duein.CompareTo(y.Duein));
 
-                    TrainJourneys = new ObservableCollection<TrainJourney>(journeyList.Select(ToJourney));
+                    _allJourneys = journeyList.Select(ToJourney).ToList();
+                    UpdateDirectionChips();
+                    ApplyDirectionFilter();
                 }
                 else
                 {
@@ -466,11 +484,48 @@ namespace iRailTracker.ViewModel
         {
             lock (_journeysLock)
             {
+                _allJourneys.Add(journey);
+                if (!MatchesDirection(journey))
+                    return;
+
                 var index = 0;
                 while (index < TrainJourneys.Count && TrainJourneys[index].DueMinutes <= journey.DueMinutes)
                     index++;
                 TrainJourneys.Insert(index, journey);
             }
+        }
+
+        private bool MatchesDirection(TrainJourney journey) =>
+            _selectedDirection == DirectionChip.All || journey.Direction == _selectedDirection;
+
+        private void ApplyDirectionFilter()
+        {
+            lock (_journeysLock)
+            {
+                TrainJourneys = new ObservableCollection<TrainJourney>(
+                    _allJourneys.Where(MatchesDirection).OrderBy(j => j.DueMinutes));
+            }
+        }
+
+        /// <summary>Rebuilds the chips from the board's directions, keeping the current choice if it still exists.</summary>
+        private void UpdateDirectionChips()
+        {
+            var directions = _allJourneys.Select(j => j.Direction)
+                .Where(d => !string.IsNullOrWhiteSpace(d))
+                .Distinct()
+                .OrderBy(d => d.StartsWith("To ") ? 1 : 0)
+                .ThenBy(d => d)
+                .ToList();
+
+            if (!directions.Contains(_selectedDirection))
+                _selectedDirection = DirectionChip.All;
+
+            DirectionChips.Clear();
+            if (directions.Count < 2)
+                return;
+
+            foreach (var name in directions.Prepend(DirectionChip.All))
+                DirectionChips.Add(new DirectionChip(name) { IsSelected = name == _selectedDirection });
         }
 
         private static void RunOnUiThread(Action action)
@@ -505,6 +560,8 @@ namespace iRailTracker.ViewModel
                                         : $"Delayed by {journey.Late} min{(journey.Late > 1 ? "s" : "")}",
                             LateColor = journey.Late <= 0 ? Color.FromArgb("#16A34A") : Color.FromArgb("#DC2626"),
                             DueMinutes = journey.Duein,
+                            Direction = journey.Direction.Trim(),
+                            IsDart = journey.Traintype.Trim().Equals("DART", StringComparison.OrdinalIgnoreCase),
                             IsTracking = JourneyTrackingService.Instance.IsTracking(journey.Traincode)
                         };
 

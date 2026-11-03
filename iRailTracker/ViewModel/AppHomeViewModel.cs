@@ -5,6 +5,7 @@ using iRailTracker.Service;
 using iRailTracker.View;
 using Microsoft.Maui.Graphics;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
@@ -344,8 +345,9 @@ namespace iRailTracker.ViewModel
                         stationCode,
                         ShowError);
 
-                    // Update cache
-                    _journeyCache[stationCode] = (DateTime.UtcNow, journeyList);
+                    // Only cache real results, so a failed request is retried on the next refresh
+                    if (journeyList.Count > 0)
+                        _journeyCache[stationCode] = (DateTime.UtcNow, journeyList);
                 }
 
                 if (journeyList.Count > 0)
@@ -359,6 +361,7 @@ namespace iRailTracker.ViewModel
                         journeyList.Select(journey => new TrainJourney
                         {
                             TrainCode = journey.Traincode,
+                            TrainDate = IrishTime.ParseTrainDate(journey.Traindate),
                             Origin = journey.Origin,
                             Destination = journey.Destination,
                             CurrentStatus = !string.IsNullOrEmpty(journey.Lastlocation)
@@ -366,7 +369,7 @@ namespace iRailTracker.ViewModel
                                 : journey.Status,
                             LastLocation = journey.Lastlocation,
                             DueIn = $"{journey.Duein} min{(journey.Duein > 1 ? "s" : "")}",
-                            ExpectedArrival = DateTime.ParseExact(journey.Exparrival, "HH:mm", null)
+                            ExpectedArrival = DateTime.ParseExact(journey.Exparrival, "HH:mm", CultureInfo.InvariantCulture)
                                 .ToString("hh:mm tt").ToLower(),
                             Late = Math.Abs(journey.Late).ToString(),
                             LateDisplay = journey.Late == 0

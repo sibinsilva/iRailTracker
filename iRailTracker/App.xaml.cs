@@ -11,12 +11,14 @@ namespace iRailTracker
     {
         private readonly IConfiguration _config;
         private readonly ConfigLoader _configLoader;
+        private readonly DataService<Settings> _settings;
 
-        public App(IConfiguration config, ConfigLoader configLoader)
+        public App(IConfiguration config, ConfigLoader configLoader, DataService<Settings> settings)
         {
             InitializeComponent();
             _config = config;
             _configLoader = configLoader;
+            _settings = settings;
 
             LocalNotificationCenter.Current.NotificationActionTapped += OnNotificationActionTapped;
         }
@@ -31,6 +33,11 @@ namespace iRailTracker
         private async Task InitializeAsync()
         {
             await _configLoader.LoadSettingsAsync(_config);
+
+            // Resume journeys that were being tracked when the app was last closed or killed,
+            // before Home builds its cards so their bell icons show the right state.
+            if (_settings.Data is not null)
+                await JourneyTrackingService.Instance.RestoreAsync(_settings.Data);
 
             if (Windows.Count > 0)
             {

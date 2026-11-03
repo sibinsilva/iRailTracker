@@ -1,3 +1,6 @@
+using System.Collections.Concurrent;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using iRailTracker.Model;
 using Plugin.LocalNotification;
 using Plugin.LocalNotification.Core.Models;
@@ -11,72 +14,120 @@ namespace iRailTracker.Service
         public static JourneyTrackingService Instance =>
             _instance ??= new JourneyTrackingService();
 
-        private class TrackedJourney
+        private const string StorageKey = "tracked_journeys";
+        private const int FirstNotificationId = 5000;
+        private static readonly TimeSpan JourneyEndGrace = TimeSpan.FromMinutes(5);
+
+        /// <summary>What gets saved to Preferences so tracking survives the app being killed.</summary>
+        public sealed record TrackedJourneyInfo(string TrainCode, string Origin, string Destination, DateTime TrainDate);
+
+        private sealed class TrackedJourney
         {
-            public required string TrainCode { get; init; }
-            public required string Origin { get; init; }
-            public required string Destination { get; init; }
+            public required TrackedJourneyInfo Info { get; init; }
             public required int NotificationId { get; init; }
             public CancellationTokenSource Cts { get; } = new();
+            public string TrainCode => Info.TrainCode;
         }
 
-        private readonly Dictionary<string, TrackedJourney> _tracked = new();
-        private int _nextNotificationId = 5000;
+        private readonly ConcurrentDictionary<string, TrackedJourney> _tracked = new();
+        private readonly SemaphoreSlim _serviceLock = new(1, 1);
+        private int _nextNotificationId = FirstNotificationId;
+        private bool _restored;
 
         public JourneyTrackingService() { }
 
         public bool IsTracking(string trainCode) => _tracked.ContainsKey(trainCode);
 
-        public async Task StartTracking(TrainJourney journey, Settings settings)
+        public Task StartTracking(TrainJourney journey, Settings settings) =>
+            StartTracking(new TrackedJourneyInfo(journey.TrainCode, journey.Origin, journey.Destination, journey.TrainDate.Date), settings);
+
+        /// <summary>
+        /// Resumes tracking of journeys saved before the app was last closed or killed. Journeys
+        /// whose service date is more than a day old are dropped; finished ones stop on their first poll.
+        /// </summary>
+        public async Task RestoreAsync(Settings settings)
         {
-            if (_tracked.ContainsKey(journey.TrainCode))
+            if (_restored)
                 return;
+            _restored = true;
 
-            var tracked = new TrackedJourney
-            {
-                TrainCode = journey.TrainCode,
-                Origin = journey.Origin,
-                Destination = journey.Destination,
-                NotificationId = _nextNotificationId++
-            };
-            _tracked[journey.TrainCode] = tracked;
+            var cutoff = IrishTime.Today.AddDays(-1);
+            foreach (var info in LoadSaved().Where(j => j.TrainDate >= cutoff))
+                await StartTracking(info, settings);
 
-            if (_tracked.Count == 1)
-                await StartForegroundServiceAsync(tracked);
-
-            _ = PollLoop(tracked, settings);
+            Save();
         }
 
         public async Task StopTracking(string trainCode)
         {
-            if (!_tracked.TryGetValue(trainCode, out var tracked))
+            if (!_tracked.TryRemove(trainCode, out var tracked))
                 return;
 
             tracked.Cts.Cancel();
-            _tracked.Remove(trainCode);
+            Save();
 
             LocalNotificationCenter.Current.Cancel(tracked.NotificationId);
 
-            if (_tracked.Count == 0)
-                await StopForegroundServiceAsync();
+            await _serviceLock.WaitAsync();
+            try
+            {
+                if (_tracked.IsEmpty)
+                    await StopForegroundServiceAsync();
+            }
+            finally
+            {
+                _serviceLock.Release();
+            }
+        }
+
+        private async Task StartTracking(TrackedJourneyInfo info, Settings settings)
+        {
+            var tracked = new TrackedJourney
+            {
+                Info = info,
+                NotificationId = Interlocked.Increment(ref _nextNotificationId)
+            };
+
+            if (!_tracked.TryAdd(info.TrainCode, tracked))
+                return;
+
+            Save();
+
+            await _serviceLock.WaitAsync();
+            try
+            {
+                if (_tracked.Count == 1)
+                    await StartForegroundServiceAsync(tracked);
+            }
+            finally
+            {
+                _serviceLock.Release();
+            }
+
+            _ = PollLoop(tracked, settings);
         }
 
         private async Task PollLoop(TrackedJourney tracked, Settings settings)
         {
-            await PollOnce(tracked, settings);
-
             var intervalSeconds = Math.Max(Preferences.Get(AppPreferences.RefreshIntervalSeconds, 30), 15);
 
             try
             {
+                await PollOnce(tracked, settings);
+
                 while (!tracked.Cts.IsCancellationRequested)
                 {
                     await Task.Delay(TimeSpan.FromSeconds(intervalSeconds), tracked.Cts.Token);
                     await PollOnce(tracked, settings);
                 }
             }
-            catch (TaskCanceledException)
+            catch (OperationCanceledException)
             {
+            }
+            catch (Exception ex)
+            {
+                // A fire-and-forget loop must never crash the app; the next start will retry.
+                System.Diagnostics.Debug.WriteLine($"Journey tracking for {tracked.TrainCode} stopped: {ex}");
             }
         }
 
@@ -85,30 +136,34 @@ namespace iRailTracker.Service
             if (tracked.Cts.IsCancellationRequested)
                 return;
 
+            var info = tracked.Info;
             var stationService = new StationService();
-            var movements = await stationService.GetTrainMovementsAsync(settings, tracked.TrainCode, _ => { });
+            var movements = await stationService.GetTrainMovementsAsync(settings, info.TrainCode, info.TrainDate, _ => { });
 
             if (movements.Count == 0 || tracked.Cts.IsCancellationRequested)
                 return;
 
-            var destinationStop = movements.FirstOrDefault(m => m.LocationType == "D");
+            var now = IrishTime.Now;
 
-            if (destinationStop is not null && HasJourneyEnded(destinationStop))
+            if (TrainMovementAnalysis.HasJourneyEnded(movements, now, info.TrainDate, JourneyEndGrace))
             {
-                await StopTracking(tracked.TrainCode);
+                await StopTracking(info.TrainCode);
                 return;
             }
 
-            var currentStop = TrainMovementAnalysis.DetermineCurrentStop(movements, DateTime.Now);
-            var currentLocation = currentStop?.LocationFullName ?? tracked.Origin;
-            var lateMinutes = await GetOfficialDelayMinutes(stationService, settings, tracked, movements);
+            var currentStop = TrainMovementAnalysis.DetermineCurrentStop(movements, now, info.TrainDate);
+            var currentLocation = currentStop?.LocationFullName ?? info.Origin;
+            var lateMinutes = await GetOfficialDelayMinutes(stationService, settings, info, movements, now);
+
+            if (tracked.Cts.IsCancellationRequested)
+                return;
 
             await ShowStatusNotification(tracked, currentLocation, lateMinutes);
 
             if (Preferences.Get(AppPreferences.DelayNotificationsEnabled, false))
             {
                 var threshold = Preferences.Get(AppPreferences.DelayNotificationThresholdMinutes, 5);
-                var delay = new TrainDelayInfo(tracked.TrainCode, tracked.Origin, tracked.Destination, lateMinutes);
+                var delay = new TrainDelayInfo(info.TrainCode, info.Origin, info.Destination, lateMinutes);
                 await DelayNotificationService.Instance.CheckAndNotify(delay, threshold);
             }
         }
@@ -119,32 +174,53 @@ namespace iRailTracker.Service
         /// tracking notification always agrees with what's shown there.
         /// </summary>
         private static async Task<int> GetOfficialDelayMinutes(
-            StationService stationService, Settings settings, TrackedJourney tracked, List<TrainMovement> movements)
+            StationService stationService, Settings settings, TrackedJourneyInfo info, List<TrainMovement> movements, DateTime now)
         {
-            var nextStop = TrainMovementAnalysis.DetermineNextStop(movements, DateTime.Now);
+            var nextStop = TrainMovementAnalysis.DetermineNextStop(movements, now, info.TrainDate);
             if (nextStop is null)
                 return 0;
 
             var board = await stationService.GetTrainServicesAsync(settings, nextStop.LocationCode, _ => { });
-            var match = board.FirstOrDefault(s => s.Traincode.Trim() == tracked.TrainCode.Trim());
+            var match = board.FirstOrDefault(s => s.Traincode.Trim() == info.TrainCode.Trim());
 
             return match?.Late ?? 0;
         }
 
-        private static bool HasJourneyEnded(TrainMovement destinationStop)
+        private void Save()
         {
-            if (!DateTime.TryParseExact(destinationStop.ExpectedArrival, "HH:mm:ss",
-                    System.Globalization.CultureInfo.InvariantCulture,
-                    System.Globalization.DateTimeStyles.None, out var expectedArrival))
-            {
-                return false;
-            }
-
-            var now = DateTime.Now;
-            var arrivalToday = now.Date + expectedArrival.TimeOfDay;
-
-            return now - arrivalToday > TimeSpan.FromMinutes(5);
+            var infos = _tracked.Values.Select(t => t.Info).ToList();
+            Preferences.Set(StorageKey, JsonSerializer.Serialize(infos, TrackingJsonContext.Default.ListTrackedJourneyInfo));
         }
+
+        private static List<TrackedJourneyInfo> LoadSaved()
+        {
+            var json = Preferences.Get(StorageKey, string.Empty);
+            if (string.IsNullOrEmpty(json))
+                return [];
+
+            try
+            {
+                return JsonSerializer.Deserialize(json, TrackingJsonContext.Default.ListTrackedJourneyInfo) ?? [];
+            }
+            catch (JsonException)
+            {
+                return [];
+            }
+        }
+
+        private static NotificationRequest BuildNotification(TrackedJourney tracked, string description) => new()
+        {
+            NotificationId = tracked.NotificationId,
+            Title = $"{tracked.Info.Origin} → {tracked.Info.Destination}",
+            Description = description,
+            ReturningData = tracked.TrainCode,
+            Android =
+            {
+                ChannelId = "journey_tracking",
+                Ongoing = true,
+                AutoCancel = false
+            }
+        };
 
         private static async Task ShowStatusNotification(TrackedJourney tracked, string currentLocation, int lateMinutes)
         {
@@ -155,21 +231,7 @@ namespace iRailTracker.Service
                 _ => $"Near {currentLocation} · On time"
             };
 
-            var notification = new NotificationRequest
-            {
-                NotificationId = tracked.NotificationId,
-                Title = $"{tracked.Origin} → {tracked.Destination}",
-                Description = statusText,
-                ReturningData = tracked.TrainCode,
-                Android =
-                {
-                    ChannelId = "journey_tracking",
-                    Ongoing = true,
-                    AutoCancel = false
-                }
-            };
-
-            await LocalNotificationCenter.Current.Show(notification);
+            await LocalNotificationCenter.Current.Show(BuildNotification(tracked, statusText));
         }
 
         private static async Task StartForegroundServiceAsync(TrackedJourney tracked)
@@ -178,22 +240,17 @@ namespace iRailTracker.Service
             if (LocalNotificationCenter.Current is not IAndroidNotificationService androidService)
                 return;
 
+            // Android 15+ limits dataSync foreground services to about 6 hours a day, which a long
+            // day of tracking can exceed. specialUse (Android 14+) has no time limit; older
+            // versions keep dataSync. Both types are declared in AndroidManifest.xml.
+            var serviceType = OperatingSystem.IsAndroidVersionAtLeast(34)
+                ? AndroidForegroundServiceType.SpecialUse
+                : AndroidForegroundServiceType.DataSync;
+
             await androidService.StartForegroundServiceAsync(new AndroidForegroundServiceRequest
             {
-                ForegroundServiceType = AndroidForegroundServiceType.DataSync,
-                Notification = new NotificationRequest
-                {
-                    NotificationId = tracked.NotificationId,
-                    Title = $"{tracked.Origin} → {tracked.Destination}",
-                    Description = "Tracking journey…",
-                    ReturningData = tracked.TrainCode,
-                    Android =
-                    {
-                        ChannelId = "journey_tracking",
-                        Ongoing = true,
-                        AutoCancel = false
-                    }
-                }
+                ForegroundServiceType = serviceType,
+                Notification = BuildNotification(tracked, "Tracking journey…")
             });
 #else
             await Task.CompletedTask;
@@ -209,5 +266,10 @@ namespace iRailTracker.Service
             await Task.CompletedTask;
 #endif
         }
+    }
+
+    [JsonSerializable(typeof(List<JourneyTrackingService.TrackedJourneyInfo>))]
+    internal partial class TrackingJsonContext : JsonSerializerContext
+    {
     }
 }

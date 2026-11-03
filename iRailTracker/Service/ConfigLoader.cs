@@ -36,7 +36,7 @@ namespace iRailTracker.Service
                 // Fetch station list
                 var stationService = new StationService();
                 var stationList = await stationService.GetAllStationsAsync(settings, errorCallback);
-                if (stationList == null)
+                if (stationList.Count == 0)
                 {
                     errorCallback?.Invoke("Failed to load station list.");
                     return;

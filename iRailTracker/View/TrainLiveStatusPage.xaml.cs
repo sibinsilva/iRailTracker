@@ -16,6 +16,7 @@ public partial class TrainLiveStatusPage : ContentPage
     private readonly IReadOnlyList<Station> _stations;
     private IDispatcherTimer? _blinkTimer;
     private MemoryLayer? _currentStationLayer;
+    private bool _mapBuilt;
 
     // OpenStreetMap's tile usage policy requires a User-Agent that identifies
     // the app; Mapsui's generic default is blocked with HTTP 403.
@@ -36,13 +37,23 @@ public partial class TrainLiveStatusPage : ContentPage
         if (BindingContext is not TrainJourney journey)
             return;
 
+        TrainMapControl.Info += OnMapInfo;
+
+        // OnAppearing runs again every time the page comes back into view; build the layers only
+        // once so tiles and pins aren't stacked on top of each other.
+        if (_mapBuilt)
+        {
+            StartBlinking();
+            return;
+        }
+
+        _mapBuilt = true;
+
         var map = TrainMapControl.Map;
         map.Layers.Add(OpenStreetMap.CreateTileLayer(OsmUserAgent));
 
-        TrainMapControl.Info += OnMapInfo;
-
         var allPoints = new List<MPoint>();
-        var movements = await FetchMovementsAsync(journey.TrainCode);
+        var movements = await FetchMovementsAsync(journey.TrainCode, journey.TrainDate);
 
         if (movements.Count > 0)
         {
@@ -158,7 +169,7 @@ public partial class TrainLiveStatusPage : ContentPage
         };
     }
 
-    private async Task<List<TrainMovement>> FetchMovementsAsync(string trainCode)
+    private async Task<List<TrainMovement>> FetchMovementsAsync(string trainCode, DateTime trainDate)
     {
         try
         {
@@ -168,7 +179,7 @@ public partial class TrainLiveStatusPage : ContentPage
 
             var stationService = new StationService();
             return await stationService.GetTrainMovementsAsync(
-                settingsService.Data, trainCode, _ => { });
+                settingsService.Data, trainCode, trainDate, _ => { });
         }
         catch
         {
@@ -234,7 +245,7 @@ public partial class TrainLiveStatusPage : ContentPage
 
     private void StartBlinking()
     {
-        if (_currentStationLayer is null)
+        if (_currentStationLayer is null || _blinkTimer is not null)
             return;
 
         _blinkTimer = Dispatcher.CreateTimer();

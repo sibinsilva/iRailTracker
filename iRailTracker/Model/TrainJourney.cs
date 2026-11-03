@@ -5,6 +5,8 @@ namespace iRailTracker.Model
     public partial class TrainJourney : ObservableObject
     {
         public string TrainCode { get; set; } = string.Empty;
+        /// <summary>Date the train's service started (Irish Rail's Traindate); needed to look up its movements.</summary>
+        public DateTime TrainDate { get; set; } = DateTime.Today;
         public string Origin { get; set; } = string.Empty;
         public string Destination { get; set; } = string.Empty;
         public string CurrentStatus { get; set; } = string.Empty;

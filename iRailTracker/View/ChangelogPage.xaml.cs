@@ -9,6 +9,9 @@ public partial class ChangelogPage : ContentPage
             "⭐ Favourite station quick access",
             "🔄 Auto-refresh for real-time updates",
             "⚙️ Configurable refresh intervals",
+            "🗺️ Map tiles load again on the live status page",
+            "🔔 Tracked journeys resume after the app is closed",
+            "🌙 Correct status for trains running past midnight",
         ]),
         new("1.0", [
             "🎉 Initial Release",

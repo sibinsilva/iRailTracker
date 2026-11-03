@@ -1,159 +1,112 @@
 ﻿using iRailTracker.Model;
-using RestSharp;
 using System.Diagnostics.CodeAnalysis;
-using System.Xml;
 using System.Xml.Serialization;
 
 namespace iRailTracker.Service
 {
+    /// <summary>
+    /// Client for the Irish Rail realtime API. All instances share one HttpClient, so creating a
+    /// StationService is cheap and doesn't open new connections.
+    /// Every method reports failures once through <c>errorCallback</c> and returns an empty list;
+    /// none of them throw.
+    /// </summary>
     public class StationService
     {
-        private readonly RestClient _restClient;
+        private static readonly HttpClient SharedClient = new() { Timeout = TimeSpan.FromSeconds(20) };
 
-        public StationService()
+        private readonly HttpClient _httpClient;
+
+        public StationService() : this(SharedClient)
         {
-            _restClient = new RestClient();
+        }
+
+        public StationService(HttpClient httpClient)
+        {
+            _httpClient = httpClient;
         }
 
         [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(StationCollection))]
         [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Station))]
         public async Task<List<Station>> GetAllStationsAsync(Settings settings, Action<string>? errorCallback)
         {
-            string url = settings.GetAllStationsUrl;
-            var request = new RestRequest(url, Method.Get);
-
-            try
-            {
-                var response = await _restClient.ExecuteAsync(request);
-
-                if (!response.IsSuccessful)
-                {
-                    var errorMsg = $"Error fetching data from {url}. Status: {response.StatusCode}, Message: {response.ErrorMessage}";
-                    errorCallback?.Invoke(errorMsg);
-                    throw new Exception(errorMsg);
-                }
-
-                string? responseXml = response.Content;
-
-                if (string.IsNullOrEmpty(responseXml))
-                {
-                    errorCallback?.Invoke($"Empty response from {url}.");
-                    throw new Exception($"Empty response from {url}.");
-                }
-
-                XmlSerializer serializer = new XmlSerializer(typeof(StationCollection));
-
-                using (StringReader reader = new StringReader(responseXml))
-                {
-                    StationCollection? stationCollection = serializer.Deserialize(reader) as StationCollection;
-                    return stationCollection?.Stations ?? [];
-                }
-            }
-            catch (XmlException xmlEx)
-            {
-                var errorMsg = $"XML deserialization error: {xmlEx.Message}";
-                errorCallback?.Invoke(errorMsg);
-                throw new Exception(errorMsg);
-            }
-            catch (Exception ex)
-            {
-                var errorMsg = $"Unexpected error: {ex.Message}";
-                errorCallback?.Invoke(errorMsg);
-                throw new Exception(errorMsg);
-            }
+            var result = await FetchXmlAsync<StationCollection>(settings.GetAllStationsUrl, errorCallback);
+            return result?.Stations ?? [];
         }
 
         [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(TrainService))]
         [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(StationData))]
         public async Task<List<StationData>> GetTrainServicesAsync(Settings settings, string stationCode, Action<string>? errorCallback)
         {
-            string url = settings.GetServiceByStationCodeURL + stationCode;
-            var request = new RestRequest(url, Method.Get);
+            var url = settings.GetServiceByStationCodeURL + Uri.EscapeDataString(stationCode);
+            var result = await FetchXmlAsync<TrainService>(url, errorCallback);
+            return result?.ObjStationData ?? [];
+        }
 
+        /// <param name="trainDate">The date the train's service started (the station board's
+        /// Traindate), not today's date: trains running past midnight keep their original date.</param>
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(TrainMovementsResponse))]
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(TrainMovement))]
+        public async Task<List<TrainMovement>> GetTrainMovementsAsync(Settings settings, string trainCode, DateTime trainDate, Action<string>? errorCallback)
+        {
+            var url = $"{settings.GetTrainMovementsUrl}?TrainId={Uri.EscapeDataString(trainCode.Trim())}" +
+                      $"&TrainDate={Uri.EscapeDataString(IrishTime.FormatTrainDate(trainDate))}";
+            var result = await FetchXmlAsync<TrainMovementsResponse>(url, errorCallback);
+            return result?.Movements ?? [];
+        }
+
+        /// <summary>Deserializes an Irish Rail API XML response. Returns null if it isn't valid.</summary>
+        public static T? ParseXml<T>(string xml) where T : class
+        {
             try
             {
-                var response = await _restClient.ExecuteAsync(request);
-
-                if (!response.IsSuccessful)
-                {
-                    var errorMsg = $"Error fetching data from {url}. Status: {response.StatusCode}, Message: {response.ErrorMessage}";
-                    errorCallback?.Invoke(errorMsg);
-                    throw new Exception(errorMsg);
-                }
-
-                string? responseXml = response.Content;
-
-                if (string.IsNullOrEmpty(responseXml))
-                {
-                    errorCallback?.Invoke($"Empty response from {url}.");
-                    throw new Exception($"Empty response from {url}.");
-                }
-
-                XmlSerializer serializer = new XmlSerializer(typeof(TrainService));
-
-                using (StringReader reader = new StringReader(responseXml))
-                {
-                    TrainService? trainService = serializer.Deserialize(reader) as TrainService;
-                    return trainService?.ObjStationData ?? [];
-                }
+                using var reader = new StringReader(xml);
+                return new XmlSerializer(typeof(T)).Deserialize(reader) as T;
             }
-            catch (XmlException xmlEx)
+            catch (InvalidOperationException)
             {
-                var errorMsg = $"XML deserialization error: {xmlEx.Message}";
-                errorCallback?.Invoke(errorMsg);
-                throw new Exception(errorMsg);
-            }
-            catch (Exception ex)
-            {
-                var errorMsg = $"Unexpected error: {ex.Message}";
-                errorCallback?.Invoke(errorMsg);
-                throw new Exception(errorMsg);
+                // XmlSerializer wraps malformed or unexpected XML in InvalidOperationException
+                return null;
             }
         }
 
-        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(TrainMovementsResponse))]
-        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(TrainMovement))]
-        public async Task<List<TrainMovement>> GetTrainMovementsAsync(Settings settings, string trainCode, Action<string>? errorCallback)
+        private async Task<T?> FetchXmlAsync<T>(string url, Action<string>? errorCallback) where T : class
         {
-            string url = $"{settings.GetTrainMovementsUrl}?TrainId={trainCode}&TrainDate={DateTime.Now:dd MMM yyyy}";
-            var request = new RestRequest(url, Method.Get);
+            string xml;
 
             try
             {
-                var response = await _restClient.ExecuteAsync(request);
+                using var response = await _httpClient.GetAsync(url);
 
-                if (!response.IsSuccessful)
+                if (!response.IsSuccessStatusCode)
                 {
-                    errorCallback?.Invoke($"Error fetching movements from {url}. Status: {response.StatusCode}");
-                    return [];
+                    errorCallback?.Invoke($"Error fetching data from {url}. Status: {(int)response.StatusCode} {response.ReasonPhrase}");
+                    return null;
                 }
 
-                string? responseXml = response.Content;
-
-                if (string.IsNullOrEmpty(responseXml))
-                {
-                    errorCallback?.Invoke($"Empty response from {url}.");
-                    return [];
-                }
-
-                XmlSerializer serializer = new XmlSerializer(typeof(TrainMovementsResponse));
-
-                using (StringReader reader = new StringReader(responseXml))
-                {
-                    TrainMovementsResponse? result = serializer.Deserialize(reader) as TrainMovementsResponse;
-                    return result?.Movements ?? [];
-                }
+                xml = await response.Content.ReadAsStringAsync();
             }
-            catch (XmlException xmlEx)
+            catch (TaskCanceledException)
             {
-                errorCallback?.Invoke($"XML deserialization error: {xmlEx.Message}");
-                return [];
+                errorCallback?.Invoke($"Request timed out: {url}");
+                return null;
             }
-            catch (Exception ex)
+            catch (HttpRequestException ex)
             {
-                errorCallback?.Invoke($"Unexpected error: {ex.Message}");
-                return [];
+                errorCallback?.Invoke($"Network error fetching {url}: {ex.Message}");
+                return null;
             }
+
+            if (string.IsNullOrWhiteSpace(xml))
+            {
+                errorCallback?.Invoke($"Empty response from {url}.");
+                return null;
+            }
+
+            var result = ParseXml<T>(xml);
+            if (result is null)
+                errorCallback?.Invoke($"Unexpected response format from {url}.");
+
+            return result;
         }
     }
 }

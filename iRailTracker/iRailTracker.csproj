@@ -94,7 +94,7 @@
   <!-- =============================== -->
   <!-- 🔷 DISPLAY VERSION -->
   <!-- =============================== -->
-  <Target Name="ComputeDisplayVersion" BeforeTargets="PrepareForBuild" DependsOnTargets="ComputePatchFromTag">
+  <Target Name="ComputeDisplayVersion" BeforeTargets="_GetAndroidPackageName;PrepareForBuild" DependsOnTargets="ComputePatchFromTag">
     <PropertyGroup>
       <ApplicationDisplayVersion>$(VersionMajor).$(VersionMinor).$(VersionPatch)</ApplicationDisplayVersion>
     </PropertyGroup>
@@ -121,6 +121,8 @@
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net10.0-android|AnyCPU'">
     <AndroidPackageFormat>apk</AndroidPackageFormat>
     <AndroidKeyStore>False</AndroidKeyStore>
+    <!-- Ship only 64-bit ARM native code in release APKs (all current phones); roughly halves the size -->
+    <RuntimeIdentifiers>android-arm64</RuntimeIdentifiers>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net10.0|AnyCPU'">
@@ -171,9 +173,7 @@
     <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.41" />
     <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="10.0.41" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.3" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="Plugin.LocalNotification" Version="14.1.1" />
-    <PackageReference Include="RestSharp" Version="113.1.0" />
   </ItemGroup>
 
   <ItemGroup>

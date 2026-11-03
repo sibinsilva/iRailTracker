@@ -74,5 +74,13 @@ namespace iRailTracker
 
             workManager.EnqueueUniquePeriodicWork(WorkName, ExistingPeriodicWorkPolicy.Update!, request);
         }
+
+        /// <summary>Runs the check once now (Settings → Check now), e.g. to test the setup.</summary>
+        public static void RunNow()
+        {
+            var request = OneTimeWorkRequest.Builder.From<CommuteWorker>().Build();
+            WorkManager.GetInstance(Android.App.Application.Context)
+                .EnqueueUniqueWork("commute_check_now", ExistingWorkPolicy.Replace!, request);
+        }
     }
 }

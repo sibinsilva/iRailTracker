@@ -29,6 +29,8 @@ namespace iRailTracker.ViewModel
         private readonly RouteFilterService _routeFilter;
         private readonly object _journeysLock = new();
         private List<TrainJourney> _allJourneys = new();
+        private int _searchGeneration;
+        private DateTime _lastRefreshUtc = DateTime.MinValue;
         private string _selectedDirection = DirectionChip.All;
         private ObservableCollection<string> _stationOptions;
         private ObservableCollection<TrainJourney> _trainJourneys;
@@ -438,7 +440,11 @@ namespace iRailTracker.ViewModel
                 var origin = stationList.FirstOrDefault(s => s.StationCode == stationCode);
                 if (destination is not null && origin is not null && destination.StationCode != origin.StationCode)
                 {
-                    // Show matching trains as each route is confirmed instead of after all of them
+                    // Show matching trains as each route is confirmed instead of after all of them.
+                    // The callbacks are queued on the UI thread and can run after the final list
+                    // below has replaced this one, which added trains twice; the generation check
+                    // drops those late callbacks.
+                    var generation = ++_searchGeneration;
                     _allJourneys = new List<TrainJourney>();
                     TrainJourneys = new ObservableCollection<TrainJourney>();
                     NoJourneyFound = false;
@@ -446,8 +452,22 @@ namespace iRailTracker.ViewModel
 
                     journeyList = await _routeFilter.FilterCallingAtAsync(
                         _settings.Data, journeyList, origin, destination, _stationService,
-                        onKept: train => RunOnUiThread(() => InsertByDueTime(ToJourney(train))));
+                        onKept: train => RunOnUiThread(() =>
+                        {
+                            if (generation == _searchGeneration)
+                                InsertByDueTime(ToJourney(train));
+                        }));
                 }
+
+                // The final list replaces any streamed one; late streamed callbacks are ignored
+                _searchGeneration++;
+                _lastRefreshUtc = DateTime.UtcNow;
+
+                // One card per train, whatever the API or filter returned
+                journeyList = journeyList
+                    .GroupBy(t => (t.Traincode.Trim(), t.Traindate.Trim()))
+                    .Select(g => g.First())
+                    .ToList();
 
                 if (journeyList.Count > 0)
                 {
@@ -493,6 +513,8 @@ namespace iRailTracker.ViewModel
         {
             lock (_journeysLock)
             {
+                if (_allJourneys.Any(j => j.TrainCode.Trim() == journey.TrainCode.Trim() && j.TrainDate == journey.TrainDate))
+                    return;
                 _allJourneys.Add(journey);
                 if (!MatchesDirection(journey))
                     return;
@@ -777,6 +799,16 @@ namespace iRailTracker.ViewModel
             // Tracking may have stopped while another page was open (notification button, or the
             // train arrived); messages aren't received then, so re-sync the bells.
             SyncTrackingState();
+
+            // Messages aren't received while another page is open: pick up commute changes made
+            // in Settings, and refresh a board that went stale meanwhile
+            OnPropertyChanged(nameof(CommuteChipText));
+            OnPropertyChanged(nameof(HasCommute));
+            if (EnableListView && !IsBusy &&
+                DateTime.UtcNow - _lastRefreshUtc > TimeSpan.FromSeconds(GetRefreshIntervalSeconds()))
+            {
+                _ = ExecuteTrainServiceSearch(waitForLock: true, bypassCache: true);
+            }
 
             if (_isRegisteredForAutoRefreshMessages)
                 return;

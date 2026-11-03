@@ -262,6 +262,21 @@ namespace iRailTracker.ViewModel
                 ? $"Checking every 15 min, {_commute.WindowStart:hh\\:mm}–{_commute.WindowEnd:hh\\:mm} on the selected days."
                 : "Off";
 
+        public ICommand CheckCommuteNowCommand => new Command(() =>
+        {
+            if (!_commute.IsComplete)
+            {
+                ShowError("Choose the stations you travel from and to first.");
+                return;
+            }
+#if ANDROID
+            CommuteScheduler.RunNow();
+#endif
+            ShowError(_commute.IsActiveAt(IrishTime.Now)
+                ? "Checking now. You'll get a notification if a train in your window is running late."
+                : "Checking now, but it's outside your commute window or days, so no alerts will be sent.");
+        });
+
         public ICommand ChooseCommuteFromCommand => new Command(async () => await ChooseCommuteStationAsync(isFrom: true));
         public ICommand ChooseCommuteToCommand => new Command(async () => await ChooseCommuteStationAsync(isFrom: false));
 

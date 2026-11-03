@@ -162,6 +162,22 @@ public class AppHomeViewModelSearchTests
     }
 
     [Fact]
+    public async Task DestinationFilter_TerminatingTrain_ShownOnce_AcrossRefreshes()
+    {
+        // 2.62.0 showed P223 (terminating at the destination) twice
+        var (vm, api, _) = Create();
+        api.BoardXml = Board(("P223", "Newbridge", 10), ("P223", "Newbridge", 10));
+
+        vm.SelectedStation = "Adamstown";
+        await vm.ExecuteTrainServiceSearch(waitForLock: true);
+        vm.SelectedDestination = "Newbridge";
+        await vm.ExecuteTrainServiceSearch(waitForLock: true);
+        await vm.ExecuteTrainServiceSearch(waitForLock: true, bypassCache: true);
+
+        Assert.Equal(["P223"], vm.TrainJourneys.Select(j => j.TrainCode));
+    }
+
+    [Fact]
     public async Task DestinationFilter_KeepsOnlyTrainsCallingThere_SortedByDueTime()
     {
         var (vm, api, _) = Create();

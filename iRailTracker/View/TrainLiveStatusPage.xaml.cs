@@ -16,7 +16,10 @@ public partial class TrainLiveStatusPage : ContentPage
     private readonly IReadOnlyList<Station> _stations;
     private IDispatcherTimer? _blinkTimer;
     private MemoryLayer? _currentStationLayer;
+    private MyLocationLayer? _myLocationLayer;
+    private IDispatcherTimer? _liveTimer;
     private bool _mapBuilt;
+    private bool _refreshing;
 
     // OpenStreetMap's tile usage policy requires a User-Agent that identifies
     // the app; Mapsui's generic default is blocked with HTTP 403.
@@ -44,6 +47,8 @@ public partial class TrainLiveStatusPage : ContentPage
         if (_mapBuilt)
         {
             StartBlinking();
+            StartLiveUpdates(journey);
+            await RefreshLivePositionAsync(journey);
             return;
         }
 
@@ -57,6 +62,9 @@ public partial class TrainLiveStatusPage : ContentPage
 
         if (movements.Count > 0)
         {
+            var currentStop = TrainMovementAnalysis.DetermineCurrentStop(movements, IrishTime.Now, journey.TrainDate);
+            ShowLiveStatus(currentStop);
+
             foreach (var movement in movements.OrderBy(m => m.LocationOrder))
             {
                 var station = FindStation(movement.LocationCode);
@@ -70,8 +78,10 @@ public partial class TrainLiveStatusPage : ContentPage
 
                 bool isOrigin = movement.LocationType == "O";
                 bool isDestination = movement.LocationType == "D";
-                bool isCurrent = !string.IsNullOrWhiteSpace(journey.LastLocation) &&
-                    IsCurrentStation(movement.LocationFullName, journey.LastLocation);
+                bool isCurrent = currentStop is not null
+                    ? ReferenceEquals(movement, currentStop)
+                    : !string.IsNullOrWhiteSpace(journey.LastLocation) &&
+                      IsCurrentStation(movement.LocationFullName, journey.LastLocation);
 
                 if (isCurrent)
                     AddCurrentStationPin(point, map);
@@ -111,14 +121,135 @@ public partial class TrainLiveStatusPage : ContentPage
         map.Navigator.ZoomToBox(extent, MBoxFit.Fit);
 
         StartBlinking();
+        StartLiveUpdates(journey);
+        await UpdateMyLocationAsync();
     }
 
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
         StopBlinking();
+        StopLiveUpdates();
         TrainMapControl.Info -= OnMapInfo;
     }
+
+    #region Live updates
+
+    /// <summary>Re-polls the train's movements on the user's refresh interval while the page is visible.</summary>
+    private void StartLiveUpdates(TrainJourney journey)
+    {
+        if (_liveTimer is not null)
+            return;
+
+        var seconds = Math.Max(Preferences.Get(AppPreferences.RefreshIntervalSeconds, 30), 15);
+        _liveTimer = Dispatcher.CreateTimer();
+        _liveTimer.Interval = TimeSpan.FromSeconds(seconds);
+        _liveTimer.Tick += async (_, _) => await RefreshLivePositionAsync(journey);
+        _liveTimer.Start();
+    }
+
+    private void StopLiveUpdates()
+    {
+        _liveTimer?.Stop();
+        _liveTimer = null;
+    }
+
+    private async Task RefreshLivePositionAsync(TrainJourney journey)
+    {
+        if (_refreshing)
+            return;
+
+        _refreshing = true;
+        try
+        {
+            var movements = await FetchMovementsAsync(journey.TrainCode, journey.TrainDate);
+            if (movements.Count > 0)
+            {
+                var currentStop = TrainMovementAnalysis.DetermineCurrentStop(movements, IrishTime.Now, journey.TrainDate);
+                ShowLiveStatus(currentStop);
+
+                var station = currentStop is null ? null : FindStation(currentStop.LocationCode);
+                if (station is not null)
+                    MoveCurrentPin(ToMapPoint(station));
+            }
+
+            await UpdateMyLocationAsync();
+        }
+        finally
+        {
+            _refreshing = false;
+        }
+    }
+
+    private void ShowLiveStatus(TrainMovement? currentStop)
+    {
+        LiveStatusLabel.Text = currentStop is null
+            ? $"Updated {IrishTime.Now:HH:mm:ss}"
+            : $"Near {currentStop.LocationFullName} · updated {IrishTime.Now:HH:mm:ss}";
+        LiveStatusLabel.IsVisible = true;
+    }
+
+    private void MoveCurrentPin(MPoint point)
+    {
+        var map = TrainMapControl.Map;
+
+        if (_currentStationLayer is null)
+        {
+            AddCurrentStationPin(point, map);
+            StartBlinking();
+        }
+        else
+        {
+            var feature = new PointFeature(point);
+            feature["Label"] = "Current";
+            _currentStationLayer.Features = [feature];
+            _currentStationLayer.DataHasChanged();
+        }
+
+        map.RefreshGraphics();
+    }
+
+    /// <summary>
+    /// Shows the user's own position if location permission was already granted elsewhere in the
+    /// app (Nearby Station). Never prompts from this page.
+    /// </summary>
+    private async Task UpdateMyLocationAsync()
+    {
+        try
+        {
+            if (await Permissions.CheckStatusAsync<Permissions.LocationWhenInUse>() != PermissionStatus.Granted)
+                return;
+
+            var location = await Geolocation.GetLastKnownLocationAsync();
+            if (location is null)
+                return;
+
+            var (x, y) = SphericalMercator.FromLonLat(location.Longitude, location.Latitude);
+            var point = new MPoint(x, y);
+
+            if (_myLocationLayer is null)
+            {
+                _myLocationLayer = new MyLocationLayer(TrainMapControl.Map, point) { Name = "MyLocation" };
+                TrainMapControl.Map.Layers.Add(_myLocationLayer);
+            }
+            else
+            {
+                _myLocationLayer.UpdateMyLocation(point, true);
+            }
+        }
+        catch (Exception ex) when (ex is FeatureNotSupportedException or FeatureNotEnabledException or PermissionException)
+        {
+            // Location is optional on this page.
+        }
+    }
+
+    private static MPoint ToMapPoint(Station station)
+    {
+        var (x, y) = SphericalMercator.FromLonLat(station.StationLongitude, station.StationLatitude);
+        return new MPoint(x, y);
+    }
+
+    #endregion
 
     private void OnMapInfo(object? sender, MapInfoEventArgs e)
     {

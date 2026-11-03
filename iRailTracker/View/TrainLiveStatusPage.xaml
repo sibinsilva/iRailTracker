@@ -11,6 +11,8 @@
             <Label Text="{Binding Origin}" FontAttributes="Bold" FontSize="16" />
             <Label Text="{Binding Destination}" FontAttributes="Bold" FontSize="16" />
             <Label Text="{Binding CurrentStatus}" FontSize="13" TextColor="{AppThemeBinding Light={StaticResource SubtleTextLight}, Dark={StaticResource SubtleTextDark}}" />
+            <Label x:Name="LiveStatusLabel" IsVisible="False" FontSize="13" FontAttributes="Bold"
+                   TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
         </VerticalStackLayout>
 
         <Grid Grid.Row="1">

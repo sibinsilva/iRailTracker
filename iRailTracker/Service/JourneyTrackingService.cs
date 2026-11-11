@@ -257,8 +257,13 @@ namespace iRailTracker.Service
             // Android 15+ limits dataSync foreground services to about 6 hours a day, which a long
             // day of tracking can exceed. specialUse (Android 14+) has no time limit; older
             // versions keep dataSync. Both types are declared in AndroidManifest.xml.
+            //
+            // Don't use AndroidForegroundServiceType.SpecialUse: Plugin.LocalNotification 14.x defines
+            // it as 0x80000000, but Android's value is 0x40000000. The plugin passes the number
+            // straight to startForeground(), which rejects it; the plugin swallows that and stops the
+            // service, and Android then kills the app for not calling startForeground() in time.
             var serviceType = OperatingSystem.IsAndroidVersionAtLeast(34)
-                ? AndroidForegroundServiceType.SpecialUse
+                ? (AndroidForegroundServiceType)(int)global::Android.Content.PM.ForegroundService.TypeSpecialUse
                 : AndroidForegroundServiceType.DataSync;
 
             await androidService.StartForegroundServiceAsync(new AndroidForegroundServiceRequest

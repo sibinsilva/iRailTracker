@@ -9,6 +9,7 @@ public partial class ChangelogPage : ContentPage
             "🧳 \"My commute\" shortcut on Home",
             "📱 Choose the station for each widget, plus a new one-row widget",
             "♿ Better screen-reader support",
+            "🐞 Fix: the app closed when you tapped the bell to track a train",
         ]),
         new("2.61", [
             "🧭 Direction chips (Northbound, Southbound, …) and a DART badge on the board",

@@ -221,6 +221,26 @@
                 </VerticalStackLayout>
             </Border>
 
+            <!-- APP UPDATES (sideloaded APK only) -->
+            <Border Style="{StaticResource Card}" IsVisible="{Binding IsSelfUpdateSupported}">
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="⬆️  App updates" Style="{StaticResource CardTitle}" VerticalOptions="Center" />
+                        <Switch Grid.Column="1"
+                                IsToggled="{Binding IsUpdateNotificationsEnabled}"
+                                SemanticProperties.Description="Notify me about new versions" />
+                    </Grid>
+                    <Label Text="Get a notification when a new version is released." Style="{StaticResource CardHint}" />
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                        <Label Text="{Binding AppVersionDisplay}" Style="{StaticResource CardHint}" FontSize="12" VerticalOptions="Center" />
+                        <Button Grid.Column="1" Text="Check for updates" Padding="14,6"
+                                Command="{Binding CheckForUpdatesCommand}"
+                                BackgroundColor="{AppThemeBinding Light={StaticResource PageBackgroundLight}, Dark={StaticResource PageBackgroundDark}}"
+                                TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
             <!-- DIAGNOSTICS -->
             <Border Style="{StaticResource Card}">
                 <VerticalStackLayout Spacing="10">

@@ -4,12 +4,15 @@ public partial class ChangelogPage : ContentPage
 {
     private static readonly List<ChangelogEntry> Entries =
     [
+        new("2.63", [
+            "⬆️ In-app updates: get notified about new versions and install them from inside the app (Settings → App updates)",
+            "🐞 Fix: the app closed when you tapped the bell to track a train",
+        ]),
         new("2.62", [
             "🧳 Commute alerts: get notified when a train on your usual journey runs late (Settings)",
             "🧳 \"My commute\" shortcut on Home",
             "📱 Choose the station for each widget, plus a new one-row widget",
             "♿ Better screen-reader support",
-            "🐞 Fix: the app closed when you tapped the bell to track a train",
         ]),
         new("2.61", [
             "🧭 Direction chips (Northbound, Southbound, …) and a DART badge on the board",

@@ -105,16 +105,19 @@ jobs:
           ANDROID_KEYSTORE_PASS: ${{ secrets.ANDROID_KEYSTORE_PASS }}
           ANDROID_KEY_PASS: ${{ secrets.ANDROID_KEY_PASS }}
           ANDROID_KEY_ALIAS: ${{ vars.ANDROID_KEY_ALIAS }}
-        run: >
-          dotnet publish "$PROJECT" -f "$TFM" -c Release -o out-aab
-          -p:ConfirmMajorBump=true
-          -p:AndroidPackageFormat=aab
-          -p:BuildPlayBundle=true
-          -p:AndroidKeyStore=true
-          -p:AndroidSigningKeyStore="$RUNNER_TEMP/release.p12"
-          -p:AndroidSigningKeyAlias="$ANDROID_KEY_ALIAS"
-          -p:AndroidSigningStorePass=env:ANDROID_KEYSTORE_PASS
-          -p:AndroidSigningKeyPass=env:ANDROID_KEY_PASS
+        # Clean first: the APK build compiles in the self-updater (SELF_UPDATE), and its generated
+        # Java stubs would otherwise linger in obj/ and end up in the Play bundle.
+        run: |
+          rm -rf iRailTracker/obj/Release iRailTracker/bin/Release
+          dotnet publish "$PROJECT" -f "$TFM" -c Release -o out-aab \
+            -p:ConfirmMajorBump=true \
+            -p:AndroidPackageFormat=aab \
+            -p:BuildPlayBundle=true \
+            -p:AndroidKeyStore=true \
+            -p:AndroidSigningKeyStore="$RUNNER_TEMP/release.p12" \
+            -p:AndroidSigningKeyAlias="$ANDROID_KEY_ALIAS" \
+            -p:AndroidSigningStorePass=env:ANDROID_KEYSTORE_PASS \
+            -p:AndroidSigningKeyPass=env:ANDROID_KEY_PASS
 
       - name: Remove keystore
         if: always()

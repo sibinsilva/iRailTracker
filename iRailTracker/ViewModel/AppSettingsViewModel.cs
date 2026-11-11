@@ -209,6 +209,31 @@ namespace iRailTracker.ViewModel
 
         #endregion
 
+        #region App updates
+
+        public bool IsSelfUpdateSupported => UpdateService.IsSupported;
+
+        public string AppVersionDisplay => $"Version {AppInfo.Current.VersionString} (build {AppInfo.Current.BuildString})";
+
+        public bool IsUpdateNotificationsEnabled
+        {
+            get => UpdateService.NotificationsEnabled;
+            set
+            {
+                if (value == UpdateService.NotificationsEnabled)
+                    return;
+                UpdateService.NotificationsEnabled = value;
+#if SELF_UPDATE
+                UpdateScheduler.Update(value);
+#endif
+                OnPropertyChanged();
+            }
+        }
+
+        public ICommand CheckForUpdatesCommand => new Command(async () => await View.UpdateFlow.CheckNowAsync());
+
+        #endregion
+
         #region Commute
 
         private CommutePreset _commute;

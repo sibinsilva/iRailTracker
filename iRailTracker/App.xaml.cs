@@ -62,7 +62,19 @@ namespace iRailTracker
             if (_settings.Data is not null)
                 _ = RestoreTrackingAsync(_settings.Data);
 
+#if SELF_UPDATE
+            UpdateScheduler.Update(UpdateService.NotificationsEnabled);
+#endif
+
             var launchDetails = LocalNotificationCenter.LaunchNotificationDetails;
+            var launchedByUpdateNotification =
+                launchDetails is { DidNotificationLaunchApp: true } &&
+                launchDetails.Request?.ReturningData == UpdateService.NotificationTag;
+
+            // A tap on the update notification opens the update dialog itself
+            if (!launchedByUpdateNotification)
+                _ = UpdateFlow.CheckOnStartupAsync();
+
             if (launchDetails is { DidNotificationLaunchApp: true })
                 HandleNotificationTap(launchDetails.Request?.ReturningData);
         }
@@ -100,6 +112,12 @@ namespace iRailTracker
         {
             if (string.IsNullOrEmpty(trainCode))
                 return;
+
+            if (trainCode == UpdateService.NotificationTag)
+            {
+                MainThread.BeginInvokeOnMainThread(() => _ = UpdateFlow.CheckNowAsync());
+                return;
+            }
 
             MainThread.BeginInvokeOnMainThread(async () =>
             {

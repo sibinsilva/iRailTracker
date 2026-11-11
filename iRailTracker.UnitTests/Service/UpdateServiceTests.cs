@@ -75,17 +75,6 @@ public class UpdateServiceTests
         Assert.Equal(expected, UpdateService.IsNewer(UpdateService.ParseRelease(Release)!, Version.Parse(installed)));
 
     [Fact]
-    public void IsCheckDue_ThrottlesAutomaticChecks()
-    {
-        var now = new DateTime(2026, 11, 11, 12, 0, 0, DateTimeKind.Utc);
-
-        Assert.False(UpdateService.IsCheckDue(now.AddHours(-1), now));
-        Assert.True(UpdateService.IsCheckDue(now.AddHours(-6), now));
-        Assert.True(UpdateService.IsCheckDue(DateTime.FromBinary(0), now));
-        Assert.True(UpdateService.IsCheckDue(now.AddDays(1), now)); // clock moved backwards
-    }
-
-    [Fact]
     public void CleanNotes_TruncatesLongNotes()
     {
         var notes = UpdateService.CleanNotes(new string('x', 1000), maxLength: 100);

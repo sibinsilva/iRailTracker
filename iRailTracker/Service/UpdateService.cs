@@ -20,10 +20,9 @@ namespace iRailTracker.Service
         public const string NotificationTag = "app_update";
         public const int NotificationId = 8000;
 
-        /// <summary>Automatic checks (app start, background) run at most this often.</summary>
+        /// <summary>How often the background check runs (the app also checks every time it starts).</summary>
         public static readonly TimeSpan CheckInterval = TimeSpan.FromHours(6);
 
-        private const string LastCheckKey = "update_last_check_utc";
         private const string LastNotifiedKey = "update_last_notified_version";
         public const string NotificationsEnabledKey = "update_notifications_enabled";
 
@@ -63,21 +62,9 @@ namespace iRailTracker.Service
             response.EnsureSuccessStatusCode();
             var json = await response.Content.ReadAsStringAsync(ct);
 
-            Preferences.Set(LastCheckKey, DateTime.UtcNow.ToBinary());
-
             var release = ParseRelease(json);
             return release is not null && IsNewer(release, CurrentVersion) ? release : null;
         }
-
-        /// <summary>True if an automatic check is due (none in the last <see cref="CheckInterval"/>).</summary>
-        public static bool IsCheckDue()
-        {
-            var last = DateTime.FromBinary(Preferences.Get(LastCheckKey, 0L));
-            return IsCheckDue(last, DateTime.UtcNow);
-        }
-
-        public static bool IsCheckDue(DateTime lastCheckUtc, DateTime nowUtc) =>
-            nowUtc - lastCheckUtc >= CheckInterval || lastCheckUtc > nowUtc;
 
         /// <summary>The background check notifies once per version.</summary>
         public static bool WasNotified(ReleaseInfo release) => Preferences.Get(LastNotifiedKey, string.Empty) == release.Tag;

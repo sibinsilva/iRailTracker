@@ -10,10 +10,10 @@ namespace iRailTracker.View
     {
         private static bool _busy;
 
-        /// <summary>Quiet check at app start (at most every few hours); errors are ignored.</summary>
+        /// <summary>Quiet check every time the app starts; errors (e.g. offline) are ignored.</summary>
         public static async Task CheckOnStartupAsync()
         {
-            if (!UpdateService.IsSupported || !UpdateService.IsCheckDue())
+            if (!UpdateService.IsSupported)
                 return;
 
             try

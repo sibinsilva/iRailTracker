@@ -18,7 +18,8 @@ namespace iRailTracker.Service
         {
             try
             {
-                return File.Exists(FilePath) ? Parse(File.ReadAllText(FilePath)) : [];
+                // Repair here too: caches saved by older versions still hold the API's bad coordinates
+                return File.Exists(FilePath) ? StationCoordinates.Repair(Parse(File.ReadAllText(FilePath))) : [];
             }
             catch (IOException)
             {

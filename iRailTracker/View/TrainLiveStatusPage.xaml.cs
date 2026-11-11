@@ -444,8 +444,14 @@ public partial class TrainLiveStatusPage : ContentPage
     /// <param name="fullName">The stop's full name from train movements. Some stations have a
     /// different code there than in the station list (Adamstown: ADMTN vs ADAMS), so fall back to
     /// the name; otherwise those stops were missing from the map and the train pin didn't move.</param>
+    /// <remarks>An exact code match comes first: a name can match several entries (Adamstown is
+    /// ADAMS, ADAMF and ADMTN), and the first of those isn't necessarily the stop the train calls at.</remarks>
     private Station? FindStation(string name, string? fullName = null)
     {
+        var byCode = _stations.FirstOrDefault(s => s.StationCode.Equals(name.Trim(), StringComparison.OrdinalIgnoreCase));
+        if (byCode is not null)
+            return byCode;
+
         if (!string.IsNullOrWhiteSpace(fullName))
         {
             var byName = _stations.FirstOrDefault(s => s.StationDesc.Trim().Equals(fullName.Trim(), StringComparison.OrdinalIgnoreCase));

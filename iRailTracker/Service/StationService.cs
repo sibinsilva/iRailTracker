@@ -30,7 +30,7 @@ namespace iRailTracker.Service
         public async Task<List<Station>> GetAllStationsAsync(Settings settings, Action<string>? errorCallback)
         {
             var result = await FetchXmlAsync<StationCollection>(settings.GetAllStationsUrl, errorCallback);
-            return result?.Stations ?? [];
+            return StationCoordinates.Repair(result?.Stations ?? []);
         }
 
         [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(TrainService))]

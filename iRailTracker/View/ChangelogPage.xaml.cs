@@ -7,6 +7,7 @@ public partial class ChangelogPage : ContentPage
         new("2.63", [
             "⬆️ In-app updates: get notified about new versions and install them from inside the app (Settings → App updates)",
             "🐞 Fix: the app closed when you tapped the bell to track a train",
+            "🗺️ Fix: Adamstown appeared on the map near Edenderry",
         ]),
         new("2.62", [
             "🧳 Commute alerts: get notified when a train on your usual journey runs late (Settings)",

@@ -43,7 +43,7 @@
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
 
-                        <Border Style="{StaticResource Card}" Padding="0" Margin="0,6"
+                        <Border Style="{DynamicResource Card}" Padding="0" Margin="0,6"
                                 SemanticProperties.Hint="Opens the live map for this train">
 
                             <Border.GestureRecognizers>

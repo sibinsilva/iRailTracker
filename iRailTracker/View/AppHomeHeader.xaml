@@ -5,7 +5,7 @@
              xmlns:vm="clr-namespace:iRailTracker.ViewModel"
              xmlns:strings="clr-namespace:iRailTracker.Resources.Strings">
 
-    <Border Style="{StaticResource Card}" Margin="12,12,12,8">
+    <Border Style="{DynamicResource Card}" Margin="12,12,12,8">
 
         <VerticalStackLayout Spacing="12">
 
@@ -14,10 +14,7 @@
                    FontFamily="OpenSansSemibold" />
 
             <!-- MODE TOGGLE (replaces radio buttons, whose unselected circle was nearly invisible in light mode) -->
-            <Border StrokeThickness="0"
-                    StrokeShape="RoundRectangle 12"
-                    Padding="4"
-                    BackgroundColor="{AppThemeBinding Light={StaticResource PageBackgroundLight}, Dark={StaticResource PageBackgroundDark}}">
+            <Border Style="{DynamicResource InsetTrack}">
                 <Grid ColumnDefinitions="*,*" ColumnSpacing="4">
                     <Border x:Name="Find_Station"
                             SemanticProperties.Description="Find stations near me"
@@ -85,7 +82,7 @@
             <!-- STATION + DESTINATION FIELDS (open the searchable list) -->
             <VerticalStackLayout Spacing="8" IsVisible="{Binding IsStationListLoaded}">
 
-                <Border x:Name="stationPicker" Style="{StaticResource FieldBox}"
+                <Border x:Name="stationPicker" Style="{DynamicResource FieldBox}"
                         SemanticProperties.Description="{Binding StationDisplay, StringFormat='From: {0}'}"
                         SemanticProperties.Hint="Opens the station list">
                     <Border.GestureRecognizers>
@@ -101,7 +98,7 @@
                     </Grid>
                 </Border>
 
-                <Border Style="{StaticResource FieldBox}"
+                <Border Style="{DynamicResource FieldBox}"
                         SemanticProperties.Description="{Binding SelectedDestination, StringFormat='Going to: {0}'}"
                         SemanticProperties.Hint="Only list trains that stop at this station">
                     <Border.GestureRecognizers>

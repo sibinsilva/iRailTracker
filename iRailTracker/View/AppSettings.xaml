@@ -24,8 +24,30 @@
     <ScrollView>
         <VerticalStackLayout Padding="12" Spacing="12">
 
+            <!-- APPEARANCE -->
+            <Border Style="{DynamicResource Card}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="🎨  Appearance" Style="{StaticResource CardTitle}" />
+                    <Label Text="Liquid Glass gives cards a frosted, see-through look; Classic is plain and solid." Style="{StaticResource CardHint}" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Border Style="{DynamicResource FieldBox}" Padding="10,2">
+                            <Picker Title="Theme"
+                                    ItemsSource="{Binding ThemeStyleOptions}"
+                                    SelectedIndex="{Binding SelectedThemeStyleIndex}"
+                                    SemanticProperties.Description="Theme" />
+                        </Border>
+                        <Border Grid.Column="1" Style="{DynamicResource FieldBox}" Padding="10,2">
+                            <Picker Title="Mode"
+                                    ItemsSource="{Binding ThemeModeOptions}"
+                                    SelectedIndex="{Binding SelectedThemeModeIndex}"
+                                    SemanticProperties.Description="Light or dark mode" />
+                        </Border>
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
             <!-- AUTO REFRESH -->
-            <Border Style="{StaticResource Card}">
+            <Border Style="{DynamicResource Card}">
                 <VerticalStackLayout Spacing="10">
                     <Grid ColumnDefinitions="*,Auto">
                         <VerticalStackLayout Spacing="2" VerticalOptions="Center">
@@ -39,7 +61,7 @@
                                 VerticalOptions="Center" />
                     </Grid>
 
-                    <Border Style="{StaticResource FieldBox}" Padding="10,2" IsEnabled="{Binding IsAutoRefreshEnabled}">
+                    <Border Style="{DynamicResource FieldBox}" Padding="10,2" IsEnabled="{Binding IsAutoRefreshEnabled}">
                         <Picker Title="Refresh every"
                                 ItemsSource="{Binding RefreshIntervals}"
                                 ItemDisplayBinding="{Binding Display}"
@@ -50,14 +72,14 @@
             </Border>
 
             <!-- FAVOURITE STATIONS -->
-            <Border Style="{StaticResource Card}">
+            <Border Style="{DynamicResource Card}">
                 <VerticalStackLayout Spacing="10">
                     <Label Text="★  Favourite stations" Style="{StaticResource CardTitle}" />
                     <Label Text="Quick-access chips on Home. The first one opens on startup and is shown in the widget."
                            Style="{StaticResource CardHint}" />
 
                     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-                        <Border Style="{StaticResource FieldBox}" Padding="10,2">
+                        <Border Style="{DynamicResource FieldBox}" Padding="10,2">
                             <Picker Title="Add a station"
                                     ItemsSource="{Binding StationNames}"
                                     SelectedIndex="{Binding SelectedStationToAddIndex, Mode=TwoWay}"
@@ -72,7 +94,7 @@
                     <VerticalStackLayout Spacing="6" BindableLayout.ItemsSource="{Binding FavouriteStations}">
                         <BindableLayout.ItemTemplate>
                             <DataTemplate>
-                                <Border Style="{StaticResource Chip}" Padding="14,6">
+                                <Border Style="{DynamicResource Chip}" Padding="14,6">
                                     <Grid ColumnDefinitions="*,Auto">
                                         <Label Text="{Binding .}"
                                                FontSize="15"
@@ -101,7 +123,7 @@
             </Border>
 
             <!-- DELAY NOTIFICATIONS -->
-            <Border Style="{StaticResource Card}">
+            <Border Style="{DynamicResource Card}">
                 <VerticalStackLayout Spacing="10">
                     <Grid ColumnDefinitions="*,Auto">
                         <VerticalStackLayout Spacing="2" VerticalOptions="Center">
@@ -116,7 +138,7 @@
                                 VerticalOptions="Center" />
                     </Grid>
 
-                    <Border Style="{StaticResource FieldBox}" Padding="10,2">
+                    <Border Style="{DynamicResource FieldBox}" Padding="10,2">
                         <Picker Title="Alert when late by"
                                 ItemsSource="{Binding DelayThresholds}"
                                 ItemDisplayBinding="{Binding Display}"
@@ -127,7 +149,7 @@
             </Border>
 
             <!-- COMMUTE ALERTS -->
-            <Border Style="{StaticResource Card}">
+            <Border Style="{DynamicResource Card}">
                 <VerticalStackLayout Spacing="10">
                     <Grid ColumnDefinitions="*,Auto">
                         <VerticalStackLayout Spacing="2" VerticalOptions="Center">
@@ -143,7 +165,7 @@
                     </Grid>
 
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
-                        <Border Style="{StaticResource FieldBox}" SemanticProperties.Description="{Binding CommuteFromDisplay, StringFormat='Commute from {0}'}">
+                        <Border Style="{DynamicResource FieldBox}" SemanticProperties.Description="{Binding CommuteFromDisplay, StringFormat='Commute from {0}'}">
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer Command="{Binding ChooseCommuteFromCommand}" />
                             </Border.GestureRecognizers>
@@ -152,7 +174,7 @@
                                 <Label Text="{Binding CommuteFromDisplay}" FontSize="14" FontFamily="OpenSansSemibold" LineBreakMode="TailTruncation" />
                             </VerticalStackLayout>
                         </Border>
-                        <Border Grid.Column="1" Style="{StaticResource FieldBox}" SemanticProperties.Description="{Binding CommuteToDisplay, StringFormat='Commute to {0}'}">
+                        <Border Grid.Column="1" Style="{DynamicResource FieldBox}" SemanticProperties.Description="{Binding CommuteToDisplay, StringFormat='Commute to {0}'}">
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer Command="{Binding ChooseCommuteToCommand}" />
                             </Border.GestureRecognizers>
@@ -204,7 +226,7 @@
                         </BindableLayout.ItemTemplate>
                     </HorizontalStackLayout>
 
-                    <Border Style="{StaticResource FieldBox}" Padding="10,2">
+                    <Border Style="{DynamicResource FieldBox}" Padding="10,2">
                         <Picker Title="Alert when late by"
                                 ItemsSource="{Binding DelayThresholds}"
                                 ItemDisplayBinding="{Binding Display}"
@@ -215,14 +237,13 @@
                         <Label Text="{Binding CommuteStatus}" Style="{StaticResource CardHint}" FontSize="12" VerticalOptions="Center" />
                         <Button Grid.Column="1" Text="Check now" Padding="14,6"
                                 Command="{Binding CheckCommuteNowCommand}"
-                                BackgroundColor="{AppThemeBinding Light={StaticResource PageBackgroundLight}, Dark={StaticResource PageBackgroundDark}}"
-                                TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+                                Style="{DynamicResource SecondaryButton}" />
                     </Grid>
                 </VerticalStackLayout>
             </Border>
 
             <!-- APP UPDATES (sideloaded APK only) -->
-            <Border Style="{StaticResource Card}" IsVisible="{Binding IsSelfUpdateSupported}">
+            <Border Style="{DynamicResource Card}" IsVisible="{Binding IsSelfUpdateSupported}">
                 <VerticalStackLayout Spacing="10">
                     <Grid ColumnDefinitions="*,Auto">
                         <Label Text="⬆️  App updates" Style="{StaticResource CardTitle}" VerticalOptions="Center" />
@@ -235,14 +256,13 @@
                         <Label Text="{Binding AppVersionDisplay}" Style="{StaticResource CardHint}" FontSize="12" VerticalOptions="Center" />
                         <Button Grid.Column="1" Text="Check for updates" Padding="14,6"
                                 Command="{Binding CheckForUpdatesCommand}"
-                                BackgroundColor="{AppThemeBinding Light={StaticResource PageBackgroundLight}, Dark={StaticResource PageBackgroundDark}}"
-                                TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+                                Style="{DynamicResource SecondaryButton}" />
                     </Grid>
                 </VerticalStackLayout>
             </Border>
 
             <!-- DIAGNOSTICS -->
-            <Border Style="{StaticResource Card}">
+            <Border Style="{DynamicResource Card}">
                 <VerticalStackLayout Spacing="10">
                     <Label Text="🩺  Diagnostics" Style="{StaticResource CardTitle}" />
                     <Label Text="{Binding CrashLogStatus}" Style="{StaticResource CardHint}" />
@@ -250,8 +270,7 @@
                         <Button Text="Share crash log" Command="{Binding ShareCrashLogCommand}" />
                         <Button Grid.Column="1" Text="Clear"
                                 Command="{Binding ClearCrashLogCommand}"
-                                BackgroundColor="{AppThemeBinding Light={StaticResource PageBackgroundLight}, Dark={StaticResource PageBackgroundDark}}"
-                                TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+                                Style="{DynamicResource SecondaryButton}" />
                     </Grid>
                 </VerticalStackLayout>
             </Border>

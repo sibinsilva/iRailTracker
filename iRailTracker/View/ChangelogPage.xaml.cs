@@ -4,6 +4,10 @@ public partial class ChangelogPage : ContentPage
 {
     private static readonly List<ChangelogEntry> Entries =
     [
+        new("2.64", [
+            "🫧 New Liquid Glass look: frosted, see-through cards over a soft colour wash",
+            "🎨 Choose your theme (Liquid Glass or Classic) and light, dark or system mode in Settings",
+        ]),
         new("2.63", [
             "⬆️ In-app updates: get notified about new versions and install them from inside the app (Settings → App updates)",
             "🐞 Fix: the app closed when you tapped the bell to track a train",

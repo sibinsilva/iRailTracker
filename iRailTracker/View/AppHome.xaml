@@ -60,7 +60,7 @@
                     Orientation="Horizontal"
                     HorizontalScrollBarVisibility="Never">
             <HorizontalStackLayout Spacing="8" Padding="12,0,12,8">
-            <Border Style="{StaticResource Chip}"
+            <Border Style="{DynamicResource Chip}"
                     IsVisible="{Binding HasCommute}"
                     BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDarkText}}"
                     SemanticProperties.Description="{Binding CommuteChipText, StringFormat='My commute, {0}'}">
@@ -80,7 +80,7 @@
                                    BindableLayout.ItemsSource="{Binding FavouriteStations}">
                 <BindableLayout.ItemTemplate>
                     <DataTemplate>
-                        <Border Style="{StaticResource Chip}"
+                        <Border Style="{DynamicResource Chip}"
                                 SemanticProperties.Description="{Binding ., StringFormat='Favourite station {0}'}">
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer

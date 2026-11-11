@@ -6,8 +6,8 @@
   <PropertyGroup>
     <!-- Release version, used when no vX.Y.Z tag exists (bump when releasing) -->
     <VersionMajor>2</VersionMajor>
-    <VersionMinor>63</VersionMinor>
-    <VersionPatch>2</VersionPatch>
+    <VersionMinor>64</VersionMinor>
+    <VersionPatch>0</VersionPatch>
 
     <!-- Store-safe build number (must always increase): computed in ComputeDisplayVersion
          below from the commit count. This is only the fallback. -->

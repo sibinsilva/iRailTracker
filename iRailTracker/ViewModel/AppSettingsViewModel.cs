@@ -209,6 +209,38 @@ namespace iRailTracker.ViewModel
 
         #endregion
 
+        #region Appearance
+
+        // Order matches the ThemeStyle / ThemeMode enums
+        public IReadOnlyList<string> ThemeStyleOptions { get; } = ["Liquid Glass", "Classic"];
+        public IReadOnlyList<string> ThemeModeOptions { get; } = ["System default", "Light", "Dark"];
+
+        public int SelectedThemeStyleIndex
+        {
+            get => (int)ThemeService.Style;
+            set
+            {
+                if (value < 0 || value == (int)ThemeService.Style)
+                    return;
+                ThemeService.ApplyStyle((ThemeStyle)value);
+                OnPropertyChanged();
+            }
+        }
+
+        public int SelectedThemeModeIndex
+        {
+            get => (int)ThemeService.Mode;
+            set
+            {
+                if (value < 0 || value == (int)ThemeService.Mode)
+                    return;
+                ThemeService.ApplyMode((ThemeMode)value);
+                OnPropertyChanged();
+            }
+        }
+
+        #endregion
+
         #region App updates
 
         public bool IsSelfUpdateSupported => UpdateService.IsSupported;

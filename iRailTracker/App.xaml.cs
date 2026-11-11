@@ -17,6 +17,7 @@ namespace iRailTracker
         public App(IConfiguration config, ConfigLoader configLoader, DataService<Settings> settings)
         {
             InitializeComponent();
+            ThemeService.ApplySaved(this);
             _config = config;
             _configLoader = configLoader;
             _settings = settings;

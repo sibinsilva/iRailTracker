@@ -8,7 +8,7 @@
         <VerticalStackLayout Padding="12" Spacing="12" MaximumWidthRequest="480">
 
             <!-- APP CARD -->
-            <Border Style="{StaticResource Card}" Padding="24">
+            <Border Style="{DynamicResource Card}" Padding="24">
                 <VerticalStackLayout Spacing="10">
                     <Image Source="logo.png"
                            WidthRequest="96"
@@ -21,7 +21,7 @@
                            FontFamily="OpenSansSemibold"
                            HorizontalTextAlignment="Center" />
 
-                    <Border Style="{StaticResource Chip}" HorizontalOptions="Center" Padding="12,4">
+                    <Border Style="{DynamicResource Chip}" HorizontalOptions="Center" Padding="12,4">
                         <Label x:Name="VersionLabel"
                                FontSize="12"
                                FontFamily="OpenSansSemibold"
@@ -38,7 +38,7 @@
             </Border>
 
             <!-- DETAILS CARD -->
-            <Border Style="{StaticResource Card}">
+            <Border Style="{DynamicResource Card}">
                 <VerticalStackLayout Spacing="14">
                     <VerticalStackLayout Spacing="2">
                         <Label Text="DEVELOPER" Style="{StaticResource SectionLabel}" />

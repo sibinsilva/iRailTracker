@@ -385,45 +385,9 @@
         </Setter>
     </Style>
 
-    <Style TargetType="Page" ApplyToDerivedTypes="True">
-        <Setter Property="Padding" Value="0"/>
-        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PageBackgroundLight}, Dark={StaticResource PageBackgroundDark}}" />
-    </Style>
-
-    <!-- Shared surfaces: use Style="{StaticResource Card}" / "Chip" for a consistent look -->
-    <!-- Cards in lists use a hairline border, not a shadow: the Android shadow drew square grey
-         corners behind the rounded card in light mode -->
-    <Style x:Key="Card" TargetType="Border">
-        <Setter Property="StrokeThickness" Value="1" />
-        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource CardStrokeLight}, Dark={StaticResource CardStrokeDark}}" />
-        <Setter Property="StrokeShape" Value="RoundRectangle 18" />
-        <Setter Property="Padding" Value="16" />
-        <Setter Property="HorizontalOptions" Value="Fill" />
-        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource CardBackgroundLight}, Dark={StaticResource CardBackgroundDark}}" />
-    </Style>
-
-    <!-- Cards floating over the map keep a shadow so they lift off the tiles -->
-    <Style x:Key="FloatingCard" TargetType="Border" BasedOn="{StaticResource Card}">
-        <Setter Property="StrokeThickness" Value="0" />
-        <Setter Property="Shadow">
-            <Shadow Brush="Black" Opacity="0.18" Radius="12" Offset="0,3" />
-        </Setter>
-    </Style>
-
-    <Style x:Key="Chip" TargetType="Border">
-        <Setter Property="StrokeThickness" Value="0" />
-        <Setter Property="StrokeShape" Value="RoundRectangle 18" />
-        <Setter Property="Padding" Value="14,8" />
-        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource ChipBackgroundLight}, Dark={StaticResource ChipBackgroundDark}}" />
-    </Style>
-
-    <Style x:Key="FieldBox" TargetType="Border">
-        <Setter Property="StrokeThickness" Value="1" />
-        <Setter Property="StrokeShape" Value="RoundRectangle 12" />
-        <Setter Property="Padding" Value="14,12" />
-        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource CardStrokeLight}, Dark={StaticResource CardStrokeDark}}" />
-        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PageBackgroundLight}, Dark={StaticResource PageBackgroundDark}}" />
-    </Style>
+    <!-- Page background and the shared surfaces (Card, FloatingCard, Chip, FieldBox, InsetTrack,
+         SecondaryButton, SearchField) live in Resources/Themes, one dictionary per theme.
+         Reference them with DynamicResource so switching theme updates open pages. -->
 
     <Style x:Key="SectionLabel" TargetType="Label">
         <Setter Property="FontSize" Value="12" />

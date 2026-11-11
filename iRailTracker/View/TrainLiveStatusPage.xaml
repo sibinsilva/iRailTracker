@@ -11,7 +11,8 @@
             <Setter Property="Padding" Value="14,8" />
             <Setter Property="CornerRadius" Value="20" />
             <Setter Property="MinimumHeightRequest" Value="40" />
-            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource CardBackgroundLight}, Dark={StaticResource CardBackgroundDark}}" />
+            <!-- Near-solid in every theme: the map tiles behind are busy -->
+            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#F2FFFFFF, Dark=#F2171C1C}" />
             <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
             <Setter Property="Shadow">
                 <Shadow Brush="Black" Opacity="0.2" Radius="8" Offset="0,2" />
@@ -24,7 +25,7 @@
         <mapsui:MapControl x:Name="TrainMapControl" />
 
         <!-- ROUTE CARD -->
-        <Border Style="{StaticResource FloatingCard}"
+        <Border Style="{DynamicResource FloatingCard}"
                 VerticalOptions="Start"
                 Margin="12"
                 Padding="16,14">
@@ -70,7 +71,7 @@
 
         <!-- TAPPED PIN DETAILS -->
         <Border x:Name="PinInfoOverlay"
-                Style="{StaticResource FloatingCard}"
+                Style="{DynamicResource FloatingCard}"
                 IsVisible="False"
                 VerticalOptions="End"
                 HorizontalOptions="Center"

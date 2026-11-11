@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<?xaml-comp compile="true" ?>
+<!-- Liquid Glass theme: frosted, translucent surfaces over a soft colour wash.
+     Android can't blur what's behind a view, so the glass effect comes from a vivid page gradient
+     showing through translucent fills, a top-to-bottom sheen and a bright "light-catching" rim.
+     Every theme defines the same keys; ThemeService swaps one for the other at runtime. -->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                    x:Class="iRailTracker.Resources.Themes.GlassTheme">
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="../Styles/Colors.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+
+    <!-- Surfaces (translucent: the page wash shows through) -->
+    <Color x:Key="PageBackgroundLight">#66FFFFFF</Color>
+    <Color x:Key="PageBackgroundDark">#17FFFFFF</Color>
+    <Color x:Key="CardBackgroundLight">#B8FFFFFF</Color>
+    <Color x:Key="CardBackgroundDark">#21FFFFFF</Color>
+    <Color x:Key="ChipBackgroundLight">#8CFFFFFF</Color>
+    <Color x:Key="ChipBackgroundDark">#1FFFFFFF</Color>
+    <Color x:Key="GlassBorderLight">#D9FFFFFF</Color>
+    <Color x:Key="GlassBorderDark">#38FFFFFF</Color>
+
+    <!-- The colour wash behind everything: mint, periwinkle, lilac (deep teal, navy, plum in dark) -->
+    <LinearGradientBrush x:Key="PageWashLight" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#CDEFEA" Offset="0" />
+        <GradientStop Color="#E0E7FA" Offset="0.55" />
+        <GradientStop Color="#F1E2F6" Offset="1" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="PageWashDark" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#042624" Offset="0" />
+        <GradientStop Color="#0B1832" Offset="0.55" />
+        <GradientStop Color="#1C1032" Offset="1" />
+    </LinearGradientBrush>
+
+    <!-- Frosted fill: brighter at the top, like light falling on glass -->
+    <LinearGradientBrush x:Key="GlassFillLight" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#D1FFFFFF" Offset="0" />
+        <GradientStop Color="#8FFFFFFF" Offset="1" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="GlassFillDark" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#2EFFFFFF" Offset="0" />
+        <GradientStop Color="#0FFFFFFF" Offset="1" />
+    </LinearGradientBrush>
+
+    <!-- Rim: bright top-left edge fading out, with a softer glint at the bottom-right -->
+    <LinearGradientBrush x:Key="GlassRimLight" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#FFFFFFFF" Offset="0" />
+        <GradientStop Color="#4DFFFFFF" Offset="0.5" />
+        <GradientStop Color="#B3FFFFFF" Offset="1" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="GlassRimDark" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#73FFFFFF" Offset="0" />
+        <GradientStop Color="#0DFFFFFF" Offset="0.5" />
+        <GradientStop Color="#33FFFFFF" Offset="1" />
+    </LinearGradientBrush>
+
+    <!-- Over the map the tiles are busy, so floating cards are frosted almost solid -->
+    <SolidColorBrush x:Key="FloatingFillLight" Color="#EBFFFFFF" />
+    <SolidColorBrush x:Key="FloatingFillDark" Color="#E6141A26" />
+
+    <Style TargetType="Page" ApplyToDerivedTypes="True">
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Background" Value="{AppThemeBinding Light={StaticResource PageWashLight}, Dark={StaticResource PageWashDark}}" />
+    </Style>
+
+    <!-- No shadow on list cards: it would show through the translucent fill (and Android drew
+         square corners behind rounded cards). The rim does the lifting instead. -->
+    <Style x:Key="Card" TargetType="Border">
+        <Setter Property="StrokeThickness" Value="1.2" />
+        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource GlassRimLight}, Dark={StaticResource GlassRimDark}}" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 24" />
+        <Setter Property="Padding" Value="16" />
+        <Setter Property="HorizontalOptions" Value="Fill" />
+        <Setter Property="Background" Value="{AppThemeBinding Light={StaticResource GlassFillLight}, Dark={StaticResource GlassFillDark}}" />
+    </Style>
+
+    <Style x:Key="FloatingCard" TargetType="Border" BasedOn="{StaticResource Card}">
+        <Setter Property="Background" Value="{AppThemeBinding Light={StaticResource FloatingFillLight}, Dark={StaticResource FloatingFillDark}}" />
+        <Setter Property="Shadow">
+            <Shadow Brush="Black" Opacity="0.22" Radius="18" Offset="0,6" />
+        </Setter>
+    </Style>
+
+    <!-- Chips and fields use BackgroundColor (not a brush) so pages can still tint them locally,
+         e.g. the teal "My commute" chip: a Background brush would override that. -->
+    <Style x:Key="Chip" TargetType="Border">
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource GlassBorderLight}, Dark={StaticResource GlassBorderDark}}" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 20" />
+        <Setter Property="Padding" Value="14,8" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource ChipBackgroundLight}, Dark={StaticResource ChipBackgroundDark}}" />
+    </Style>
+
+    <Style x:Key="FieldBox" TargetType="Border">
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 16" />
+        <Setter Property="Padding" Value="14,12" />
+        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource GlassBorderLight}, Dark={StaticResource GlassBorderDark}}" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PageBackgroundLight}, Dark={StaticResource PageBackgroundDark}}" />
+    </Style>
+
+    <Style x:Key="InsetTrack" TargetType="Border">
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource GlassBorderLight}, Dark={StaticResource GlassBorderDark}}" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 16" />
+        <Setter Property="Padding" Value="4" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PageBackgroundLight}, Dark={StaticResource PageBackgroundDark}}" />
+    </Style>
+
+    <Style x:Key="SecondaryButton" TargetType="Button">
+        <Setter Property="FontFamily" Value="OpenSansSemibold" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="CornerRadius" Value="22" />
+        <Setter Property="MinimumHeightRequest" Value="44" />
+        <Setter Property="MinimumWidthRequest" Value="44" />
+        <Setter Property="BorderWidth" Value="1" />
+        <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource GlassBorderLight}, Dark={StaticResource GlassBorderDark}}" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PageBackgroundLight}, Dark={StaticResource PageBackgroundDark}}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+    </Style>
+
+    <Style x:Key="SearchField" TargetType="SearchBar">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource CardBackgroundLight}, Dark={StaticResource CardBackgroundDark}}" />
+    </Style>
+</ResourceDictionary>

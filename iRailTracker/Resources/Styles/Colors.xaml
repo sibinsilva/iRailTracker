@@ -26,15 +26,9 @@
     <Color x:Key="Gray900">#1E293B</Color>
     <Color x:Key="Gray950">#0F172A</Color>
 
-    <!-- Semantic: Surfaces. Cards are white on a softly tinted page so they stand out -->
-    <Color x:Key="PageBackgroundLight">#EEF3F2</Color>
-    <Color x:Key="PageBackgroundDark">#0B0F0F</Color>
-    <Color x:Key="CardBackgroundLight">#FFFFFF</Color>
-    <Color x:Key="CardBackgroundDark">#171C1C</Color>
+    <!-- Semantic: Surfaces. Page, card and chip fills depend on the theme (Resources/Themes) -->
     <Color x:Key="CardStrokeLight">#DDE5E3</Color>
     <Color x:Key="CardStrokeDark">#263030</Color>
-    <Color x:Key="ChipBackgroundLight">#D9F2EE</Color>
-    <Color x:Key="ChipBackgroundDark">#123432</Color>
 
     <!-- Semantic: Text -->
     <Color x:Key="SubtleTextLight">#64748B</Color>

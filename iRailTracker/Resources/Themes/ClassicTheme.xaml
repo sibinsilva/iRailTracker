@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<?xaml-comp compile="true" ?>
+<!-- Classic theme: solid white cards on a softly tinted page (the look before Liquid Glass).
+     Every theme defines the same keys; ThemeService swaps one for the other at runtime. -->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                    x:Class="iRailTracker.Resources.Themes.ClassicTheme">
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="../Styles/Colors.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+
+    <!-- Surfaces -->
+    <Color x:Key="PageBackgroundLight">#EEF3F2</Color>
+    <Color x:Key="PageBackgroundDark">#0B0F0F</Color>
+    <Color x:Key="CardBackgroundLight">#FFFFFF</Color>
+    <Color x:Key="CardBackgroundDark">#171C1C</Color>
+    <Color x:Key="ChipBackgroundLight">#D9F2EE</Color>
+    <Color x:Key="ChipBackgroundDark">#123432</Color>
+
+    <Style TargetType="Page" ApplyToDerivedTypes="True">
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PageBackgroundLight}, Dark={StaticResource PageBackgroundDark}}" />
+    </Style>
+
+    <!-- Cards in lists use a hairline border, not a shadow: the Android shadow drew square grey
+         corners behind the rounded card in light mode -->
+    <Style x:Key="Card" TargetType="Border">
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource CardStrokeLight}, Dark={StaticResource CardStrokeDark}}" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 18" />
+        <Setter Property="Padding" Value="16" />
+        <Setter Property="HorizontalOptions" Value="Fill" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource CardBackgroundLight}, Dark={StaticResource CardBackgroundDark}}" />
+    </Style>
+
+    <!-- Cards floating over the map keep a shadow so they lift off the tiles -->
+    <Style x:Key="FloatingCard" TargetType="Border" BasedOn="{StaticResource Card}">
+        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="Shadow">
+            <Shadow Brush="Black" Opacity="0.18" Radius="12" Offset="0,3" />
+        </Setter>
+    </Style>
+
+    <Style x:Key="Chip" TargetType="Border">
+        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 18" />
+        <Setter Property="Padding" Value="14,8" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource ChipBackgroundLight}, Dark={StaticResource ChipBackgroundDark}}" />
+    </Style>
+
+    <Style x:Key="FieldBox" TargetType="Border">
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 12" />
+        <Setter Property="Padding" Value="14,12" />
+        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource CardStrokeLight}, Dark={StaticResource CardStrokeDark}}" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PageBackgroundLight}, Dark={StaticResource PageBackgroundDark}}" />
+    </Style>
+
+    <!-- Track behind a segmented toggle -->
+    <Style x:Key="InsetTrack" TargetType="Border">
+        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 12" />
+        <Setter Property="Padding" Value="4" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PageBackgroundLight}, Dark={StaticResource PageBackgroundDark}}" />
+    </Style>
+
+    <!-- Quiet secondary button (Check now, Clear, ...). An explicit style replaces the implicit
+         Button style, so it repeats the shared setters. -->
+    <Style x:Key="SecondaryButton" TargetType="Button">
+        <Setter Property="FontFamily" Value="OpenSansSemibold" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="BorderWidth" Value="0" />
+        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="MinimumHeightRequest" Value="44" />
+        <Setter Property="MinimumWidthRequest" Value="44" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PageBackgroundLight}, Dark={StaticResource PageBackgroundDark}}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+    </Style>
+
+    <Style x:Key="SearchField" TargetType="SearchBar">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource CardBackgroundLight}, Dark={StaticResource CardBackgroundDark}}" />
+    </Style>
+</ResourceDictionary>
